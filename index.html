@@ -236,6 +236,17 @@
           </div>
 
           <div class="op-group">
+            <h4>文字変換</h4>
+            <select id="selSrcTransform" class="input"></select>
+            <div class="inline">
+              <button id="btnRomaji" class="btn">ローマ字化</button>
+              <button id="btnUpper" class="btn">大文字化</button>
+              <button id="btnLower" class="btn">小文字化</button>
+              <button id="btnReverse" class="btn">反転</button>
+            </div>
+          </div>
+
+          <div class="op-group">
             <h4>文字削除</h4>
             <select id="selSrcDel" class="input"></select>
             <div class="inline">
@@ -298,6 +309,21 @@
               <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
               <label class="muted small"><input type="checkbox" id="regexInvert"> 逆一致</label>
               <button id="btnRegex" class="btn">filter_regex</button>
+            </div>
+          </div>
+
+          <div class="op-group">
+            <h4>整形・置換</h4>
+            <select id="selSrcFormat" class="input"></select>
+            <div class="inline">
+              <button id="btnDedupe" class="btn">重複文字除去</button>
+              <button id="btnSortAsc" class="btn">昇順ソート</button>
+              <button id="btnSortDesc" class="btn">降順ソート</button>
+            </div>
+            <div class="inline">
+              <input id="replaceFrom" class="input" placeholder="置換 from" />
+              <input id="replaceTo" class="input" placeholder="to" />
+              <button id="btnReplace" class="btn">置換</button>
             </div>
           </div>
 
@@ -423,6 +449,15 @@ async function toKatakana(s) {
     return window.wanakana.toKatakana(normNFKC(s));
   }
 }
+async function toRomaji(s) {
+  if (!s) return '';
+  try {
+    await ensureKuro();
+    return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
+  } catch {
+    return window.wanakana.toRomaji(normNFKC(s));
+  }
+}
 
 /* ====== Bag / Registry ====== */
 let _nextId = 0;
@@ -515,6 +550,16 @@ async function op_normalize_katakana(srcBag) {
   }
   return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
 }
+async function op_to_romaji(srcBag) {
+  const out = new Set();
+  let i = 0;
+  for (const w of srcBag.items) {
+    const r = await toRomaji(w);
+    if (r) out.add(r.replace(/\s+/g, ''));
+    if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
+}
 async function op_delete_chars(srcBag, chars, normalizeInput = false) {
   const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
   const dels = Array.from(new Set((del || '').split('')));
@@ -525,6 +570,60 @@ async function op_delete_chars(srcBag, chars, normalizeInput = false) {
     if (wNew !== w) out.add(wNew);
   }
   return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, { op: 'delete_chars', src: srcBag.id, deleted: dels.join('') });
+}
+function op_to_upper(srcBag) {
+  const out = new Set();
+  for (const w of srcBag.items) {
+    out.add(normNFKC(w).toUpperCase());
+  }
+  return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
+}
+function op_to_lower(srcBag) {
+  const out = new Set();
+  for (const w of srcBag.items) {
+    out.add(normNFKC(w).toLowerCase());
+  }
+  return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
+}
+function op_reverse(srcBag) {
+  const out = new Set();
+  for (const w of srcBag.items) {
+    const reversed = Array.from(normNFKC(w)).reverse().join('');
+    if (reversed) out.add(reversed);
+  }
+  return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
+}
+function op_dedupe_chars(srcBag) {
+  const out = new Set();
+  for (const w of srcBag.items) {
+    const seen = new Set();
+    const result = [];
+    for (const ch of Array.from(normNFKC(w))) {
+      if (seen.has(ch)) continue;
+      seen.add(ch);
+      result.push(ch);
+    }
+    if (result.length) out.add(result.join(''));
+  }
+  return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
+}
+function op_replace(srcBag, fromValue, toValue) {
+  const needle = normNFKC(fromValue);
+  const replacement = normNFKC(toValue ?? '');
+  const out = new Set();
+  if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement });
+  for (const w of srcBag.items) {
+    const normed = normNFKC(w);
+    const replaced = normed.split(needle).join(replacement);
+    out.add(replaced);
+  }
+  return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
+}
+function op_sort(srcBag, order = 'asc', locale = 'ja') {
+  const arr = Array.from(srcBag.items);
+  arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
+  if (order === 'desc') arr.reverse();
+  return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
 }
 function op_filter_in(srcBag, lookupBag) {
   const out = new Set();
@@ -637,7 +736,7 @@ function op_sample(bag, count, seed) {
 const BAG_DIR = './bag/';
 function applyChoices() {
   const choices = REG.choices();
-  const ids = ['#selSrcNorm', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcRegex', '#selSrcNgram', '#selSrcSample', '#selExport'];
+  const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
   ids.forEach(id => setSelectOptions(el(id), choices));
 }
 function addBagFromWords(name, words, meta) {
@@ -744,6 +843,34 @@ el('#btnKatakana')?.addEventListener('click', async () => {
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
+el('#btnRomaji')?.addEventListener('click', async () => {
+  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+  appendOpLog(`to_romaji … [${src.id}] ${src.name}`);
+  const nb = await op_to_romaji(src);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnUpper')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+  appendOpLog(`to_upper … [${src.id}] ${src.name}`);
+  const nb = op_to_upper(src);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnLower')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+  appendOpLog(`to_lower … [${src.id}] ${src.name}`);
+  const nb = op_to_lower(src);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnReverse')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+  appendOpLog(`reverse … [${src.id}] ${src.name}`);
+  const nb = op_reverse(src);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
 el('#btnDel')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcDel').value); if (!src) return;
   const chars = el('#delChars').value || '';
@@ -845,6 +972,39 @@ el('#btnRegex')?.addEventListener('click', () => {
     appendOpLog('× 正規表現エラー');
     return;
   }
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnDedupe')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+  appendOpLog(`dedupe_chars … [${src.id}] ${src.name}`);
+  const nb = op_dedupe_chars(src);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnSortAsc')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+  appendOpLog(`sort asc … [${src.id}] ${src.name}`);
+  const nb = op_sort(src, 'asc');
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnSortDesc')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+  appendOpLog(`sort desc … [${src.id}] ${src.name}`);
+  const nb = op_sort(src, 'desc');
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnReplace')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+  const fromRaw = el('#replaceFrom').value;
+  const toRaw = el('#replaceTo').value || '';
+  const from = normNFKC(fromRaw);
+  const to = normNFKC(toRaw);
+  if (!from) { log('置換対象 (from) を入力してください'); return; }
+  appendOpLog(`replace "${from}" → "${to}" … [${src.id}] ${src.name}`);
+  const nb = op_replace(src, fromRaw, toRaw);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
