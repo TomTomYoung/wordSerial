@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bag → op → NewBag（JSONロード / かな正規化 / 文字消去 / 包含フィルタ / 編集）</title>
+
+<!-- === libs (CDN) === -->
+<script src="https://cdn.jsdelivr.net/npm/wanakana@5.0.2/dist/wanakana.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+
+<style>
+  :root { --bg:#0f1115; --fg:#e6e6e6; --muted:#9aa0a6; --acc:#7aa2f7; --warn:#f6bd60; --ok:#34d399; --err:#f06272; --card:#151a22; --border:#2a2f3a; }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--fg); font:14px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans","Noto Sans JP","Yu Gothic UI",sans-serif; }
+  h1,h2,h3 { margin:12px 0 8px; font-weight:700; }
+  .wrap { max-width:1200px; margin:0 auto; padding:18px; }
+  .row { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  .col { flex:1 1 360px; min-width:320px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  .btn { cursor:pointer; background:#1e2530; border:1px solid var(--border); color:var(--fg); padding:8px 12px; border-radius:10px; transition:all .15s ease; }
+  .btn:hover { border-color:var(--acc); box-shadow:0 0 0 2px rgba(122,162,247,.15) inset; }
+  .btn.primary { background:linear-gradient(180deg,#1f2a44,#1a2136); border-color:#304571; color:#e7efff; }
+  .btn.warn { background:#3a2a17; border-color:#6b4d27; color:#ffe7ba; }
+  .btn.ok { background:#11261f; border-color:#1f6b53; color:#cafdf0; }
+  .btn.ghost { background:transparent; }
+  .input, textarea, select { width:100%; padding:8px 10px; color:var(--fg); background:#10151e; border:1px solid var(--border); border-radius:10px; outline:none; }
+  .muted { color:var(--muted); }
+  .grid { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; }
+  details { border:1px solid var(--border); border-radius:10px; background:#0e141d; margin-top:10px; }
+  details > summary { cursor:pointer; padding:10px 12px; font-weight:600; list-style:none; }
+  details > summary::-webkit-details-marker { display:none; }
+  .bag-meta { padding:0 12px 10px; color:#b8c2cc; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px; white-space:pre-wrap; }
+  .preview-bar { display:flex; gap:10px; padding:0 12px 10px; align-items:center; flex-wrap:wrap; }
+  .preview { padding:0 12px 12px; }
+  .mono { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+  .tight { max-width:220px; }
+  #log { white-space:pre-wrap; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>Bag → op → NewBag（JSONロード / かな正規化 / 文字消去 / 包含フィルタ / 編集）</h2>
+
+  <!-- 0) データ投入（bag/*.json 列挙→選択→ロード / 手動アップロード / 貼り付け） -->
+  <div class="row">
+    <div class="col card">
+      <h3>0) 入力データ</h3>
+      <div class="row" style="align-items:center">
+        <button id="btnList" class="btn">bag/ を列挙</button>
+        <select id="selFile" class="input" style="min-width:260px"></select>
+        <button id="btnLoad" class="btn primary">選択JSONをBag化</button>
+        <span class="muted">or</span>
+        <input type="file" id="filePick" class="input" accept=".json" />
+      </div>
+      <div class="muted" style="margin-top:6px">JSON 形式： <span class="mono">[{"id":"…","lemmas":["語1","語2"],"glosses":[…]}, …]</span>（lemmas を単語として取り込む）</div>
+      <div style="height:8px"></div>
+      <div class="grid">
+        <textarea id="pasteArea" rows="8" class="mono" placeholder="一行に一語（任意）"></textarea>
+        <button id="btnMakeBagFromText" class="btn">貼り付け→Bag</button>
+      </div>
+      <div style="height:6px"></div>
+      <div class="grid">
+        <input id="bagNameInput" class="input" placeholder="Bag名（省略可）" />
+        <div></div>
+      </div>
+      <div id="importLog" class="muted mono" style="margin-top:6px"></div>
+    </div>
+
+    <!-- 1) オペレーション（シリアル：srcを選んで→op→NewBag 追加） -->
+    <div class="col card">
+      <h3>1) 操作（op）</h3>
+      <div class="grid">
+        <select id="selSrcNorm" class="input"></select>
+        <button id="btnNorm" class="btn ok">normalize → ひらがな</button>
+      </div>
+      <div style="height:10px"></div>
+      <div class="grid">
+        <select id="selSrcDel" class="input"></select>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="delChars" class="input tight" placeholder="削除する文字（例：ん）" />
+          <label class="muted"><input type="checkbox" id="ckNormDel" checked /> 入力もひらがな化</label>
+          <button id="btnDel" class="btn warn">delete chars</button>
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="grid">
+        <select id="selSrcFlt" class="input"></select>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select id="selLkpFlt" class="input tight"></select>
+          <button id="btnFlt" class="btn">filter_in（交差）</button>
+        </div>
+      </div>
+      <div id="opLog" class="muted mono" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- 2) Bag 一覧（編集→適用 / 範囲プレビュー / 全表示も可） -->
+  <div class="card" style="margin-top:16px;">
+    <h3>2) Bag 一覧</h3>
+    <div id="bagsArea"></div>
+  </div>
+
+  <div id="log"></div>
+</div>
+
+<script>
+/* ====== 共通ユーティリティ ====== */
+const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/,'Z');
+const uniq = a => Array.from(new Set(a));
+const normNFKC = s => (s||"").normalize('NFKC').trim();
+const el = q => document.querySelector(q);
+const log = (m)=>{ const e=el('#log'); e.textContent += (e.textContent?'\n':'') + m; };
+function setSelectOptions(sel, opts) {
+  const v = sel.value;
+  sel.innerHTML = "";
+  for (const o of opts) {
+    const op = document.createElement('option');
+    op.value = o.value;
+    op.textContent = o.label;
+    sel.appendChild(op);
+  }
+  if (opts.length) sel.value = v && opts.some(o=>o.value===v) ? v : opts[opts.length-1].value;
+}
+
+/* ====== Kuroshiro（かな正規化） ====== */
+let K = null, kuroReady = false;
+async function ensureKuro() {
+  if (kuroReady) return;
+  K = new window.Kuroshiro();
+  // 明示的に辞書パスをCDNに
+  const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
+  await K.init(new Analyzer({ dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict" }));
+  kuroReady = true;
+}
+async function toHiragana(s) {
+  if (!s) return "";
+  try {
+    await ensureKuro();
+    return await K.convert(normNFKC(s), { to:"hiragana", mode:"spaced" });
+  } catch {
+    return window.wanakana.toHiragana(normNFKC(s));
+  }
+}
+
+/* ====== Bag / Registry ====== */
+let _nextId = 0;
+class Bag {
+  constructor(name, items, meta={}) {
+    this.id = _nextId++;
+    this.name = name || `bag#${this.id}`;
+    this.items = new Set(items || []);
+    this.meta = Object.assign({}, meta);
+    if (!this.meta.created_at) this.meta.created_at = nowISO();
+    this.meta.size = this.items.size;
+  }
+  label() { return `[${this.id}] ${this.name} (${this.items.size})`; }
+}
+class BagRegistry {
+  constructor(){ this._bags = []; }
+  add(b){ this._bags.push(b); return b.id; }
+  get(id){ return this._bags.find(x => x.id === Number(id)); }
+  all(){ return this._bags.slice(); }
+  choices(){ return this._bags.map(b => ({ label: b.label(), value: String(b.id) })); }
+}
+const REG = new BagRegistry();
+
+/* ====== Ops（シリアル） ====== */
+async function op_normalize_hiragana(srcBag) {
+  const out = new Set();
+  let i=0;
+  for (const w of srcBag.items) {
+    const h = await toHiragana(w);
+    if (h) out.add(h.replace(/\s+/g,'')); // 語間スペース除去
+    if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op:"normalize_hiragana", src:srcBag.id, normalized:"hiragana" });
+}
+async function op_delete_chars(srcBag, chars, normalizeInput=false) {
+  const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
+  const dels = Array.from(new Set((del||"").split("")));
+  const out = new Set();
+  for (const w of srcBag.items) {
+    let wNew = w;
+    for (const c of dels) if (c) wNew = wNew.split(c).join('');
+    if (wNew !== w) out.add(wNew);
+  }
+  return new Bag(`${srcBag.name} → delete(${dels.join('')||'∅'})`, out, { op:"delete_chars", src:srcBag.id, deleted:dels.join('') });
+}
+function op_filter_in(srcBag, lookupBag) {
+  const out = new Set();
+  for (const w of srcBag.items) if (lookupBag.items.has(w)) out.add(w);
+  return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, { op:"filter_in", src:srcBag.id, lookup:lookupBag.id });
+}
+
+/* ====== JSON列挙・ロード（bag/*.json） ====== */
+const BAG_DIR = './bag/';
+function applyChoices() {
+  const choices = REG.choices();
+  ["#selSrcNorm","#selSrcDel","#selSrcFlt","#selLkpFlt"].forEach(id=>{
+    const s = el(id); if (s) setSelectOptions(s, choices);
+  });
+}
+function addBagFromWords(name, words, meta) {
+  const b = new Bag(name, uniq(words.map(normNFKC).filter(Boolean)), meta||{});
+  REG.add(b); applyChoices(); renderBags();
+  el('#importLog').textContent += (el('#importLog').textContent?'\n':'') + `+ Bag [${b.id}] '${b.name}' size=${b.items.size}`;
+  return b;
+}
+
+async function listJson() {
+  const sel = el('#selFile');
+  sel.innerHTML = "";
+  // 1) _files.txt
+  try {
+    const r = await fetch(BAG_DIR + '_files.txt', {cache:'no-cache'});
+    if (r.ok) {
+      const t = await r.text();
+      const files = t.split(/\r?\n/).map(s=>s.trim()).filter(s=>s && /\.json$/i.test(s));
+      if (files.length) { setSelectOptions(sel, files.map(f=>({label:f, value:f}))); log('一覧: _files.txt から ' + files.length + ' 件'); return; }
+    }
+  } catch(_) {}
+  // 2) ディレクトリ一覧HTML
+  try {
+    const r = await fetch(BAG_DIR, {cache:'no-cache'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const html = await r.text();
+    const files = [...html.matchAll(/href="([^"]+?\.json)"/gi)].map(m=>decodeURIComponent(m[1].split('/').pop()));
+    const files2 = [...html.matchAll(/href='([^']+?\.json)'/gi)].map(m=>decodeURIComponent(m[1].split('/').pop()));
+    const all = uniq([...(files||[]), ...(files2||[])]);
+    if (all.length) { setSelectOptions(sel, all.map(f=>({label:f, value:f}))); log('一覧: ディレクトリHTMLから ' + all.length + ' 件'); return; }
+    throw new Error('解析失敗');
+  } catch(e) {
+    log('列挙失敗: ' + e.message + '（bag/_files.txt を置くか、HTTPサーバのディレクトリ一覧を有効にしろ）');
+  }
+}
+async function loadSelectedJson() {
+  const f = el('#selFile').value;
+  if (!f) { log('ファイル未選択'); return; }
+  try {
+    const r = await fetch(BAG_DIR + f, {cache:'no-cache'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const raw = await r.text();
+    const head = raw.trim()[0];
+    if (head !== '[' && head !== '{') throw new Error('JSONではなくHTML等が返っている');
+    const data = JSON.parse(raw);
+    const words = [];
+    for (const obj of (Array.isArray(data)?data:[data])) {
+      if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
+    }
+    addBagFromWords(f.replace(/\.json$/i,''), words, {from:'json', format:'lemmas'});
+    log(`読み込みOK: ${f} | 語数=${words.length}`);
+  } catch(e) { log('読み込み失敗: ' + e.message); }
+}
+
+/* ====== 手動アップロード / 貼り付け ====== */
+el('#filePick').addEventListener('change', async (ev)=>{
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const txt = await f.text();
+    const head = txt.trim()[0];
+    if (head !== '[' && head !== '{') throw new Error('JSONでない');
+    const data = JSON.parse(txt);
+    const words = [];
+    for (const obj of (Array.isArray(data)?data:[data])) {
+      if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
+    }
+    addBagFromWords(f.name.replace(/\.json$/i,''), words, {from:'upload', format:'lemmas'});
+    log(`手動読み込みOK: ${f.name} | 語数=${words.length}`);
+  } catch(e) { log('手動読み込み失敗: ' + e.message); }
+});
+el('#btnMakeBagFromText').onclick = ()=>{
+  const name = normNFKC(el('#bagNameInput').value) || 'input bag';
+  const words = uniq(el('#pasteArea').value.split(/\r?\n/).map(s=>normNFKC(s)).filter(Boolean));
+  if (!words.length) { el('#importLog').textContent += (el('#importLog').textContent?'\n':'') + '空入力'; return; }
+  addBagFromWords(name, words, {from:'paste', normalized:'NFKC'});
+};
+
+/* ====== 操作ボタン ====== */
+function appendOpLog(msg) {
+  const logEl = el('#opLog');
+  logEl.textContent = (logEl.textContent ? logEl.textContent + "\n" : "") + msg;
+}
+el('#btnNorm').onclick = async ()=>{
+  const src = REG.get(el('#selSrcNorm').value); if (!src) return;
+  appendOpLog(`normalize(hiragana)… [${src.id}] ${src.name}`);
+  const nb = await op_normalize_hiragana(src);
+  REG.add(nb); applyChoices(); renderBags();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+};
+el('#btnDel').onclick = async ()=>{
+  const src = REG.get(el('#selSrcDel').value); if (!src) return;
+  const chars = el('#delChars').value || "";
+  const normIn = el('#ckNormDel').checked;
+  appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}) … [${src.id}] ${src.name}`);
+  const nb = await op_delete_chars(src, chars, normIn);
+  REG.add(nb); applyChoices(); renderBags();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+};
+el('#btnFlt').onclick = ()=>{
+  const src = REG.get(el('#selSrcFlt').value), lkp = REG.get(el('#selLkpFlt').value);
+  if (!src || !lkp) return;
+  appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] … [${src.id}] ${src.name}`);
+  const nb = op_filter_in(src, lkp);
+  REG.add(nb); applyChoices(); renderBags();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+};
+
+/* ====== Bag一覧（編集/適用 + 範囲/全表示） ====== */
+function renderBags() {
+  const host = el("#bagsArea");
+  host.innerHTML = "";
+  for (const b of REG.all()) {
+    const details = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.textContent = `[${b.id}] ${b.name} | size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}`;
+    details.appendChild(sum);
+
+    const meta = document.createElement('div');
+    meta.className = 'bag-meta';
+    meta.textContent = Object.entries(b.meta).map(([k,v]) => `${k}: ${v}`).join('\n');
+    details.appendChild(meta);
+
+    const bar = document.createElement('div');
+    bar.className = 'preview-bar';
+    bar.innerHTML = `
+      <span class="muted">プレビュー:</span>
+      <label class="muted">offset <input class="input tight" type="number" min="0" value="0" data-k="off"></label>
+      <label class="muted">limit <input class="input tight" type="number" min="1" value="200" data-k="lim"></label>
+      <label class="muted"><input type="checkbox" data-k="all"> 全表示</label>
+      <button class="btn ghost" data-k="copy">コピー</button>
+      <button class="btn" data-k="edit">編集モード</button>
+      <button class="btn ok" data-k="apply" disabled>編集を適用</button>
+      <span class="muted mono" data-k="count"></span>
+    `;
+    details.appendChild(bar);
+
+    const ta = document.createElement('textarea');
+    ta.className = 'preview mono';
+    ta.rows = 12;
+    ta.readOnly = true;
+    details.appendChild(ta);
+
+    const offEl = bar.querySelector('input[data-k="off"]');
+    const limEl = bar.querySelector('input[data-k="lim"]');
+    const allEl = bar.querySelector('input[data-k="all"]');
+    const copyBtn = bar.querySelector('[data-k="copy"]');
+    const editBtn = bar.querySelector('[data-k="edit"]');
+    const applyBtn = bar.querySelector('[data-k="apply"]');
+    const cntEl  = bar.querySelector('[data-k="count"]');
+
+    function renderRange() {
+      const items = Array.from(b.items).sort((a,c)=>a.localeCompare(c,'ja'));
+      cntEl.textContent = `total=${items.length}`;
+      let off = Math.max(0, parseInt(offEl.value||0,10));
+      let lim = Math.max(1, parseInt(limEl.value||200,10));
+      if (allEl.checked) { off = 0; lim = items.length; }
+      ta.value = items.slice(off, off+lim).join('\n');
+    }
+    offEl.addEventListener('input', renderRange);
+    limEl.addEventListener('input', renderRange);
+    allEl.addEventListener('change', renderRange);
+    copyBtn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(ta.value); copyBtn.textContent = "コピー済み"; setTimeout(()=>copyBtn.textContent="コピー", 1200); } catch {}
+    });
+
+    let editing = false;
+    editBtn.addEventListener('click', ()=>{
+      editing = !editing;
+      ta.readOnly = !editing;
+      editBtn.textContent = editing ? "編集中…" : "編集モード";
+      applyBtn.disabled = !editing;
+      if (editing) { // 編集用に全件をテキスト化
+        ta.value = Array.from(b.items).sort((a,c)=>a.localeCompare(c,'ja')).join('\n');
+      } else {
+        renderRange();
+      }
+    });
+    applyBtn.addEventListener('click', ()=>{
+      const lines = ta.value.split(/\r?\n/).map(normNFKC).filter(Boolean);
+      b.items = new Set(uniq(lines));
+      b.meta.size = b.items.size;
+      ta.readOnly = true; editing=false; applyBtn.disabled=true; editBtn.textContent="編集モード";
+      sum.textContent = `[${b.id}] ${b.name} | size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}`;
+      renderRange(); // 反映
+    });
+
+    details.addEventListener('toggle', () => { if (details.open) renderRange(); });
+
+    host.appendChild(details);
+  }
+}
+
+/* ====== 初期化 ====== */
+(function seed() {
+  const demo = ["狐","たぬき","東京","百科事典","コンピュータ","がっこう","バナナ","リンゴ","りんご","アップル"];
+  addBagFromWords("seed (demo few nouns)", demo, { pos:"n", normalized:"NFKC only", seed:true });
+})();
+document.getElementById('btnList').onclick = listJson;
+document.getElementById('btnLoad').onclick = loadSelectedJson;
+</script>
+</body>
+</html>
