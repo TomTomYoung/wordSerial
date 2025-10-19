@@ -254,6 +254,8 @@
             <div class="inline">
               <button id="btnUnion" class="btn">和集合 (Union)</button>
               <button id="btnDiff" class="btn">差集合 (Difference)</button>
+              <button id="btnIntersect" class="btn">積集合 (Intersection)</button>
+              <button id="btnSymDiff" class="btn">対称差 (Symmetric)</button>
             </div>
           </div>
 
@@ -273,6 +275,19 @@
               <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight" value="1"></label>
               <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight" value="10"></label>
               <button id="btnLengthFilter" class="btn">適用</button>
+            </div>
+          </div>
+
+          <div class="op-group">
+            <h4>前後一致フィルタ</h4>
+            <select id="selSrcAffix" class="input"></select>
+            <div class="inline">
+              <input id="prefixValue" class="input" placeholder="前方一致（prefix）" />
+              <button id="btnPrefix" class="btn">prefix filter</button>
+            </div>
+            <div class="inline">
+              <input id="suffixValue" class="input" placeholder="後方一致（suffix）" />
+              <button id="btnSuffix" class="btn">suffix filter</button>
             </div>
           </div>
 
@@ -524,6 +539,17 @@ function op_difference(bagA, bagB) {
   const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
   return new Bag(`${bagA.name} - ${bagB.name}`, out, { op: 'difference', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
 }
+function op_intersection(bagA, bagB) {
+  const out = new Set();
+  for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
+  return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, { op: 'intersection', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+}
+function op_symmetric_difference(bagA, bagB) {
+  const out = new Set();
+  for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
+  for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
+  return new Bag(`${bagA.name} △ ${bagB.name}`, out, { op: 'symmetric_difference', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+}
 function op_filter_length(bag, minLen, maxLen) {
   const out = new Set();
   for (const w of bag.items) {
@@ -531,6 +557,24 @@ function op_filter_length(bag, minLen, maxLen) {
     if (len >= minLen && len <= maxLen) out.add(w);
   }
   return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, { op: 'filter_length', src: bag.id, range: `${minLen}-${maxLen}` });
+}
+function op_filter_prefix(bag, prefix) {
+  const needle = normNFKC(prefix);
+  const out = new Set();
+  if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '' });
+  for (const w of bag.items) {
+    if (normNFKC(w).startsWith(needle)) out.add(w);
+  }
+  return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle });
+}
+function op_filter_suffix(bag, suffix) {
+  const needle = normNFKC(suffix);
+  const out = new Set();
+  if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '' });
+  for (const w of bag.items) {
+    if (normNFKC(w).endsWith(needle)) out.add(w);
+  }
+  return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle });
 }
 function op_filter_regex(bag, pattern, invert) {
   const re = new RegExp(pattern, 'u');
@@ -593,7 +637,7 @@ function op_sample(bag, count, seed) {
 const BAG_DIR = './bag/';
 function applyChoices() {
   const choices = REG.choices();
-  const ids = ['#selSrcNorm', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcRegex', '#selSrcNgram', '#selSrcSample', '#selExport'];
+  const ids = ['#selSrcNorm', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcRegex', '#selSrcNgram', '#selSrcSample', '#selExport'];
   ids.forEach(id => setSelectOptions(el(id), choices));
 }
 function addBagFromWords(name, words, meta) {
@@ -735,6 +779,24 @@ el('#btnDiff')?.addEventListener('click', () => {
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
+el('#btnIntersect')?.addEventListener('click', () => {
+  const a = REG.get(el('#selSrcUnionA').value);
+  const b = REG.get(el('#selSrcUnionB').value);
+  if (!a || !b) return;
+  appendOpLog(`intersection … [${a.id}] ${a.name} ∩ [${b.id}] ${b.name}`);
+  const nb = op_intersection(a, b);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnSymDiff')?.addEventListener('click', () => {
+  const a = REG.get(el('#selSrcUnionA').value);
+  const b = REG.get(el('#selSrcUnionB').value);
+  if (!a || !b) return;
+  appendOpLog(`symmetric difference … [${a.id}] ${a.name} △ [${b.id}] ${b.name}`);
+  const nb = op_symmetric_difference(a, b);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
 el('#btnLengthFilter')?.addEventListener('click', () => {
   const src = REG.get(el('#selSrcLen').value);
   if (!src) return;
@@ -742,6 +804,28 @@ el('#btnLengthFilter')?.addEventListener('click', () => {
   const max = Math.max(min, parseIntSafe(el('#lenMax').value, min));
   appendOpLog(`filter length [${min}, ${max}] … [${src.id}] ${src.name}`);
   const nb = op_filter_length(src, min, max);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnPrefix')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcAffix').value);
+  if (!src) return;
+  const prefixRaw = el('#prefixValue').value;
+  const prefix = normNFKC(prefixRaw);
+  if (!prefix) { log('prefix を入力してください'); return; }
+  appendOpLog(`filter prefix "${prefix}" … [${src.id}] ${src.name}`);
+  const nb = op_filter_prefix(src, prefixRaw);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnSuffix')?.addEventListener('click', () => {
+  const src = REG.get(el('#selSrcAffix').value);
+  if (!src) return;
+  const suffixRaw = el('#suffixValue').value;
+  const suffix = normNFKC(suffixRaw);
+  if (!suffix) { log('suffix を入力してください'); return; }
+  appendOpLog(`filter suffix "${suffix}" … [${src.id}] ${src.name}`);
+  const nb = op_filter_suffix(src, suffixRaw);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
