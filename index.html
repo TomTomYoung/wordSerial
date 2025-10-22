@@ -550,6 +550,15 @@ async function maybeNormalizeBagItems(bag, shouldNormalize) {
   return maybeNormalizeItems(bag.items, shouldNormalize);
 }
 
+async function maybeNormalizeQueryValue(value, shouldNormalize) {
+  const base = normNFKC(value || '');
+  if (!base) return '';
+  if (!shouldNormalize) return base;
+  const hira = await toHiragana(base);
+  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+  return normalized || base;
+}
+
 /* ====== Bag / Registry ====== */
 let _nextId = 0;
 class Bag {
@@ -833,20 +842,20 @@ async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
   });
 }
 async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
-  const needle = normNFKC(prefix);
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+  const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
   const out = new Set();
   if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
   for (const w of srcItems) {
     if (normNFKC(w).startsWith(needle)) out.add(w);
   }
   return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
 }
 async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
-  const needle = normNFKC(suffix);
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+  const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
   const out = new Set();
   if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
   for (const w of srcItems) {
     if (normNFKC(w).endsWith(needle)) out.add(w);
   }
@@ -1072,7 +1081,7 @@ const OP_REBUILDERS = {
   async filter_prefix(meta) {
     const src = REG.get(meta.src);
     if (!src) throw new Error('source bag not found');
-    const prefix = meta.prefix || '';
+    const prefix = await maybeNormalizeQueryValue(meta.prefix || '', !!meta.normalize_before);
     const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
     const out = new Set();
     if (!prefix) return out;
@@ -1082,7 +1091,7 @@ const OP_REBUILDERS = {
   async filter_suffix(meta) {
     const src = REG.get(meta.src);
     if (!src) throw new Error('source bag not found');
-    const suffix = meta.suffix || '';
+    const suffix = await maybeNormalizeQueryValue(meta.suffix || '', !!meta.normalize_before);
     const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
     const out = new Set();
     if (!suffix) return out;
