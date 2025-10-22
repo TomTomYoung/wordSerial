@@ -496,10 +496,28 @@ async function ensureKuro() {
   await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
   kuroReady = true;
 }
+function katakanaToHiragana(value) {
+  if (!value) return '';
+  return value.replace(/[\u30A1-\u30FA\u30FD\u30FE]/g, ch => {
+    const code = ch.charCodeAt(0);
+    if (code === 0x30FD) return 'ゝ'; // ヽ → ゝ
+    if (code === 0x30FE) return 'ゞ'; // ヾ → ゞ
+    return String.fromCharCode(code - 0x60);
+  });
+}
+
+function normalizeKatakanaFallback(value) {
+  if (!value) return '';
+  return katakanaToHiragana(value);
+}
+
 function safeWanakanaConvert(method, value) {
   const wk = window.wanakana;
   if (wk && typeof wk[method] === 'function') {
     return wk[method](value);
+  }
+  if (method === 'toHiragana') {
+    return normalizeKatakanaFallback(value);
   }
   return value;
 }
@@ -529,6 +547,41 @@ async function toRomaji(s) {
   } catch {
     return safeWanakanaConvert('toRomaji', normNFKC(s));
   }
+}
+
+function waitFrame() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+async function convertItemsToHiragana(items) {
+  const out = [];
+  let i = 0;
+  for (const w of items) {
+    const h = await toHiragana(w);
+    if (h) out.push(h.replace(/\s+/g, ''));
+    if (++i % 2000 === 0) await waitFrame();
+  }
+  return out;
+}
+
+async function maybeNormalizeItems(items, shouldNormalize) {
+  if (!shouldNormalize) return new Set(items);
+  const arr = await convertItemsToHiragana(items);
+  return new Set(arr);
+}
+
+async function maybeNormalizeBagItems(bag, shouldNormalize) {
+  if (!bag) return new Set();
+  return maybeNormalizeItems(bag.items, shouldNormalize);
+}
+
+async function maybeNormalizeQueryValue(value, shouldNormalize) {
+  const base = normNFKC(value || '');
+  if (!base) return '';
+  if (!shouldNormalize) return base;
+  const hira = await toHiragana(base);
+  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+  return normalized || base;
 }
 
 function waitFrame() {
