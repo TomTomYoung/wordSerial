@@ -77,6 +77,17 @@
     border-radius: 12px;
     background: rgba(15, 20, 30, 0.6);
     overflow: hidden;
+    position: relative;
+  }
+  .bag-card.dragging { opacity: 0.55; }
+  .bag-card.drag-over::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(122, 162, 247, 0.75);
+    top: 0;
   }
   .bag-card > summary {
     cursor: pointer;
@@ -171,6 +182,14 @@
   .inline .input { max-width: 160px; }
   .history-actions { display: flex; gap: 8px; }
   .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .bag-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 12px 12px;
+    align-items: center;
+  }
+  .bag-actions .status { flex: 1; min-width: 140px; }
 </style>
 </head>
 <body>
@@ -188,6 +207,7 @@
         <h2>Bag 一覧</h2>
         <div class="subtitle small">プレビューを開くと編集・コピーができます。</div>
       </div>
+      <button id="btnApplyAll" class="btn ok">全バッグを再適用</button>
       <div id="bagsArea" class="bag-list"></div>
     </aside>
 
@@ -252,6 +272,7 @@
             <div class="inline">
               <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
               <label class="muted small"><input type="checkbox" id="ckNormDel" checked /> 入力をひらがな化</label>
+              <label class="muted small"><input type="checkbox" id="ckPreNormDel"> Bag をひらがな化</label>
               <button id="btnDel" class="btn warn">delete chars</button>
             </div>
           </div>
@@ -277,6 +298,10 @@
               <select id="selLkpFlt" class="input"></select>
               <button id="btnFlt" class="btn">filter_in（交差）</button>
             </div>
+            <div class="inline">
+              <label class="muted small"><input type="checkbox" id="ckPreNormFltSrc"> Bag をひらがな化</label>
+              <label class="muted small"><input type="checkbox" id="ckPreNormFltLookup"> Lookup をひらがな化</label>
+            </div>
           </div>
 
           <div class="op-group">
@@ -287,11 +312,17 @@
               <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight" value="10"></label>
               <button id="btnLengthFilter" class="btn">適用</button>
             </div>
+            <div class="inline">
+              <label class="muted small"><input type="checkbox" id="ckPreNormLen"> Bag をひらがな化</label>
+            </div>
           </div>
 
           <div class="op-group">
             <h4>前後一致フィルタ</h4>
             <select id="selSrcAffix" class="input"></select>
+            <div class="inline">
+              <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
+            </div>
             <div class="inline">
               <input id="prefixValue" class="input" placeholder="前方一致（prefix）" />
               <button id="btnPrefix" class="btn">prefix filter</button>
@@ -309,6 +340,9 @@
               <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
               <label class="muted small"><input type="checkbox" id="regexInvert"> 逆一致</label>
               <button id="btnRegex" class="btn">filter_regex</button>
+            </div>
+            <div class="inline">
+              <label class="muted small"><input type="checkbox" id="ckPreNormRegex"> Bag をひらがな化</label>
             </div>
           </div>
 
@@ -407,6 +441,37 @@ function appendOpLog(msg) {
   host.prepend(div);
   while (host.children.length > 150) host.removeChild(host.lastChild);
 }
+
+function setsAreEqual(a, b) {
+  if (a === b) return true;
+  if (!(a instanceof Set) || !(b instanceof Set)) return false;
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
+
+function findBagStatusElement(bagId) {
+  return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
+}
+
+function setBagStatusMessage(bagId, message) {
+  const statusEl = findBagStatusElement(bagId);
+  if (statusEl) {
+    const text = message || '';
+    statusEl.textContent = text;
+    statusEl.title = text;
+  }
+}
+
+function describeBagLifecycle(bag) {
+  if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
+  if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
+  if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
+  if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
+  return '';
+}
 function setSelectOptions(sel, opts) {
   if (!sel) return;
   const v = sel.value;
@@ -459,6 +524,41 @@ async function toRomaji(s) {
   }
 }
 
+function waitFrame() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+async function convertItemsToHiragana(items) {
+  const out = [];
+  let i = 0;
+  for (const w of items) {
+    const h = await toHiragana(w);
+    if (h) out.push(h.replace(/\s+/g, ''));
+    if (++i % 2000 === 0) await waitFrame();
+  }
+  return out;
+}
+
+async function maybeNormalizeItems(items, shouldNormalize) {
+  if (!shouldNormalize) return new Set(items);
+  const arr = await convertItemsToHiragana(items);
+  return new Set(arr);
+}
+
+async function maybeNormalizeBagItems(bag, shouldNormalize) {
+  if (!bag) return new Set();
+  return maybeNormalizeItems(bag.items, shouldNormalize);
+}
+
+async function maybeNormalizeQueryValue(value, shouldNormalize) {
+  const base = normNFKC(value || '');
+  if (!base) return '';
+  if (!shouldNormalize) return base;
+  const hira = await toHiragana(base);
+  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+  return normalized || base;
+}
+
 /* ====== Bag / Registry ====== */
 let _nextId = 0;
 class Bag {
@@ -477,6 +577,39 @@ class BagRegistry {
   add(b) { this._bags.push(b); return b.id; }
   get(id) { return this._bags.find(x => x.id === Number(id)); }
   all() { return this._bags.slice(); }
+  indexOf(id) { return this._bags.findIndex(x => x.id === Number(id)); }
+  remove(id) {
+    const idx = this.indexOf(id);
+    if (idx < 0) return false;
+    this._bags.splice(idx, 1);
+    return true;
+  }
+  clone(id, nameSuffix = ' copy') {
+    const src = this.get(id);
+    if (!src) return null;
+    const clonedMeta = Object.assign({}, src.meta, {
+      cloned_from: src.id,
+      cloned_op: src.meta?.op || null,
+      op: 'clone',
+      src: src.id
+    });
+    delete clonedMeta.reapply_status;
+    delete clonedMeta.reapply_error;
+    const clone = new Bag(`${src.name}${nameSuffix}`, Array.from(src.items), clonedMeta);
+    this.add(clone);
+    return clone;
+  }
+  moveRelative(sourceId, targetId, placeBefore = false) {
+    const fromIdx = this.indexOf(sourceId);
+    const targetIdx = this.indexOf(targetId);
+    if (fromIdx < 0 || targetIdx < 0 || sourceId === targetId) return false;
+    const [bag] = this._bags.splice(fromIdx, 1);
+    let insertIdx = this.indexOf(targetId);
+    if (insertIdx < 0) return false;
+    if (!placeBefore) insertIdx += 1;
+    this._bags.splice(insertIdx, 0, bag);
+    return true;
+  }
   choices() { return this._bags.map(b => ({ label: b.label(), value: String(b.id) })); }
   serialize() {
     return {
@@ -560,16 +693,23 @@ async function op_to_romaji(srcBag) {
   }
   return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
 }
-async function op_delete_chars(srcBag, chars, normalizeInput = false) {
+async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
   const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
   const dels = Array.from(new Set((del || '').split('')));
+  const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
   const out = new Set();
-  for (const w of srcBag.items) {
+  for (const w of srcItems) {
     let wNew = w;
     for (const c of dels) if (c) wNew = wNew.split(c).join('');
     if (wNew !== w) out.add(wNew);
   }
-  return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, { op: 'delete_chars', src: srcBag.id, deleted: dels.join('') });
+  return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, {
+    op: 'delete_chars',
+    src: srcBag.id,
+    deleted: dels.join(''),
+    normalize_input: normalizeInput,
+    normalize_before: normalizeBefore
+  });
 }
 function op_to_upper(srcBag) {
   const out = new Set();
@@ -625,64 +765,111 @@ function op_sort(srcBag, order = 'asc', locale = 'ja') {
   if (order === 'desc') arr.reverse();
   return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
 }
-function op_filter_in(srcBag, lookupBag) {
+async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
+  const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
+  const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
   const out = new Set();
-  for (const w of srcBag.items) if (lookupBag.items.has(w)) out.add(w);
-  return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, { op: 'filter_in', src: srcBag.id, lookup: lookupBag.id });
+  for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+  return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, {
+    op: 'filter_in',
+    src: srcBag.id,
+    lookup: lookupBag.id,
+    normalize_src_before: normalizeSrc,
+    normalize_lookup_before: normalizeLookup
+  });
 }
 function op_union(bagA, bagB) {
   const out = new Set([...bagA.items, ...bagB.items]);
-  return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, { op: 'union', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+  return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
+    op: 'union',
+    src: [bagA.id, bagB.id].join(','),
+    src_a: bagA.id,
+    src_b: bagB.id,
+    size_a: bagA.items.size,
+    size_b: bagB.items.size
+  });
 }
 function op_difference(bagA, bagB) {
   const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
-  return new Bag(`${bagA.name} - ${bagB.name}`, out, { op: 'difference', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+  return new Bag(`${bagA.name} - ${bagB.name}`, out, {
+    op: 'difference',
+    src: [bagA.id, bagB.id].join(','),
+    src_a: bagA.id,
+    src_b: bagB.id,
+    size_a: bagA.items.size,
+    size_b: bagB.items.size
+  });
 }
 function op_intersection(bagA, bagB) {
   const out = new Set();
   for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
-  return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, { op: 'intersection', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+  return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
+    op: 'intersection',
+    src: [bagA.id, bagB.id].join(','),
+    src_a: bagA.id,
+    src_b: bagB.id,
+    size_a: bagA.items.size,
+    size_b: bagB.items.size
+  });
 }
 function op_symmetric_difference(bagA, bagB) {
   const out = new Set();
   for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
   for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
-  return new Bag(`${bagA.name} △ ${bagB.name}`, out, { op: 'symmetric_difference', src: [bagA.id, bagB.id].join(','), size_a: bagA.items.size, size_b: bagB.items.size });
+  return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
+    op: 'symmetric_difference',
+    src: [bagA.id, bagB.id].join(','),
+    src_a: bagA.id,
+    src_b: bagB.id,
+    size_a: bagA.items.size,
+    size_b: bagB.items.size
+  });
 }
-function op_filter_length(bag, minLen, maxLen) {
+async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
   const out = new Set();
-  for (const w of bag.items) {
+  for (const w of srcItems) {
     const len = normNFKC(w).length;
     if (len >= minLen && len <= maxLen) out.add(w);
   }
-  return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, { op: 'filter_length', src: bag.id, range: `${minLen}-${maxLen}` });
+  return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, {
+    op: 'filter_length',
+    src: bag.id,
+    range: `${minLen}-${maxLen}`,
+    min: minLen,
+    max: maxLen,
+    normalize_before: normalizeBefore
+  });
 }
-function op_filter_prefix(bag, prefix) {
-  const needle = normNFKC(prefix);
+async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
+  const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
   const out = new Set();
-  if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '' });
-  for (const w of bag.items) {
+  if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+  for (const w of srcItems) {
     if (normNFKC(w).startsWith(needle)) out.add(w);
   }
-  return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle });
+  return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
 }
-function op_filter_suffix(bag, suffix) {
-  const needle = normNFKC(suffix);
+async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
+  const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
   const out = new Set();
-  if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '' });
-  for (const w of bag.items) {
+  if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+  for (const w of srcItems) {
     if (normNFKC(w).endsWith(needle)) out.add(w);
   }
-  return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle });
+  return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
 }
-function op_filter_regex(bag, pattern, invert) {
+async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
   const re = new RegExp(pattern, 'u');
   const out = new Set();
-  for (const w of bag.items) {
+  for (const w of srcItems) {
     const matched = re.test(w);
     if ((matched && !invert) || (!matched && invert)) out.add(w);
   }
-  return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert });
+  return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
 }
 function op_ngrams(bag, n) {
   const size = Number.isFinite(n) ? Math.max(1, n) : 1;
@@ -730,6 +917,305 @@ function op_sample(bag, count, seed) {
   }
   const sampled = items.slice(0, need);
   return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
+}
+
+const OP_REBUILDERS = {
+  async normalize_hiragana(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    return new Set(await convertItemsToHiragana(src.items));
+  },
+  async normalize_katakana(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    let i = 0;
+    for (const w of src.items) {
+      const k = await toKatakana(w);
+      if (k) out.add(k.replace(/\s+/g, ''));
+      if (++i % 2000 === 0) await waitFrame();
+    }
+    return out;
+  },
+  async to_romaji(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    let i = 0;
+    for (const w of src.items) {
+      const r = await toRomaji(w);
+      if (r) out.add(r.replace(/\s+/g, ''));
+      if (++i % 2000 === 0) await waitFrame();
+    }
+    return out;
+  },
+  async delete_chars(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const dels = Array.from(new Set((meta.deleted || '').split('')));
+    const out = new Set();
+    for (const w of srcItems) {
+      let wNew = w;
+      for (const c of dels) if (c) wNew = wNew.split(c).join('');
+      if (wNew !== w) out.add(wNew);
+    }
+    return out;
+  },
+  async to_upper(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    for (const w of src.items) out.add(normNFKC(w).toUpperCase());
+    return out;
+  },
+  async to_lower(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    for (const w of src.items) out.add(normNFKC(w).toLowerCase());
+    return out;
+  },
+  async reverse(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    for (const w of src.items) {
+      const reversed = Array.from(normNFKC(w)).reverse().join('');
+      if (reversed) out.add(reversed);
+    }
+    return out;
+  },
+  async dedupe_chars(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const out = new Set();
+    for (const w of src.items) {
+      const seen = new Set();
+      const result = [];
+      for (const ch of Array.from(normNFKC(w))) {
+        if (seen.has(ch)) continue;
+        seen.add(ch);
+        result.push(ch);
+      }
+      if (result.length) out.add(result.join(''));
+    }
+    return out;
+  },
+  async replace(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const needle = meta.from || '';
+    const replacement = meta.to || '';
+    const out = new Set();
+    if (!needle) return out;
+    for (const w of src.items) {
+      const normed = normNFKC(w);
+      const replaced = normed.split(needle).join(replacement);
+      out.add(replaced);
+    }
+    return out;
+  },
+  async sort(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const order = meta.order || 'asc';
+    const locale = meta.locale || 'ja';
+    const arr = Array.from(src.items);
+    arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
+    if (order === 'desc') arr.reverse();
+    return new Set(arr);
+  },
+  async filter_in(meta) {
+    const src = REG.get(meta.src);
+    const lookup = REG.get(meta.lookup);
+    if (!src || !lookup) throw new Error('source or lookup bag not found');
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_src_before);
+    const lookupItems = await maybeNormalizeBagItems(lookup, !!meta.normalize_lookup_before);
+    const out = new Set();
+    for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+    return out;
+  },
+  async union(meta) {
+    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+    if (!a || !b) throw new Error('union source missing');
+    return new Set([...a.items, ...b.items]);
+  },
+  async difference(meta) {
+    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+    if (!a || !b) throw new Error('difference source missing');
+    return new Set([...a.items].filter(w => !b.items.has(w)));
+  },
+  async intersection(meta) {
+    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+    if (!a || !b) throw new Error('intersection source missing');
+    const out = new Set();
+    for (const w of a.items) if (b.items.has(w)) out.add(w);
+    return out;
+  },
+  async symmetric_difference(meta) {
+    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+    if (!a || !b) throw new Error('symmetric difference source missing');
+    const out = new Set();
+    for (const w of a.items) if (!b.items.has(w)) out.add(w);
+    for (const w of b.items) if (!a.items.has(w)) out.add(w);
+    return out;
+  },
+  async filter_length(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const min = Number.isFinite(meta.min) ? meta.min : Number(meta.range?.split('-')[0]) || 0;
+    const max = Number.isFinite(meta.max) ? meta.max : Number(meta.range?.split('-')[1]) || min;
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const out = new Set();
+    for (const w of srcItems) {
+      const len = normNFKC(w).length;
+      if (len >= min && len <= max) out.add(w);
+    }
+    return out;
+  },
+  async filter_prefix(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const prefix = await maybeNormalizeQueryValue(meta.prefix || '', !!meta.normalize_before);
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const out = new Set();
+    if (!prefix) return out;
+    for (const w of srcItems) if (normNFKC(w).startsWith(prefix)) out.add(w);
+    return out;
+  },
+  async filter_suffix(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const suffix = await maybeNormalizeQueryValue(meta.suffix || '', !!meta.normalize_before);
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const out = new Set();
+    if (!suffix) return out;
+    for (const w of srcItems) if (normNFKC(w).endsWith(suffix)) out.add(w);
+    return out;
+  },
+  async filter_regex(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const pattern = meta.pattern;
+    const invert = !!meta.invert;
+    if (!pattern) return new Set();
+    const re = new RegExp(pattern, 'u');
+    const out = new Set();
+    for (const w of srcItems) {
+      const matched = re.test(w);
+      if ((matched && !invert) || (!matched && invert)) out.add(w);
+    }
+    return out;
+  },
+  async ngrams(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const n = Number.isFinite(meta.n) ? Math.max(1, meta.n) : 1;
+    const out = new Set();
+    for (const w of src.items) {
+      const norm = normNFKC(w);
+      if (!norm || norm.length < n) continue;
+      for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
+    }
+    return out;
+  },
+  async sample(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const items = Array.from(src.items);
+    const count = Number.isFinite(meta.count) ? meta.count : 0;
+    const need = Math.min(Math.max(0, count), items.length);
+    if (need === items.length) return new Set(items);
+    let rand = Math.random;
+    if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
+    for (let i = items.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rand() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    return new Set(items.slice(0, need));
+  },
+  async clone(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('clone source not found');
+    return new Set(src.items);
+  },
+  async manual_edit() {
+    return null;
+  }
+};
+
+async function recomputeBagByMeta(bag) {
+  const meta = bag?.meta || {};
+  const op = meta.op;
+  if (!op) return { changed: false, reason: 'no-op' };
+  const runner = OP_REBUILDERS[op];
+  if (!runner) return { changed: false, reason: 'unsupported' };
+  const before = bag.items instanceof Set ? new Set(bag.items) : new Set(Array.from(bag.items || []));
+  const result = await runner(meta);
+  if (!result) {
+    bag.meta.reapplied_at = nowISO();
+    return { changed: false, reason: 'no-change' };
+  }
+  const nextItems = result instanceof Set ? result : new Set(result);
+  const changed = !setsAreEqual(before, nextItems);
+  bag.items = nextItems;
+  bag.meta.size = bag.items.size;
+  bag.meta.reapplied_at = nowISO();
+  if (changed) bag.meta.updated_at = nowISO();
+  return { changed, reason: changed ? 'updated' : 'no-change' };
+}
+
+async function reapplySeries(limitBagId = null) {
+  const limit = limitBagId === null ? null : Number(limitBagId);
+  const label = limit === null ? 'all bags' : `bag ${limit}`;
+  appendOpLog(`↻ Reapply start (${label})`);
+  const bags = REG.all();
+  let updated = 0;
+  for (const bag of bags) {
+    try {
+      const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
+      if (!runnable) {
+        bag.meta.reapply_status = '⏭ 再適用対象外';
+        delete bag.meta.reapply_error;
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+      } else {
+        bag.meta.reapply_status = '⟳ 再適用中…';
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        const result = await recomputeBagByMeta(bag);
+        delete bag.meta.reapply_error;
+        if (result.changed) {
+          updated += 1;
+          bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
+        } else {
+          bag.meta.reapply_status = '＝ 変更なし';
+        }
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+      }
+    } catch (e) {
+      log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
+      appendOpLog(`× Reapply failed [${bag.id}] ${bag.name}: ${e.message}`);
+      bag.meta.reapply_error = e.message;
+      bag.meta.reapplied_at = nowISO();
+      bag.meta.reapply_status = `× エラー: ${e.message}`;
+      setBagStatusMessage(bag.id, bag.meta.reapply_status);
+      break;
+    }
+    if (limit !== null && bag.id === limit) break;
+  }
+  if (updated > 0) {
+    renderBags();
+    applyChoices();
+    captureState();
+    appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
+  } else {
+    appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
+  }
 }
 
 /* ====== JSON列挙・ロード（bag/*.json） ====== */
@@ -875,16 +1361,19 @@ el('#btnDel')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcDel').value); if (!src) return;
   const chars = el('#delChars').value || '';
   const normIn = el('#ckNormDel').checked;
-  appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}) … [${src.id}] ${src.name}`);
-  const nb = await op_delete_chars(src, chars, normIn);
+  const normBag = el('#ckPreNormDel').checked;
+  appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+  const nb = await op_delete_chars(src, chars, normIn, normBag);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
-el('#btnFlt')?.addEventListener('click', () => {
+el('#btnFlt')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcFlt').value), lkp = REG.get(el('#selLkpFlt').value);
   if (!src || !lkp) return;
-  appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] … [${src.id}] ${src.name}`);
-  const nb = op_filter_in(src, lkp);
+  const normSrc = el('#ckPreNormFltSrc').checked;
+  const normLookup = el('#ckPreNormFltLookup').checked;
+  appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) … [${src.id}] ${src.name}`);
+  const nb = await op_filter_in(src, lkp, normSrc, normLookup);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
@@ -924,49 +1413,53 @@ el('#btnSymDiff')?.addEventListener('click', () => {
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
-el('#btnLengthFilter')?.addEventListener('click', () => {
+el('#btnLengthFilter')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcLen').value);
   if (!src) return;
   const min = Math.max(0, parseIntSafe(el('#lenMin').value, 0));
   const max = Math.max(min, parseIntSafe(el('#lenMax').value, min));
-  appendOpLog(`filter length [${min}, ${max}] … [${src.id}] ${src.name}`);
-  const nb = op_filter_length(src, min, max);
+  const normBag = el('#ckPreNormLen').checked;
+  appendOpLog(`filter length [${min}, ${max}] (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+  const nb = await op_filter_length(src, min, max, normBag);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
-el('#btnPrefix')?.addEventListener('click', () => {
+el('#btnPrefix')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcAffix').value);
   if (!src) return;
   const prefixRaw = el('#prefixValue').value;
   const prefix = normNFKC(prefixRaw);
   if (!prefix) { log('prefix を入力してください'); return; }
-  appendOpLog(`filter prefix "${prefix}" … [${src.id}] ${src.name}`);
-  const nb = op_filter_prefix(src, prefixRaw);
+  const normBag = el('#ckPreNormAffix').checked;
+  appendOpLog(`filter prefix "${prefix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+  const nb = await op_filter_prefix(src, prefixRaw, normBag);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
-el('#btnSuffix')?.addEventListener('click', () => {
+el('#btnSuffix')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcAffix').value);
   if (!src) return;
   const suffixRaw = el('#suffixValue').value;
   const suffix = normNFKC(suffixRaw);
   if (!suffix) { log('suffix を入力してください'); return; }
-  appendOpLog(`filter suffix "${suffix}" … [${src.id}] ${src.name}`);
-  const nb = op_filter_suffix(src, suffixRaw);
+  const normBag = el('#ckPreNormAffix').checked;
+  appendOpLog(`filter suffix "${suffix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+  const nb = await op_filter_suffix(src, suffixRaw, normBag);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
-el('#btnRegex')?.addEventListener('click', () => {
+el('#btnRegex')?.addEventListener('click', async () => {
   const src = REG.get(el('#selSrcRegex').value);
   const pattern = el('#regexPattern').value;
   const invert = el('#regexInvert').checked;
   if (!src) return;
   if (!pattern) { log('正規表現を入力してください'); return; }
   const invertLabel = invert ? ' (invert)' : '';
-  appendOpLog(`filter_regex /${pattern}/${invertLabel} … [${src.id}] ${src.name}`);
+  const normBag = el('#ckPreNormRegex').checked;
+  appendOpLog(`filter_regex /${pattern}/${invertLabel} (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
   let nb;
   try {
-    nb = op_filter_regex(src, pattern, invert);
+    nb = await op_filter_regex(src, pattern, invert, normBag);
   } catch (e) {
     log(`正規表現エラー: ${e.message}`);
     appendOpLog('× 正規表現エラー');
@@ -1074,14 +1567,19 @@ el('#btnRedo')?.addEventListener('click', () => {
   appendOpLog('⮫ Redo');
 });
 
+let dragSourceId = null;
+
 /* ====== Bag一覧（編集/適用 + 範囲/全表示） ====== */
 function renderBags() {
   const host = el('#bagsArea');
   if (!host) return;
+  dragSourceId = null;
   host.innerHTML = '';
   for (const b of REG.all()) {
     const details = document.createElement('details');
     details.className = 'bag-card';
+    details.dataset.id = b.id;
+    details.draggable = true;
     const sum = document.createElement('summary');
     sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
     details.appendChild(sum);
@@ -1098,7 +1596,7 @@ function renderBags() {
       <label class="muted small">offset <input class="input tight" type="number" min="0" value="0" data-k="off"></label>
       <label class="muted small">limit <input class="input tight" type="number" min="1" value="200" data-k="lim"></label>
       <label class="muted small"><input type="checkbox" data-k="all"> 全表示</label>
-      <button class="btn ghost" data-k="copy">コピー</button>
+      <button class="btn ghost" data-k="copy">クリップボード</button>
       <button class="btn" data-k="edit">編集モード</button>
       <button class="btn ok" data-k="apply" disabled>編集を適用</button>
       <span class="muted mono small" data-k="count"></span>
@@ -1118,6 +1616,7 @@ function renderBags() {
     const editBtn = bar.querySelector('[data-k="edit"]');
     const applyBtn = bar.querySelector('[data-k="apply"]');
     const cntEl = bar.querySelector('[data-k="count"]');
+    const copyOriginalLabel = copyBtn?.textContent || '';
 
     function renderRange() {
       const items = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja'));
@@ -1134,7 +1633,9 @@ function renderBags() {
       try {
         await navigator.clipboard.writeText(ta.value);
         copyBtn.textContent = 'コピー済み';
-        setTimeout(() => copyBtn.textContent = 'コピー', 1200);
+        setTimeout(() => {
+          copyBtn.textContent = copyOriginalLabel;
+        }, 1200);
       } catch {}
     });
 
@@ -1156,17 +1657,105 @@ function renderBags() {
       b.meta.size = b.items.size;
       b.meta.op = 'manual_edit';
       b.meta.updated_at = nowISO();
+      delete b.meta.reapply_status;
+      delete b.meta.reapply_error;
       ta.readOnly = true;
       editing = false;
       applyBtn.disabled = true;
       editBtn.textContent = '編集モード';
       sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
       renderRange();
+      applyChoices();
       captureState();
       appendOpLog(`edit → Bag [${b.id}] size=${b.items.size}`);
     });
 
     details.addEventListener('toggle', () => { if (details.open) renderRange(); });
+
+    const actions = document.createElement('div');
+    actions.className = 'bag-actions';
+    actions.innerHTML = `
+      <button class="btn ghost" data-k="reapply">再適用</button>
+      <button class="btn ghost" data-k="duplicate">複製</button>
+      <button class="btn warn" data-k="remove">削除</button>
+      <span class="muted small status" data-k="status"></span>
+    `;
+    details.appendChild(actions);
+
+    const statusEl = actions.querySelector('[data-k="status"]');
+    if (statusEl) {
+      const statusText = describeBagLifecycle(b);
+      statusEl.textContent = statusText;
+      statusEl.title = statusText;
+    }
+
+    const reapplyBtn = actions.querySelector('[data-k="reapply"]');
+    const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
+    const removeBtn = actions.querySelector('[data-k="remove"]');
+
+    reapplyBtn.addEventListener('click', async () => {
+      reapplyBtn.disabled = true;
+      try {
+        await reapplySeries(b.id);
+      } finally {
+        reapplyBtn.disabled = false;
+      }
+    });
+
+    duplicateBtn.addEventListener('click', () => {
+      const clone = REG.clone(b.id);
+      if (!clone) return;
+      applyChoices();
+      renderBags();
+      captureState();
+      appendOpLog(`⧉ Clone → [${clone.id}] from [${b.id}] ${b.name}`);
+    });
+
+    removeBtn.addEventListener('click', () => {
+      if (!window.confirm(`Bag [${b.id}] ${b.name} を削除しますか？`)) return;
+      if (REG.remove(b.id)) {
+        applyChoices();
+        renderBags();
+        captureState();
+        appendOpLog(`− Remove Bag [${b.id}] ${b.name}`);
+      }
+    });
+
+    details.addEventListener('dragstart', e => {
+      dragSourceId = b.id;
+      details.classList.add('dragging');
+      e.dataTransfer?.setData('text/plain', String(b.id));
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+    });
+    details.addEventListener('dragend', () => {
+      dragSourceId = null;
+      details.classList.remove('dragging');
+      details.classList.remove('drag-over');
+    });
+    details.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (dragSourceId === null || dragSourceId === b.id) return;
+      details.classList.add('drag-over');
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    });
+    details.addEventListener('dragleave', () => {
+      details.classList.remove('drag-over');
+    });
+    details.addEventListener('drop', e => {
+      e.preventDefault();
+      details.classList.remove('drag-over');
+      const sourceId = dragSourceId;
+      dragSourceId = null;
+      if (sourceId === null || sourceId === b.id) return;
+      const rect = details.getBoundingClientRect();
+      const placeBefore = e.clientY < rect.top + rect.height / 2;
+      if (REG.moveRelative(sourceId, b.id, placeBefore)) {
+        applyChoices();
+        renderBags();
+        captureState();
+        appendOpLog(`↕ Reorder Bag [${sourceId}] ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
+      }
+    });
 
     host.appendChild(details);
   }
@@ -1181,6 +1770,17 @@ document.querySelectorAll('.tab-button').forEach(btn => {
     const target = document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`);
     if (target) target.classList.add('active');
   });
+});
+
+el('#btnApplyAll')?.addEventListener('click', async () => {
+  const btn = el('#btnApplyAll');
+  if (!btn) return;
+  btn.disabled = true;
+  try {
+    await reapplySeries();
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 /* ====== 初期化 ====== */
