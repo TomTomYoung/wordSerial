@@ -496,13 +496,20 @@ async function ensureKuro() {
   await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
   kuroReady = true;
 }
+function safeWanakanaConvert(method, value) {
+  const wk = window.wanakana;
+  if (wk && typeof wk[method] === 'function') {
+    return wk[method](value);
+  }
+  return value;
+}
 async function toHiragana(s) {
   if (!s) return '';
   try {
     await ensureKuro();
     return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
   } catch {
-    return window.wanakana.toHiragana(normNFKC(s));
+    return safeWanakanaConvert('toHiragana', normNFKC(s));
   }
 }
 async function toKatakana(s) {
@@ -511,7 +518,7 @@ async function toKatakana(s) {
     await ensureKuro();
     return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
   } catch {
-    return window.wanakana.toKatakana(normNFKC(s));
+    return safeWanakanaConvert('toKatakana', normNFKC(s));
   }
 }
 async function toRomaji(s) {
@@ -520,7 +527,7 @@ async function toRomaji(s) {
     await ensureKuro();
     return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
   } catch {
-    return window.wanakana.toRomaji(normNFKC(s));
+    return safeWanakanaConvert('toRomaji', normNFKC(s));
   }
 }
 
