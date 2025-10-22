@@ -559,6 +559,27 @@ async function toRomaji(s) {
   } catch {
     return safeWanakanaConvert('toRomaji', normNFKC(s));
   }
+  return out;
+}
+
+async function maybeNormalizeItems(items, shouldNormalize) {
+  if (!shouldNormalize) return new Set(items);
+  const arr = await convertItemsToHiragana(items);
+  return new Set(arr);
+}
+
+async function maybeNormalizeBagItems(bag, shouldNormalize) {
+  if (!bag) return new Set();
+  return maybeNormalizeItems(bag.items, shouldNormalize);
+}
+
+async function maybeNormalizeQueryValue(value, shouldNormalize) {
+  const base = normNFKC(value || '');
+  if (!base) return '';
+  if (!shouldNormalize) return base;
+  const hira = await toHiragana(base);
+  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+  return normalized || base;
 }
 
 function waitFrame() {
