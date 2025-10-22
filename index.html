@@ -442,6 +442,16 @@ function appendOpLog(msg) {
   while (host.children.length > 150) host.removeChild(host.lastChild);
 }
 
+function setsAreEqual(a, b) {
+  if (a === b) return true;
+  if (!(a instanceof Set) || !(b instanceof Set)) return false;
+  if (a.size !== b.size) return false;
+  for (const value of a) {
+    if (!b.has(value)) return false;
+  }
+  return true;
+}
+
 function findBagStatusElement(bagId) {
   return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
 }
@@ -1137,15 +1147,19 @@ async function recomputeBagByMeta(bag) {
   if (!op) return { changed: false, reason: 'no-op' };
   const runner = OP_REBUILDERS[op];
   if (!runner) return { changed: false, reason: 'unsupported' };
+  const before = bag.items instanceof Set ? new Set(bag.items) : new Set(Array.from(bag.items || []));
   const result = await runner(meta);
   if (!result) {
     bag.meta.reapplied_at = nowISO();
     return { changed: false, reason: 'no-change' };
   }
-  bag.items = result instanceof Set ? result : new Set(result);
+  const nextItems = result instanceof Set ? result : new Set(result);
+  const changed = !setsAreEqual(before, nextItems);
+  bag.items = nextItems;
   bag.meta.size = bag.items.size;
   bag.meta.reapplied_at = nowISO();
-  return { changed: true, reason: 'updated' };
+  if (changed) bag.meta.updated_at = nowISO();
+  return { changed, reason: changed ? 'updated' : 'no-change' };
 }
 
 async function reapplySeries(limitBagId = null) {
@@ -1159,6 +1173,7 @@ async function reapplySeries(limitBagId = null) {
       const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
       if (!runnable) {
         bag.meta.reapply_status = '⏭ 再適用対象外';
+        delete bag.meta.reapply_error;
         setBagStatusMessage(bag.id, bag.meta.reapply_status);
       } else {
         bag.meta.reapply_status = '⟳ 再適用中…';
@@ -1168,14 +1183,10 @@ async function reapplySeries(limitBagId = null) {
         if (result.changed) {
           updated += 1;
           bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
-          setBagStatusMessage(bag.id, bag.meta.reapply_status);
-        } else if (result.reason === 'no-change') {
-          bag.meta.reapply_status = '＝ 変更なし';
-          setBagStatusMessage(bag.id, bag.meta.reapply_status);
         } else {
-          bag.meta.reapply_status = '⏭ 再適用対象外';
-          setBagStatusMessage(bag.id, bag.meta.reapply_status);
+          bag.meta.reapply_status = '＝ 変更なし';
         }
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
       }
     } catch (e) {
       log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
@@ -1192,9 +1203,9 @@ async function reapplySeries(limitBagId = null) {
     renderBags();
     applyChoices();
     captureState();
-    appendOpLog(`↻ Reapply done (${updated} bag${updated > 1 ? 's' : ''})`);
+    appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
   } else {
-    appendOpLog('↻ Reapply: no bag updated');
+    appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
   }
 }
 
