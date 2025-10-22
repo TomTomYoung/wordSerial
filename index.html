@@ -334,6 +334,18 @@
           </div>
 
           <div class="op-group">
+            <h4>部分一致フィルタ</h4>
+            <select id="selSrcContains" class="input"></select>
+            <div class="inline">
+              <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
+            </div>
+            <div class="inline">
+              <input id="containsValue" class="input" placeholder="入力文字列を含む語" />
+              <button id="btnContains" class="btn">contains filter</button>
+            </div>
+          </div>
+
+          <div class="op-group">
             <h4>正規表現フィルタ</h4>
             <select id="selSrcRegex" class="input"></select>
             <div class="inline">
@@ -546,20 +558,6 @@ async function toRomaji(s) {
     return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
   } catch {
     return safeWanakanaConvert('toRomaji', normNFKC(s));
-  }
-}
-
-function waitFrame() {
-  return new Promise(resolve => setTimeout(resolve, 0));
-}
-
-async function convertItemsToHiragana(items) {
-  const out = [];
-  let i = 0;
-  for (const w of items) {
-    const h = await toHiragana(w);
-    if (h) out.push(h.replace(/\s+/g, ''));
-    if (++i % 2000 === 0) await waitFrame();
   }
   return out;
 }
@@ -921,6 +919,16 @@ async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
   }
   return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
 }
+async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
+  const needle = await maybeNormalizeQueryValue(needleRaw, normalizeBefore);
+  const out = new Set();
+  if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
+  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+  for (const w of srcItems) {
+    if (normNFKC(w).includes(needle)) out.add(w);
+  }
+  return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
+}
 async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
   const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
   const re = new RegExp(pattern, 'u');
@@ -1158,6 +1166,16 @@ const OP_REBUILDERS = {
     for (const w of srcItems) if (normNFKC(w).endsWith(suffix)) out.add(w);
     return out;
   },
+  async filter_contains(meta) {
+    const src = REG.get(meta.src);
+    if (!src) throw new Error('source bag not found');
+    const needle = await maybeNormalizeQueryValue(meta.needle || meta.contains || '', !!meta.normalize_before);
+    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+    const out = new Set();
+    if (!needle) return out;
+    for (const w of srcItems) if (normNFKC(w).includes(needle)) out.add(w);
+    return out;
+  },
   async filter_regex(meta) {
     const src = REG.get(meta.src);
     if (!src) throw new Error('source bag not found');
@@ -1282,7 +1300,7 @@ async function reapplySeries(limitBagId = null) {
 const BAG_DIR = './bag/';
 function applyChoices() {
   const choices = REG.choices();
-  const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
+  const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
   ids.forEach(id => setSelectOptions(el(id), choices));
 }
 function addBagFromWords(name, words, meta) {
@@ -1505,6 +1523,18 @@ el('#btnSuffix')?.addEventListener('click', async () => {
   const normBag = el('#ckPreNormAffix').checked;
   appendOpLog(`filter suffix "${suffix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
   const nb = await op_filter_suffix(src, suffixRaw, normBag);
+  REG.add(nb); applyChoices(); renderBags(); captureState();
+  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+});
+el('#btnContains')?.addEventListener('click', async () => {
+  const src = REG.get(el('#selSrcContains').value);
+  if (!src) return;
+  const needleRaw = el('#containsValue').value;
+  const needle = normNFKC(needleRaw);
+  if (!needle) { log('検索文字列を入力してください'); return; }
+  const normBag = el('#ckPreNormContains').checked;
+  appendOpLog(`filter contains "${needle}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+  const nb = await op_filter_contains(src, needleRaw, normBag);
   REG.add(nb); applyChoices(); renderBags(); captureState();
   appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
 });
