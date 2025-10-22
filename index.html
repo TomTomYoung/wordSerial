@@ -441,6 +441,27 @@ function appendOpLog(msg) {
   host.prepend(div);
   while (host.children.length > 150) host.removeChild(host.lastChild);
 }
+
+function findBagStatusElement(bagId) {
+  return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
+}
+
+function setBagStatusMessage(bagId, message) {
+  const statusEl = findBagStatusElement(bagId);
+  if (statusEl) {
+    const text = message || '';
+    statusEl.textContent = text;
+    statusEl.title = text;
+  }
+}
+
+function describeBagLifecycle(bag) {
+  if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
+  if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
+  if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
+  if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
+  return '';
+}
 function setSelectOptions(sel, opts) {
   if (!sel) return;
   const v = sel.value;
@@ -553,6 +574,8 @@ class BagRegistry {
       op: 'clone',
       src: src.id
     });
+    delete clonedMeta.reapply_status;
+    delete clonedMeta.reapply_error;
     const clone = new Bag(`${src.name}${nameSuffix}`, Array.from(src.items), clonedMeta);
     this.add(clone);
     return clone;
@@ -1111,18 +1134,18 @@ const OP_REBUILDERS = {
 async function recomputeBagByMeta(bag) {
   const meta = bag?.meta || {};
   const op = meta.op;
-  if (!op) return false;
+  if (!op) return { changed: false, reason: 'no-op' };
   const runner = OP_REBUILDERS[op];
-  if (!runner) return false;
+  if (!runner) return { changed: false, reason: 'unsupported' };
   const result = await runner(meta);
   if (!result) {
     bag.meta.reapplied_at = nowISO();
-    return false;
+    return { changed: false, reason: 'no-change' };
   }
   bag.items = result instanceof Set ? result : new Set(result);
   bag.meta.size = bag.items.size;
   bag.meta.reapplied_at = nowISO();
-  return true;
+  return { changed: true, reason: 'updated' };
 }
 
 async function reapplySeries(limitBagId = null) {
@@ -1133,11 +1156,34 @@ async function reapplySeries(limitBagId = null) {
   let updated = 0;
   for (const bag of bags) {
     try {
-      const changed = await recomputeBagByMeta(bag);
-      if (changed) updated += 1;
+      const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
+      if (!runnable) {
+        bag.meta.reapply_status = '⏭ 再適用対象外';
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+      } else {
+        bag.meta.reapply_status = '⟳ 再適用中…';
+        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        const result = await recomputeBagByMeta(bag);
+        delete bag.meta.reapply_error;
+        if (result.changed) {
+          updated += 1;
+          bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
+          setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        } else if (result.reason === 'no-change') {
+          bag.meta.reapply_status = '＝ 変更なし';
+          setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        } else {
+          bag.meta.reapply_status = '⏭ 再適用対象外';
+          setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        }
+      }
     } catch (e) {
       log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
       appendOpLog(`× Reapply failed [${bag.id}] ${bag.name}: ${e.message}`);
+      bag.meta.reapply_error = e.message;
+      bag.meta.reapplied_at = nowISO();
+      bag.meta.reapply_status = `× エラー: ${e.message}`;
+      setBagStatusMessage(bag.id, bag.meta.reapply_status);
       break;
     }
     if (limit !== null && bag.id === limit) break;
@@ -1550,6 +1596,7 @@ function renderBags() {
     const editBtn = bar.querySelector('[data-k="edit"]');
     const applyBtn = bar.querySelector('[data-k="apply"]');
     const cntEl = bar.querySelector('[data-k="count"]');
+    const copyOriginalLabel = copyBtn?.textContent || '';
 
     function renderRange() {
       const items = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja'));
@@ -1566,7 +1613,9 @@ function renderBags() {
       try {
         await navigator.clipboard.writeText(ta.value);
         copyBtn.textContent = 'コピー済み';
-        setTimeout(() => copyBtn.textContent = 'コピー', 1200);
+        setTimeout(() => {
+          copyBtn.textContent = copyOriginalLabel;
+        }, 1200);
       } catch {}
     });
 
@@ -1588,6 +1637,8 @@ function renderBags() {
       b.meta.size = b.items.size;
       b.meta.op = 'manual_edit';
       b.meta.updated_at = nowISO();
+      delete b.meta.reapply_status;
+      delete b.meta.reapply_error;
       ta.readOnly = true;
       editing = false;
       applyBtn.disabled = true;
@@ -1610,6 +1661,13 @@ function renderBags() {
       <span class="muted small status" data-k="status"></span>
     `;
     details.appendChild(actions);
+
+    const statusEl = actions.querySelector('[data-k="status"]');
+    if (statusEl) {
+      const statusText = describeBagLifecycle(b);
+      statusEl.textContent = statusText;
+      statusEl.title = statusText;
+    }
 
     const reapplyBtn = actions.querySelector('[data-k="reapply"]');
     const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
