@@ -1,0 +1,138 @@
+[
+  {
+    "id": "kuromoji:名詞:00000000",
+    "pos": "名詞",
+    "lemmas": [
+      "名詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000001",
+    "pos": "名詞",
+    "lemmas": [
+      "動詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000002",
+    "pos": "名詞",
+    "lemmas": [
+      "形容詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000003",
+    "pos": "名詞",
+    "lemmas": [
+      "副詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000004",
+    "pos": "名詞",
+    "lemmas": [
+      "連体詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000005",
+    "pos": "名詞",
+    "lemmas": [
+      "接続詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000006",
+    "pos": "名詞",
+    "lemmas": [
+      "助詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000007",
+    "pos": "名詞",
+    "lemmas": [
+      "助動詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000008",
+    "pos": "名詞",
+    "lemmas": [
+      "感動"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000009",
+    "pos": "名詞",
+    "lemmas": [
+      "詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000010",
+    "pos": "名詞",
+    "lemmas": [
+      "接頭"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000011",
+    "pos": "名詞",
+    "lemmas": [
+      "詞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000012",
+    "pos": "名詞",
+    "lemmas": [
+      "記号"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000013",
+    "pos": "名詞",
+    "lemmas": [
+      "フィラー"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000014",
+    "pos": "名詞",
+    "lemmas": [
+      "その他"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000015",
+    "pos": "名詞",
+    "lemmas": [
+      "未知"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:名詞:00000016",
+    "pos": "名詞",
+    "lemmas": [
+      "語"
+    ],
+    "glosses": []
+  }
+]
