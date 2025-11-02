@@ -3,7 +3,7 @@
     "id": "kuromoji:記号:00000000",
     "pos": "記号",
     "lemmas": [
-      " "
+      "δ"
     ],
     "glosses": []
   },
@@ -11,7 +11,7 @@
     "id": "kuromoji:記号:00000001",
     "pos": "記号",
     "lemmas": [
-      " "
+      "ｕ"
     ],
     "glosses": []
   },
@@ -19,7 +19,7 @@
     "id": "kuromoji:記号:00000002",
     "pos": "記号",
     "lemmas": [
-      " "
+      "」"
     ],
     "glosses": []
   },
@@ -27,7 +27,7 @@
     "id": "kuromoji:記号:00000003",
     "pos": "記号",
     "lemmas": [
-      " "
+      "―"
     ],
     "glosses": []
   },
@@ -35,7 +35,7 @@
     "id": "kuromoji:記号:00000004",
     "pos": "記号",
     "lemmas": [
-      " "
+      "←"
     ],
     "glosses": []
   },
@@ -43,7 +43,7 @@
     "id": "kuromoji:記号:00000005",
     "pos": "記号",
     "lemmas": [
-      " "
+      "゜"
     ],
     "glosses": []
   },
@@ -51,7 +51,7 @@
     "id": "kuromoji:記号:00000006",
     "pos": "記号",
     "lemmas": [
-      " "
+      "Ｘ"
     ],
     "glosses": []
   },
@@ -59,7 +59,7 @@
     "id": "kuromoji:記号:00000007",
     "pos": "記号",
     "lemmas": [
-      " "
+      "Ｎ"
     ],
     "glosses": []
   },
@@ -67,7 +67,7 @@
     "id": "kuromoji:記号:00000008",
     "pos": "記号",
     "lemmas": [
-      " "
+      "ｊ"
     ],
     "glosses": []
   },
@@ -75,7 +75,7 @@
     "id": "kuromoji:記号:00000009",
     "pos": "記号",
     "lemmas": [
-      " "
+      "ゞ"
     ],
     "glosses": []
   },
@@ -83,7 +83,7 @@
     "id": "kuromoji:記号:00000010",
     "pos": "記号",
     "lemmas": [
-      " "
+      "Ζ"
     ],
     "glosses": []
   },
@@ -91,7 +91,7 @@
     "id": "kuromoji:記号:00000011",
     "pos": "記号",
     "lemmas": [
-      " "
+      "Ｒ"
     ],
     "glosses": []
   },
@@ -99,7 +99,1567 @@
     "id": "kuromoji:記号:00000012",
     "pos": "記号",
     "lemmas": [
-      " "
+      "ｒ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000013",
+    "pos": "記号",
+    "lemmas": [
+      "ζ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000014",
+    "pos": "記号",
+    "lemmas": [
+      "ω"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000015",
+    "pos": "記号",
+    "lemmas": [
+      "Η"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000016",
+    "pos": "記号",
+    "lemmas": [
+      "ε"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000017",
+    "pos": "記号",
+    "lemmas": [
+      "▽"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000018",
+    "pos": "記号",
+    "lemmas": [
+      "｀"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000019",
+    "pos": "記号",
+    "lemmas": [
+      "Ｈ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000020",
+    "pos": "記号",
+    "lemmas": [
+      "Ｈ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000021",
+    "pos": "記号",
+    "lemmas": [
+      "β"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000022",
+    "pos": "記号",
+    "lemmas": [
+      "＼"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000023",
+    "pos": "記号",
+    "lemmas": [
+      "Ｉ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000024",
+    "pos": "記号",
+    "lemmas": [
+      "仝"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000025",
+    "pos": "記号",
+    "lemmas": [
+      "＜"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000026",
+    "pos": "記号",
+    "lemmas": [
+      "γ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000027",
+    "pos": "記号",
+    "lemmas": [
+      "￡"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000028",
+    "pos": "記号",
+    "lemmas": [
+      "ν"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000029",
+    "pos": "記号",
+    "lemmas": [
+      "τ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000030",
+    "pos": "記号",
+    "lemmas": [
+      "￥"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000031",
+    "pos": "記号",
+    "lemmas": [
+      "χ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000032",
+    "pos": "記号",
+    "lemmas": [
+      "‥"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000033",
+    "pos": "記号",
+    "lemmas": [
+      "□"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000034",
+    "pos": "記号",
+    "lemmas": [
+      "【"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000035",
+    "pos": "記号",
+    "lemmas": [
+      "Ｂ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000036",
+    "pos": "記号",
+    "lemmas": [
+      "ヾ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000037",
+    "pos": "記号",
+    "lemmas": [
+      "↓"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000038",
+    "pos": "記号",
+    "lemmas": [
+      "Υ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000039",
+    "pos": "記号",
+    "lemmas": [
+      "（"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000040",
+    "pos": "記号",
+    "lemmas": [
+      "＄"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000041",
+    "pos": "記号",
+    "lemmas": [
+      "Π"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000042",
+    "pos": "記号",
+    "lemmas": [
+      "――"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000043",
+    "pos": "記号",
+    "lemmas": [
+      "ｈ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000044",
+    "pos": "記号",
+    "lemmas": [
+      "ｈ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000045",
+    "pos": "記号",
+    "lemmas": [
+      "※"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000046",
+    "pos": "記号",
+    "lemmas": [
+      "η"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000047",
+    "pos": "記号",
+    "lemmas": [
+      "×"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000048",
+    "pos": "記号",
+    "lemmas": [
+      "×"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000049",
+    "pos": "記号",
+    "lemmas": [
+      "×"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000050",
+    "pos": "記号",
+    "lemmas": [
+      "ξ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000051",
+    "pos": "記号",
+    "lemmas": [
+      "〆"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000052",
+    "pos": "記号",
+    "lemmas": [
+      "ο"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000053",
+    "pos": "記号",
+    "lemmas": [
+      "）"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000054",
+    "pos": "記号",
+    "lemmas": [
+      "Ｕ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000055",
+    "pos": "記号",
+    "lemmas": [
+      "Κ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000056",
+    "pos": "記号",
+    "lemmas": [
+      "゛"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000057",
+    "pos": "記号",
+    "lemmas": [
+      "υ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000058",
+    "pos": "記号",
+    "lemmas": [
+      "［"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000059",
+    "pos": "記号",
+    "lemmas": [
+      "ｐ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000060",
+    "pos": "記号",
+    "lemmas": [
+      "Ε"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000061",
+    "pos": "記号",
+    "lemmas": [
+      "‐"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000062",
+    "pos": "記号",
+    "lemmas": [
+      "ｄ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000063",
+    "pos": "記号",
+    "lemmas": [
+      "′"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000064",
+    "pos": "記号",
+    "lemmas": [
+      "》"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000065",
+    "pos": "記号",
+    "lemmas": [
+      "￣"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000066",
+    "pos": "記号",
+    "lemmas": [
+      "Θ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000067",
+    "pos": "記号",
+    "lemmas": [
+      "《"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000068",
+    "pos": "記号",
+    "lemmas": [
+      "Ｓ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000069",
+    "pos": "記号",
+    "lemmas": [
+      "Ρ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000070",
+    "pos": "記号",
+    "lemmas": [
+      "ｌ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000071",
+    "pos": "記号",
+    "lemmas": [
+      "〓"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000072",
+    "pos": "記号",
+    "lemmas": [
+      "〃"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000073",
+    "pos": "記号",
+    "lemmas": [
+      "ゝ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000074",
+    "pos": "記号",
+    "lemmas": [
+      "ｗ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000075",
+    "pos": "記号",
+    "lemmas": [
+      "Λ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000076",
+    "pos": "記号",
+    "lemmas": [
+      "】"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000077",
+    "pos": "記号",
+    "lemmas": [
+      "｛"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000078",
+    "pos": "記号",
+    "lemmas": [
+      "Ｖ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000079",
+    "pos": "記号",
+    "lemmas": [
+      "θ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000080",
+    "pos": "記号",
+    "lemmas": [
+      "▼"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000081",
+    "pos": "記号",
+    "lemmas": [
+      "Ｄ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000082",
+    "pos": "記号",
+    "lemmas": [
+      "△"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000083",
+    "pos": "記号",
+    "lemmas": [
+      "π"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000084",
+    "pos": "記号",
+    "lemmas": [
+      "ａ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000085",
+    "pos": "記号",
+    "lemmas": [
+      "☆"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000086",
+    "pos": "記号",
+    "lemmas": [
+      "Ｌ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000087",
+    "pos": "記号",
+    "lemmas": [
+      "－－"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000088",
+    "pos": "記号",
+    "lemmas": [
+      "◇"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000089",
+    "pos": "記号",
+    "lemmas": [
+      "＋"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000090",
+    "pos": "記号",
+    "lemmas": [
+      "＋"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000091",
+    "pos": "記号",
+    "lemmas": [
+      "∥"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000092",
+    "pos": "記号",
+    "lemmas": [
+      "…"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000093",
+    "pos": "記号",
+    "lemmas": [
+      "ｎ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000094",
+    "pos": "記号",
+    "lemmas": [
+      "”"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000095",
+    "pos": "記号",
+    "lemmas": [
+      "｜"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000096",
+    "pos": "記号",
+    "lemmas": [
+      "Χ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000097",
+    "pos": "記号",
+    "lemmas": [
+      "・"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000098",
+    "pos": "記号",
+    "lemmas": [
+      "→"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000099",
+    "pos": "記号",
+    "lemmas": [
+      "‘"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000100",
+    "pos": "記号",
+    "lemmas": [
+      "Ψ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000101",
+    "pos": "記号",
+    "lemmas": [
+      "｝"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000102",
+    "pos": "記号",
+    "lemmas": [
+      "↑"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000103",
+    "pos": "記号",
+    "lemmas": [
+      "々"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000104",
+    "pos": "記号",
+    "lemmas": [
+      "ｖ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000105",
+    "pos": "記号",
+    "lemmas": [
+      "Σ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000106",
+    "pos": "記号",
+    "lemmas": [
+      "ｓ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000107",
+    "pos": "記号",
+    "lemmas": [
+      "々々"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000108",
+    "pos": "記号",
+    "lemmas": [
+      "Ｏ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000109",
+    "pos": "記号",
+    "lemmas": [
+      "─"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000110",
+    "pos": "記号",
+    "lemmas": [
+      "α"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000111",
+    "pos": "記号",
+    "lemmas": [
+      "σ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000112",
+    "pos": "記号",
+    "lemmas": [
+      "◎"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000113",
+    "pos": "記号",
+    "lemmas": [
+      "ｉ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000114",
+    "pos": "記号",
+    "lemmas": [
+      "＾"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000115",
+    "pos": "記号",
+    "lemmas": [
+      "Ｅ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000116",
+    "pos": "記号",
+    "lemmas": [
+      "■"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000117",
+    "pos": "記号",
+    "lemmas": [
+      "、"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000118",
+    "pos": "記号",
+    "lemmas": [
+      "φ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000119",
+    "pos": "記号",
+    "lemmas": [
+      "〉"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000120",
+    "pos": "記号",
+    "lemmas": [
+      "。"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000121",
+    "pos": "記号",
+    "lemmas": [
+      "Α"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000122",
+    "pos": "記号",
+    "lemmas": [
+      "〔"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000123",
+    "pos": "記号",
+    "lemmas": [
+      "ι"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000124",
+    "pos": "記号",
+    "lemmas": [
+      "Μ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000125",
+    "pos": "記号",
+    "lemmas": [
+      "Γ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000126",
+    "pos": "記号",
+    "lemmas": [
+      "＿"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000127",
+    "pos": "記号",
+    "lemmas": [
+      "¨"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000128",
+    "pos": "記号",
+    "lemmas": [
+      "Φ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000129",
+    "pos": "記号",
+    "lemmas": [
+      "，"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000130",
+    "pos": "記号",
+    "lemmas": [
+      "ｅ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000131",
+    "pos": "記号",
+    "lemmas": [
+      "Ｆ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000132",
+    "pos": "記号",
+    "lemmas": [
+      "Ｃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000133",
+    "pos": "記号",
+    "lemmas": [
+      "〒"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000134",
+    "pos": "記号",
+    "lemmas": [
+      "　"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000135",
+    "pos": "記号",
+    "lemmas": [
+      "Ξ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000136",
+    "pos": "記号",
+    "lemmas": [
+      "´"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000137",
+    "pos": "記号",
+    "lemmas": [
+      "／"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000138",
+    "pos": "記号",
+    "lemmas": [
+      "＠"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000139",
+    "pos": "記号",
+    "lemmas": [
+      "～"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000140",
+    "pos": "記号",
+    "lemmas": [
+      "～"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000141",
+    "pos": "記号",
+    "lemmas": [
+      "κ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000142",
+    "pos": "記号",
+    "lemmas": [
+      "Ｋ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000143",
+    "pos": "記号",
+    "lemmas": [
+      "Ｊ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000144",
+    "pos": "記号",
+    "lemmas": [
+      "●"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000145",
+    "pos": "記号",
+    "lemmas": [
+      "λ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000146",
+    "pos": "記号",
+    "lemmas": [
+      "〈"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000147",
+    "pos": "記号",
+    "lemmas": [
+      "Ω"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000148",
+    "pos": "記号",
+    "lemmas": [
+      "’"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000149",
+    "pos": "記号",
+    "lemmas": [
+      "──"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000150",
+    "pos": "記号",
+    "lemmas": [
+      "〇"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000151",
+    "pos": "記号",
+    "lemmas": [
+      "○"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000152",
+    "pos": "記号",
+    "lemmas": [
+      "★"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000153",
+    "pos": "記号",
+    "lemmas": [
+      "ｃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000154",
+    "pos": "記号",
+    "lemmas": [
+      "ｙ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000155",
+    "pos": "記号",
+    "lemmas": [
+      "ｍ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000156",
+    "pos": "記号",
+    "lemmas": [
+      "ｂ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000157",
+    "pos": "記号",
+    "lemmas": [
+      "ｑ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000158",
+    "pos": "記号",
+    "lemmas": [
+      "ｆ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000159",
+    "pos": "記号",
+    "lemmas": [
+      "］"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000160",
+    "pos": "記号",
+    "lemmas": [
+      "Ｙ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000161",
+    "pos": "記号",
+    "lemmas": [
+      "－"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000162",
+    "pos": "記号",
+    "lemmas": [
+      "▲"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000163",
+    "pos": "記号",
+    "lemmas": [
+      "Ｗ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000164",
+    "pos": "記号",
+    "lemmas": [
+      "Ｇ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000165",
+    "pos": "記号",
+    "lemmas": [
+      "ｚ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000166",
+    "pos": "記号",
+    "lemmas": [
+      "ｚ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000167",
+    "pos": "記号",
+    "lemmas": [
+      "Τ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000168",
+    "pos": "記号",
+    "lemmas": [
+      "＝"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000169",
+    "pos": "記号",
+    "lemmas": [
+      "＝"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000170",
+    "pos": "記号",
+    "lemmas": [
+      "ヽ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000171",
+    "pos": "記号",
+    "lemmas": [
+      "ｔ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000172",
+    "pos": "記号",
+    "lemmas": [
+      "Ａ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000173",
+    "pos": "記号",
+    "lemmas": [
+      "〕"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000174",
+    "pos": "記号",
+    "lemmas": [
+      "Ν"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000175",
+    "pos": "記号",
+    "lemmas": [
+      "；"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000176",
+    "pos": "記号",
+    "lemmas": [
+      "μ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000177",
+    "pos": "記号",
+    "lemmas": [
+      "ｘ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000178",
+    "pos": "記号",
+    "lemmas": [
+      "Ｐ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000179",
+    "pos": "記号",
+    "lemmas": [
+      "＞"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000180",
+    "pos": "記号",
+    "lemmas": [
+      "＊"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000181",
+    "pos": "記号",
+    "lemmas": [
+      "Ｑ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000182",
+    "pos": "記号",
+    "lemmas": [
+      "Ｚ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000183",
+    "pos": "記号",
+    "lemmas": [
+      "Ｚ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000184",
+    "pos": "記号",
+    "lemmas": [
+      "“"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000185",
+    "pos": "記号",
+    "lemmas": [
+      "『"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000186",
+    "pos": "記号",
+    "lemmas": [
+      "ｏ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000187",
+    "pos": "記号",
+    "lemmas": [
+      "ψ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000188",
+    "pos": "記号",
+    "lemmas": [
+      "＆"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000189",
+    "pos": "記号",
+    "lemmas": [
+      "＆"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000190",
+    "pos": "記号",
+    "lemmas": [
+      "！"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000191",
+    "pos": "記号",
+    "lemmas": [
+      "．"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000192",
+    "pos": "記号",
+    "lemmas": [
+      "◆"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000193",
+    "pos": "記号",
+    "lemmas": [
+      "「"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000194",
+    "pos": "記号",
+    "lemmas": [
+      "Ｔ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000195",
+    "pos": "記号",
+    "lemmas": [
+      "："
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000196",
+    "pos": "記号",
+    "lemmas": [
+      "÷"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000197",
+    "pos": "記号",
+    "lemmas": [
+      "ｇ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000198",
+    "pos": "記号",
+    "lemmas": [
+      "ｋ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000199",
+    "pos": "記号",
+    "lemmas": [
+      "Ｍ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000200",
+    "pos": "記号",
+    "lemmas": [
+      "Ο"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000201",
+    "pos": "記号",
+    "lemmas": [
+      "』"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000202",
+    "pos": "記号",
+    "lemmas": [
+      "？"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000203",
+    "pos": "記号",
+    "lemmas": [
+      "Δ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000204",
+    "pos": "記号",
+    "lemmas": [
+      "Β"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000205",
+    "pos": "記号",
+    "lemmas": [
+      "ノ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000206",
+    "pos": "記号",
+    "lemmas": [
+      "ρ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:記号:00000207",
+    "pos": "記号",
+    "lemmas": [
+      "Ι"
     ],
     "glosses": []
   }

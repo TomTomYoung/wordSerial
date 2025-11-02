@@ -1,1 +1,1370 @@
-[]
+[
+  {
+    "id": "kuromoji:接続詞:00000000",
+    "pos": "接続詞",
+    "lemmas": [
+      "即"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000001",
+    "pos": "接続詞",
+    "lemmas": [
+      "かくして"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000002",
+    "pos": "接続詞",
+    "lemmas": [
+      "すると"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000003",
+    "pos": "接続詞",
+    "lemmas": [
+      "ですけれど"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000004",
+    "pos": "接続詞",
+    "lemmas": [
+      "だって"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000005",
+    "pos": "接続詞",
+    "lemmas": [
+      "なかんづく"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000006",
+    "pos": "接続詞",
+    "lemmas": [
+      "然し乍ら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000007",
+    "pos": "接続詞",
+    "lemmas": [
+      "即ち"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000008",
+    "pos": "接続詞",
+    "lemmas": [
+      "さもなければ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000009",
+    "pos": "接続詞",
+    "lemmas": [
+      "けれども"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000010",
+    "pos": "接続詞",
+    "lemmas": [
+      "けれど"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000011",
+    "pos": "接続詞",
+    "lemmas": [
+      "ほんなら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000012",
+    "pos": "接続詞",
+    "lemmas": [
+      "つまるところ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000013",
+    "pos": "接続詞",
+    "lemmas": [
+      "てゆーか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000014",
+    "pos": "接続詞",
+    "lemmas": [
+      "ほんで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000015",
+    "pos": "接続詞",
+    "lemmas": [
+      "なので"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000016",
+    "pos": "接続詞",
+    "lemmas": [
+      "そうしたら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000017",
+    "pos": "接続詞",
+    "lemmas": [
+      "否"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000018",
+    "pos": "接続詞",
+    "lemmas": [
+      "否"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000019",
+    "pos": "接続詞",
+    "lemmas": [
+      "かつ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000020",
+    "pos": "接続詞",
+    "lemmas": [
+      "と同時に"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000021",
+    "pos": "接続詞",
+    "lemmas": [
+      "実は"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000022",
+    "pos": "接続詞",
+    "lemmas": [
+      "ならびに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000023",
+    "pos": "接続詞",
+    "lemmas": [
+      "または"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000024",
+    "pos": "接続詞",
+    "lemmas": [
+      "ですが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000025",
+    "pos": "接続詞",
+    "lemmas": [
+      "然しながら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000026",
+    "pos": "接続詞",
+    "lemmas": [
+      "こうして"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000027",
+    "pos": "接続詞",
+    "lemmas": [
+      "したら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000028",
+    "pos": "接続詞",
+    "lemmas": [
+      "いっぽう"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000029",
+    "pos": "接続詞",
+    "lemmas": [
+      "そもそも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000030",
+    "pos": "接続詞",
+    "lemmas": [
+      "では"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000031",
+    "pos": "接続詞",
+    "lemmas": [
+      "そういや"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000032",
+    "pos": "接続詞",
+    "lemmas": [
+      "かたや"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000033",
+    "pos": "接続詞",
+    "lemmas": [
+      "それでは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000034",
+    "pos": "接続詞",
+    "lemmas": [
+      "だとすれば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000035",
+    "pos": "接続詞",
+    "lemmas": [
+      "それにしても"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000036",
+    "pos": "接続詞",
+    "lemmas": [
+      "なのに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000037",
+    "pos": "接続詞",
+    "lemmas": [
+      "それでも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000038",
+    "pos": "接続詞",
+    "lemmas": [
+      "しかしながら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000039",
+    "pos": "接続詞",
+    "lemmas": [
+      "然し"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000040",
+    "pos": "接続詞",
+    "lemmas": [
+      "次いで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000041",
+    "pos": "接続詞",
+    "lemmas": [
+      "ただ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000042",
+    "pos": "接続詞",
+    "lemmas": [
+      "とすれば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000043",
+    "pos": "接続詞",
+    "lemmas": [
+      "若しくは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000044",
+    "pos": "接続詞",
+    "lemmas": [
+      "だから"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000045",
+    "pos": "接続詞",
+    "lemmas": [
+      "そのうえに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000046",
+    "pos": "接続詞",
+    "lemmas": [
+      "つまり"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000047",
+    "pos": "接続詞",
+    "lemmas": [
+      "なぜなら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000048",
+    "pos": "接続詞",
+    "lemmas": [
+      "ちなみに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000049",
+    "pos": "接続詞",
+    "lemmas": [
+      "追って"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000050",
+    "pos": "接続詞",
+    "lemmas": [
+      "じゃが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000051",
+    "pos": "接続詞",
+    "lemmas": [
+      "そしたら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000052",
+    "pos": "接続詞",
+    "lemmas": [
+      "ないし"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000053",
+    "pos": "接続詞",
+    "lemmas": [
+      "でないと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000054",
+    "pos": "接続詞",
+    "lemmas": [
+      "たとへば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000055",
+    "pos": "接続詞",
+    "lemmas": [
+      "しかも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000056",
+    "pos": "接続詞",
+    "lemmas": [
+      "まずは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000057",
+    "pos": "接続詞",
+    "lemmas": [
+      "おまけに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000058",
+    "pos": "接続詞",
+    "lemmas": [
+      "それどころか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000059",
+    "pos": "接続詞",
+    "lemmas": [
+      "次に"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000060",
+    "pos": "接続詞",
+    "lemmas": [
+      "ですから"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000061",
+    "pos": "接続詞",
+    "lemmas": [
+      "だからこそ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000062",
+    "pos": "接続詞",
+    "lemmas": [
+      "だけど"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000063",
+    "pos": "接続詞",
+    "lemmas": [
+      "それも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000064",
+    "pos": "接続詞",
+    "lemmas": [
+      "どころか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000065",
+    "pos": "接続詞",
+    "lemmas": [
+      "或は"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000066",
+    "pos": "接続詞",
+    "lemmas": [
+      "亦"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000067",
+    "pos": "接続詞",
+    "lemmas": [
+      "そのうえで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000068",
+    "pos": "接続詞",
+    "lemmas": [
+      "で"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000069",
+    "pos": "接続詞",
+    "lemmas": [
+      "そこで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000070",
+    "pos": "接続詞",
+    "lemmas": [
+      "故に"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000071",
+    "pos": "接続詞",
+    "lemmas": [
+      "譬えば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000072",
+    "pos": "接続詞",
+    "lemmas": [
+      "されど"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000073",
+    "pos": "接続詞",
+    "lemmas": [
+      "そやさかい"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000074",
+    "pos": "接続詞",
+    "lemmas": [
+      "じゃあ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000075",
+    "pos": "接続詞",
+    "lemmas": [
+      "よって"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000076",
+    "pos": "接続詞",
+    "lemmas": [
+      "そうして"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000077",
+    "pos": "接続詞",
+    "lemmas": [
+      "ぎゃくに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000078",
+    "pos": "接続詞",
+    "lemmas": [
+      "なかんずく"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000079",
+    "pos": "接続詞",
+    "lemmas": [
+      "おしむらくは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000080",
+    "pos": "接続詞",
+    "lemmas": [
+      "ともあれ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000081",
+    "pos": "接続詞",
+    "lemmas": [
+      "それとも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000082",
+    "pos": "接続詞",
+    "lemmas": [
+      "及び"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000083",
+    "pos": "接続詞",
+    "lemmas": [
+      "わけても"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000084",
+    "pos": "接続詞",
+    "lemmas": [
+      "ところで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000085",
+    "pos": "接続詞",
+    "lemmas": [
+      "惜しむらくは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000086",
+    "pos": "接続詞",
+    "lemmas": [
+      "それに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000087",
+    "pos": "接続詞",
+    "lemmas": [
+      "尤も"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000088",
+    "pos": "接続詞",
+    "lemmas": [
+      "というのも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000089",
+    "pos": "接続詞",
+    "lemmas": [
+      "恐れながら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000090",
+    "pos": "接続詞",
+    "lemmas": [
+      "併せて"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000091",
+    "pos": "接続詞",
+    "lemmas": [
+      "しかし"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000092",
+    "pos": "接続詞",
+    "lemmas": [
+      "たとえば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000093",
+    "pos": "接続詞",
+    "lemmas": [
+      "それなのに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000094",
+    "pos": "接続詞",
+    "lemmas": [
+      "ともに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000095",
+    "pos": "接続詞",
+    "lemmas": [
+      "が"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000096",
+    "pos": "接続詞",
+    "lemmas": [
+      "あるいは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000097",
+    "pos": "接続詞",
+    "lemmas": [
+      "そして"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000098",
+    "pos": "接続詞",
+    "lemmas": [
+      "それなら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000099",
+    "pos": "接続詞",
+    "lemmas": [
+      "でなければ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000100",
+    "pos": "接続詞",
+    "lemmas": [
+      "ふんじゃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000101",
+    "pos": "接続詞",
+    "lemmas": [
+      "ほんじゃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000102",
+    "pos": "接続詞",
+    "lemmas": [
+      "ところが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000103",
+    "pos": "接続詞",
+    "lemmas": [
+      "ほなら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000104",
+    "pos": "接続詞",
+    "lemmas": [
+      "したがって"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000105",
+    "pos": "接続詞",
+    "lemmas": [
+      "さらに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000106",
+    "pos": "接続詞",
+    "lemmas": [
+      "けど"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000107",
+    "pos": "接続詞",
+    "lemmas": [
+      "乃至"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000108",
+    "pos": "接続詞",
+    "lemmas": [
+      "例へば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000109",
+    "pos": "接続詞",
+    "lemmas": [
+      "逆に"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000110",
+    "pos": "接続詞",
+    "lemmas": [
+      "じゃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000111",
+    "pos": "接続詞",
+    "lemmas": [
+      "だからといって"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000112",
+    "pos": "接続詞",
+    "lemmas": [
+      "てか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000113",
+    "pos": "接続詞",
+    "lemmas": [
+      "譬へば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000114",
+    "pos": "接続詞",
+    "lemmas": [
+      "いえ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000115",
+    "pos": "接続詞",
+    "lemmas": [
+      "だが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000116",
+    "pos": "接続詞",
+    "lemmas": [
+      "および"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000117",
+    "pos": "接続詞",
+    "lemmas": [
+      "そうですが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000118",
+    "pos": "接続詞",
+    "lemmas": [
+      "或いは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000119",
+    "pos": "接続詞",
+    "lemmas": [
+      "それでいて"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000120",
+    "pos": "接続詞",
+    "lemmas": [
+      "そーいや"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000121",
+    "pos": "接続詞",
+    "lemmas": [
+      "そりゃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000122",
+    "pos": "接続詞",
+    "lemmas": [
+      "ゆえに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000123",
+    "pos": "接続詞",
+    "lemmas": [
+      "それで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000124",
+    "pos": "接続詞",
+    "lemmas": [
+      "但し"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000125",
+    "pos": "接続詞",
+    "lemmas": [
+      "んじゃ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000126",
+    "pos": "接続詞",
+    "lemmas": [
+      "おそれながら"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000127",
+    "pos": "接続詞",
+    "lemmas": [
+      "さて"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000128",
+    "pos": "接続詞",
+    "lemmas": [
+      "おなじく"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000129",
+    "pos": "接続詞",
+    "lemmas": [
+      "はんめん"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000130",
+    "pos": "接続詞",
+    "lemmas": [
+      "例えば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000131",
+    "pos": "接続詞",
+    "lemmas": [
+      "ってか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000132",
+    "pos": "接続詞",
+    "lemmas": [
+      "ともすれば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000133",
+    "pos": "接続詞",
+    "lemmas": [
+      "そういえば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000134",
+    "pos": "接続詞",
+    "lemmas": [
+      "さりとて"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000135",
+    "pos": "接続詞",
+    "lemmas": [
+      "ほな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000136",
+    "pos": "接続詞",
+    "lemmas": [
+      "ただし"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000137",
+    "pos": "接続詞",
+    "lemmas": [
+      "ましてや"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000138",
+    "pos": "接続詞",
+    "lemmas": [
+      "にもかかわらず"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000139",
+    "pos": "接続詞",
+    "lemmas": [
+      "但"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000140",
+    "pos": "接続詞",
+    "lemmas": [
+      "因みに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000141",
+    "pos": "接続詞",
+    "lemmas": [
+      "本当は"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000142",
+    "pos": "接続詞",
+    "lemmas": [
+      "でも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000143",
+    "pos": "接続詞",
+    "lemmas": [
+      "又"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000144",
+    "pos": "接続詞",
+    "lemmas": [
+      "もっとも"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000145",
+    "pos": "接続詞",
+    "lemmas": [
+      "また"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000146",
+    "pos": "接続詞",
+    "lemmas": [
+      "一方"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000147",
+    "pos": "接続詞",
+    "lemmas": [
+      "それだけに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000148",
+    "pos": "接続詞",
+    "lemmas": [
+      "又は"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000149",
+    "pos": "接続詞",
+    "lemmas": [
+      "ついては"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000150",
+    "pos": "接続詞",
+    "lemmas": [
+      "そうすると"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000151",
+    "pos": "接続詞",
+    "lemmas": [
+      "いや"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000152",
+    "pos": "接続詞",
+    "lemmas": [
+      "そのうえ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000153",
+    "pos": "接続詞",
+    "lemmas": [
+      "ついで"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000154",
+    "pos": "接続詞",
+    "lemmas": [
+      "それと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000155",
+    "pos": "接続詞",
+    "lemmas": [
+      "だとすると"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000156",
+    "pos": "接続詞",
+    "lemmas": [
+      "尚"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000157",
+    "pos": "接続詞",
+    "lemmas": [
+      "同じく"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000158",
+    "pos": "接続詞",
+    "lemmas": [
+      "すなわち"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000159",
+    "pos": "接続詞",
+    "lemmas": [
+      "並びに"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000160",
+    "pos": "接続詞",
+    "lemmas": [
+      "なお"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000161",
+    "pos": "接続詞",
+    "lemmas": [
+      "そうなると"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000162",
+    "pos": "接続詞",
+    "lemmas": [
+      "それから"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000163",
+    "pos": "接続詞",
+    "lemmas": [
+      "反面"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000164",
+    "pos": "接続詞",
+    "lemmas": [
+      "あわせて"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000165",
+    "pos": "接続詞",
+    "lemmas": [
+      "もしくは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000166",
+    "pos": "接続詞",
+    "lemmas": [
+      "従って"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000167",
+    "pos": "接続詞",
+    "lemmas": [
+      "だけれども"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000168",
+    "pos": "接続詞",
+    "lemmas": [
+      "ならば"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000169",
+    "pos": "接続詞",
+    "lemmas": [
+      "ないしは"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:接続詞:00000170",
+    "pos": "接続詞",
+    "lemmas": [
+      "なら"
+    ],
+    "glosses": []
+  }
+]

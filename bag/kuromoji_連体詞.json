@@ -1,1 +1,1082 @@
-[]
+[
+  {
+    "id": "kuromoji:連体詞:00000000",
+    "pos": "連体詞",
+    "lemmas": [
+      "恐るべき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000001",
+    "pos": "連体詞",
+    "lemmas": [
+      "雑然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000002",
+    "pos": "連体詞",
+    "lemmas": [
+      "ごうごうたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000003",
+    "pos": "連体詞",
+    "lemmas": [
+      "殺伐たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000004",
+    "pos": "連体詞",
+    "lemmas": [
+      "この"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000005",
+    "pos": "連体詞",
+    "lemmas": [
+      "ただならぬ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000006",
+    "pos": "連体詞",
+    "lemmas": [
+      "びびたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000007",
+    "pos": "連体詞",
+    "lemmas": [
+      "在りし"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000008",
+    "pos": "連体詞",
+    "lemmas": [
+      "いろんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000009",
+    "pos": "連体詞",
+    "lemmas": [
+      "ちょっとした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000010",
+    "pos": "連体詞",
+    "lemmas": [
+      "そういう"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000011",
+    "pos": "連体詞",
+    "lemmas": [
+      "黙々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000012",
+    "pos": "連体詞",
+    "lemmas": [
+      "あまりの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000013",
+    "pos": "連体詞",
+    "lemmas": [
+      "ちっちゃな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000014",
+    "pos": "連体詞",
+    "lemmas": [
+      "吾が"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000015",
+    "pos": "連体詞",
+    "lemmas": [
+      "そういった"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000016",
+    "pos": "連体詞",
+    "lemmas": [
+      "こんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000017",
+    "pos": "連体詞",
+    "lemmas": [
+      "最たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000018",
+    "pos": "連体詞",
+    "lemmas": [
+      "さしたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000019",
+    "pos": "連体詞",
+    "lemmas": [
+      "さっそうたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000020",
+    "pos": "連体詞",
+    "lemmas": [
+      "奇しき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000021",
+    "pos": "連体詞",
+    "lemmas": [
+      "其の"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000022",
+    "pos": "連体詞",
+    "lemmas": [
+      "或"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000023",
+    "pos": "連体詞",
+    "lemmas": [
+      "わが"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000024",
+    "pos": "連体詞",
+    "lemmas": [
+      "おおきな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000025",
+    "pos": "連体詞",
+    "lemmas": [
+      "大した"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000026",
+    "pos": "連体詞",
+    "lemmas": [
+      "冠たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000027",
+    "pos": "連体詞",
+    "lemmas": [
+      "あくる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000028",
+    "pos": "連体詞",
+    "lemmas": [
+      "確たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000029",
+    "pos": "連体詞",
+    "lemmas": [
+      "荒涼たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000030",
+    "pos": "連体詞",
+    "lemmas": [
+      "これらの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000031",
+    "pos": "連体詞",
+    "lemmas": [
+      "来る"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000032",
+    "pos": "連体詞",
+    "lemmas": [
+      "色んな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000033",
+    "pos": "連体詞",
+    "lemmas": [
+      "どういう"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000034",
+    "pos": "連体詞",
+    "lemmas": [
+      "ひょんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000035",
+    "pos": "連体詞",
+    "lemmas": [
+      "おそるべき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000036",
+    "pos": "連体詞",
+    "lemmas": [
+      "由々しき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000037",
+    "pos": "連体詞",
+    "lemmas": [
+      "歴然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000038",
+    "pos": "連体詞",
+    "lemmas": [
+      "れっきとした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000039",
+    "pos": "連体詞",
+    "lemmas": [
+      "おなじ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000040",
+    "pos": "連体詞",
+    "lemmas": [
+      "何たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000041",
+    "pos": "連体詞",
+    "lemmas": [
+      "釈然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000042",
+    "pos": "連体詞",
+    "lemmas": [
+      "どんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000043",
+    "pos": "連体詞",
+    "lemmas": [
+      "おんなじ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000044",
+    "pos": "連体詞",
+    "lemmas": [
+      "騒然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000045",
+    "pos": "連体詞",
+    "lemmas": [
+      "悠然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000046",
+    "pos": "連体詞",
+    "lemmas": [
+      "聖なる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000047",
+    "pos": "連体詞",
+    "lemmas": [
+      "広々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000048",
+    "pos": "連体詞",
+    "lemmas": [
+      "かかる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000049",
+    "pos": "連体詞",
+    "lemmas": [
+      "確固たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000050",
+    "pos": "連体詞",
+    "lemmas": [
+      "画然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000051",
+    "pos": "連体詞",
+    "lemmas": [
+      "もうもうたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000052",
+    "pos": "連体詞",
+    "lemmas": [
+      "堂々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000053",
+    "pos": "連体詞",
+    "lemmas": [
+      "凛冽たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000054",
+    "pos": "連体詞",
+    "lemmas": [
+      "ちっさな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000055",
+    "pos": "連体詞",
+    "lemmas": [
+      "おかしな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000056",
+    "pos": "連体詞",
+    "lemmas": [
+      "大いなる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000057",
+    "pos": "連体詞",
+    "lemmas": [
+      "遅々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000058",
+    "pos": "連体詞",
+    "lemmas": [
+      "去る"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000059",
+    "pos": "連体詞",
+    "lemmas": [
+      "およそ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000060",
+    "pos": "連体詞",
+    "lemmas": [
+      "どの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000061",
+    "pos": "連体詞",
+    "lemmas": [
+      "おっきな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000062",
+    "pos": "連体詞",
+    "lemmas": [
+      "津津たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000063",
+    "pos": "連体詞",
+    "lemmas": [
+      "しかるべき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000064",
+    "pos": "連体詞",
+    "lemmas": [
+      "同じ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000065",
+    "pos": "連体詞",
+    "lemmas": [
+      "たかだか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000066",
+    "pos": "連体詞",
+    "lemmas": [
+      "いわゆる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000067",
+    "pos": "連体詞",
+    "lemmas": [
+      "それらの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000068",
+    "pos": "連体詞",
+    "lemmas": [
+      "ありとあらゆる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000069",
+    "pos": "連体詞",
+    "lemmas": [
+      "ちいさな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000070",
+    "pos": "連体詞",
+    "lemmas": [
+      "亡き"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000071",
+    "pos": "連体詞",
+    "lemmas": [
+      "正々堂々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000072",
+    "pos": "連体詞",
+    "lemmas": [
+      "淡々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000073",
+    "pos": "連体詞",
+    "lemmas": [
+      "おおいなる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000074",
+    "pos": "連体詞",
+    "lemmas": [
+      "閑散たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000075",
+    "pos": "連体詞",
+    "lemmas": [
+      "如何なる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000076",
+    "pos": "連体詞",
+    "lemmas": [
+      "たいした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000077",
+    "pos": "連体詞",
+    "lemmas": [
+      "我が"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000078",
+    "pos": "連体詞",
+    "lemmas": [
+      "当の"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000079",
+    "pos": "連体詞",
+    "lemmas": [
+      "整然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000080",
+    "pos": "連体詞",
+    "lemmas": [
+      "輝ける"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000081",
+    "pos": "連体詞",
+    "lemmas": [
+      "さる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000082",
+    "pos": "連体詞",
+    "lemmas": [
+      "微々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000083",
+    "pos": "連体詞",
+    "lemmas": [
+      "こういう"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000084",
+    "pos": "連体詞",
+    "lemmas": [
+      "だいそれた"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000085",
+    "pos": "連体詞",
+    "lemmas": [
+      "そんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000086",
+    "pos": "連体詞",
+    "lemmas": [
+      "たんなる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000087",
+    "pos": "連体詞",
+    "lemmas": [
+      "こうした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000088",
+    "pos": "連体詞",
+    "lemmas": [
+      "その"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000089",
+    "pos": "連体詞",
+    "lemmas": [
+      "とんだ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000090",
+    "pos": "連体詞",
+    "lemmas": [
+      "超然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000091",
+    "pos": "連体詞",
+    "lemmas": [
+      "切々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000092",
+    "pos": "連体詞",
+    "lemmas": [
+      "名だたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000093",
+    "pos": "連体詞",
+    "lemmas": [
+      "そうした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000094",
+    "pos": "連体詞",
+    "lemmas": [
+      "あんな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000095",
+    "pos": "連体詞",
+    "lemmas": [
+      "小さな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000096",
+    "pos": "連体詞",
+    "lemmas": [
+      "ろくな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000097",
+    "pos": "連体詞",
+    "lemmas": [
+      "漫然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000098",
+    "pos": "連体詞",
+    "lemmas": [
+      "なんらかの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000099",
+    "pos": "連体詞",
+    "lemmas": [
+      "他の"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000100",
+    "pos": "連体詞",
+    "lemmas": [
+      "あの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000101",
+    "pos": "連体詞",
+    "lemmas": [
+      "漠たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000102",
+    "pos": "連体詞",
+    "lemmas": [
+      "かの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000103",
+    "pos": "連体詞",
+    "lemmas": [
+      "津々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000104",
+    "pos": "連体詞",
+    "lemmas": [
+      "何らかの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000105",
+    "pos": "連体詞",
+    "lemmas": [
+      "轟々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000106",
+    "pos": "連体詞",
+    "lemmas": [
+      "然るべき"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000107",
+    "pos": "連体詞",
+    "lemmas": [
+      "断然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000108",
+    "pos": "連体詞",
+    "lemmas": [
+      "まさかの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000109",
+    "pos": "連体詞",
+    "lemmas": [
+      "断固たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000110",
+    "pos": "連体詞",
+    "lemmas": [
+      "奮然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000111",
+    "pos": "連体詞",
+    "lemmas": [
+      "漠然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000112",
+    "pos": "連体詞",
+    "lemmas": [
+      "きたる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000113",
+    "pos": "連体詞",
+    "lemmas": [
+      "見知らぬ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000114",
+    "pos": "連体詞",
+    "lemmas": [
+      "大きな"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000115",
+    "pos": "連体詞",
+    "lemmas": [
+      "毅然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000116",
+    "pos": "連体詞",
+    "lemmas": [
+      "楚々たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000117",
+    "pos": "連体詞",
+    "lemmas": [
+      "とある"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000118",
+    "pos": "連体詞",
+    "lemmas": [
+      "いかなる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000119",
+    "pos": "連体詞",
+    "lemmas": [
+      "主たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000120",
+    "pos": "連体詞",
+    "lemmas": [
+      "おもだった"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000121",
+    "pos": "連体詞",
+    "lemmas": [
+      "敢然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000122",
+    "pos": "連体詞",
+    "lemmas": [
+      "ある"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000123",
+    "pos": "連体詞",
+    "lemmas": [
+      "単なる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000124",
+    "pos": "連体詞",
+    "lemmas": [
+      "あれらの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000125",
+    "pos": "連体詞",
+    "lemmas": [
+      "平然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000126",
+    "pos": "連体詞",
+    "lemmas": [
+      "隠然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000127",
+    "pos": "連体詞",
+    "lemmas": [
+      "素知らぬ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000128",
+    "pos": "連体詞",
+    "lemmas": [
+      "さらなる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000129",
+    "pos": "連体詞",
+    "lemmas": [
+      "あらゆる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000130",
+    "pos": "連体詞",
+    "lemmas": [
+      "ふとした"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000131",
+    "pos": "連体詞",
+    "lemmas": [
+      "端然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000132",
+    "pos": "連体詞",
+    "lemmas": [
+      "たっての"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000133",
+    "pos": "連体詞",
+    "lemmas": [
+      "厳然たる"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:連体詞:00000134",
+    "pos": "連体詞",
+    "lemmas": [
+      "ほんの"
+    ],
+    "glosses": []
+  }
+]

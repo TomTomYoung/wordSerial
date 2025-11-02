@@ -1,1 +1,154 @@
-[]
+[
+  {
+    "id": "kuromoji:フィラー:00000000",
+    "pos": "フィラー",
+    "lemmas": [
+      "えと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000001",
+    "pos": "フィラー",
+    "lemmas": [
+      "あ"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000002",
+    "pos": "フィラー",
+    "lemmas": [
+      "ま"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000003",
+    "pos": "フィラー",
+    "lemmas": [
+      "うん"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000004",
+    "pos": "フィラー",
+    "lemmas": [
+      "ええと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000005",
+    "pos": "フィラー",
+    "lemmas": [
+      "あー"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000006",
+    "pos": "フィラー",
+    "lemmas": [
+      "あの"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000007",
+    "pos": "フィラー",
+    "lemmas": [
+      "その"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000008",
+    "pos": "フィラー",
+    "lemmas": [
+      "なんか"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000009",
+    "pos": "フィラー",
+    "lemmas": [
+      "えー"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000010",
+    "pos": "フィラー",
+    "lemmas": [
+      "えーと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000011",
+    "pos": "フィラー",
+    "lemmas": [
+      "えーっと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000012",
+    "pos": "フィラー",
+    "lemmas": [
+      "え"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000013",
+    "pos": "フィラー",
+    "lemmas": [
+      "そうですね"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000014",
+    "pos": "フィラー",
+    "lemmas": [
+      "あのー"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000015",
+    "pos": "フィラー",
+    "lemmas": [
+      "そのー"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000016",
+    "pos": "フィラー",
+    "lemmas": [
+      "と"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000017",
+    "pos": "フィラー",
+    "lemmas": [
+      "うんと"
+    ],
+    "glosses": []
+  },
+  {
+    "id": "kuromoji:フィラー:00000018",
+    "pos": "フィラー",
+    "lemmas": [
+      "まあ"
+    ],
+    "glosses": []
+  }
+]
