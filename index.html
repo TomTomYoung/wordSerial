@@ -197,7 +197,10 @@
   <header>
     <div>
       <h1>Word Serial Lab</h1>
-      <div class="subtitle">Bag → Operation → New Bag | JSON ロード / 正規化 / 集合演算 / 編集</div>
+      <div class="subtitle">
+        <div>Bag を作成 → Bag を選択 → Operation を実行 → New Bag で結果を確認</div>
+        <div class="small">bag/ の JSON を読み込むか、テキスト貼り付けから Bag を作成し、任意の操作で加工できます。</div>
+      </div>
     </div>
   </header>
 
@@ -248,6 +251,7 @@
         <div class="panel-grid">
           <div class="op-group">
             <h4>かな正規化</h4>
+            <p class="muted small">変換したい Bag を選んで、ひらがな・カタカナの統一を行います。</p>
             <select id="selSrcNorm" class="input"></select>
             <div class="inline">
               <button id="btnNorm" class="btn ok">ひらがな化</button>
@@ -257,6 +261,7 @@
 
           <div class="op-group">
             <h4>文字変換</h4>
+            <p class="muted small">かな正規化以外の変換を行います。対象 Bag を選び、ローマ字化や大小文字変換、語順反転を適用します。</p>
             <select id="selSrcTransform" class="input"></select>
             <div class="inline">
               <button id="btnRomaji" class="btn">ローマ字化</button>
@@ -268,6 +273,7 @@
 
           <div class="op-group">
             <h4>文字削除</h4>
+            <p class="muted small">指定した文字を取り除いた新しい Bag を作ります。事前ひらがな化オプションで比較を揃えられます。</p>
             <select id="selSrcDel" class="input"></select>
             <div class="inline">
               <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
@@ -279,6 +285,7 @@
 
           <div class="op-group">
             <h4>集合演算</h4>
+            <p class="muted small">2 つの Bag を選び、和・差・積・対称差といった集合操作で新しい Bag を生成します。</p>
             <div class="inline">
               <select id="selSrcUnionA" class="input"></select>
               <select id="selSrcUnionB" class="input"></select>
@@ -293,6 +300,7 @@
 
           <div class="op-group">
             <h4>包含フィルタ</h4>
+            <p class="muted small">交差対象となる Bag と Lookup Bag を選び、両方に現れる語のみを残します。</p>
             <div class="inline">
               <select id="selSrcFlt" class="input"></select>
               <select id="selLkpFlt" class="input"></select>
@@ -306,6 +314,7 @@
 
           <div class="op-group">
             <h4>長さフィルタ</h4>
+            <p class="muted small">語の文字数で絞り込みます。min/max に範囲を指定し、必要に応じて Bag をひらがな化します。</p>
             <select id="selSrcLen" class="input"></select>
             <div class="inline">
               <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight" value="1"></label>
@@ -319,6 +328,7 @@
 
           <div class="op-group">
             <h4>前後一致フィルタ</h4>
+            <p class="muted small">語頭や語尾が一致する語だけを取り出します。prefix / suffix に条件を入力してください。</p>
             <select id="selSrcAffix" class="input"></select>
             <div class="inline">
               <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
@@ -335,6 +345,7 @@
 
           <div class="op-group">
             <h4>部分一致フィルタ</h4>
+            <p class="muted small">語の中に含まれる文字列で検索します。部分一致させたい語句を入力します。</p>
             <select id="selSrcContains" class="input"></select>
             <div class="inline">
               <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
@@ -347,6 +358,7 @@
 
           <div class="op-group">
             <h4>正規表現フィルタ</h4>
+            <p class="muted small">正規表現で高度な検索ができます。パターンを入力し、逆一致を選ぶと不一致のみを残します。</p>
             <select id="selSrcRegex" class="input"></select>
             <div class="inline">
               <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
@@ -360,6 +372,7 @@
 
           <div class="op-group">
             <h4>整形・置換</h4>
+            <p class="muted small">語の整形処理をまとめています。重複除去やソート、部分置換で Bag を調整します。</p>
             <select id="selSrcFormat" class="input"></select>
             <div class="inline">
               <button id="btnDedupe" class="btn">重複文字除去</button>
@@ -375,6 +388,7 @@
 
           <div class="op-group">
             <h4>n-gram 抽出</h4>
+            <p class="muted small">選択した Bag から連続する n 文字列を切り出します。n の長さを指定してください。</p>
             <select id="selSrcNgram" class="input"></select>
             <div class="inline">
               <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight" value="2"></label>
@@ -384,6 +398,7 @@
 
           <div class="op-group">
             <h4>サンプリング</h4>
+            <p class="muted small">Bag の中からランダムに語を抽出します。件数やシード値で再現性を調整できます。</p>
             <select id="selSrcSample" class="input"></select>
             <div class="inline">
               <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight" value="20"></label>
