@@ -1,1687 +1,1948 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Word Serial Lab</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Word Serial Lab</title>
 
-<!-- === libs (CDN) === -->
-<script src="https://cdn.jsdelivr.net/npm/wanakana@5.0.2/dist/wanakana.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
+  <!-- === libs (CDN) === -->
+  <script src="https://cdn.jsdelivr.net/npm/wanakana@5.0.2/dist/wanakana.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 
-<style>
-  :root {
-    --bg: #0f1115;
-    --fg: #e6e6e6;
-    --muted: #9aa0a6;
-    --acc: #7aa2f7;
-    --warn: #f6bd60;
-    --ok: #34d399;
-    --err: #f06272;
-    --card: #151a22;
-    --border: #2a2f3a;
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font: 14px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
-  }
-  h1, h2, h3, h4 { margin: 0; font-weight: 700; }
-  h1 { font-size: 24px; }
-  h2 { font-size: 18px; }
-  h3 { font-size: 16px; margin-bottom: 8px; }
-  .app {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px 24px 32px;
-  }
-  .app > header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 18px;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .subtitle { color: var(--muted); font-size: 13px; }
-  .layout {
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr) 280px;
-    gap: 18px;
-  }
-  @media (max-width: 1200px) {
-    .layout { grid-template-columns: minmax(0, 1fr); }
-    .sidebar, .main, .log-panel { order: initial; }
-  }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: var(--shadow);
-  }
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 480px;
-  }
-  .bag-list { display: flex; flex-direction: column; gap: 12px; }
-  .bag-card {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: rgba(15, 20, 30, 0.6);
-    overflow: hidden;
-    position: relative;
-  }
-  .bag-card.dragging { opacity: 0.55; }
-  .bag-card.drag-over::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: rgba(122, 162, 247, 0.75);
-    top: 0;
-  }
-  .bag-card > summary {
-    cursor: pointer;
-    padding: 10px 12px;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .bag-card > summary::-webkit-details-marker { display: none; }
-  .bag-title { font-size: 14px; font-weight: 600; }
-  .bag-meta {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    font-size: 12px;
-    color: var(--muted);
-    padding: 0 12px 12px;
-    white-space: pre-wrap;
-  }
-  .preview-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 0 12px 10px;
-    align-items: center;
-  }
-  .preview-bar label { display: flex; gap: 4px; align-items: center; color: var(--muted); }
-  .preview {
-    width: 100%;
-    border: none;
-    border-top: 1px solid var(--border);
-    padding: 12px;
-    background: rgba(8, 10, 16, 0.6);
-    color: var(--fg);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    resize: vertical;
-  }
-  .btn {
-    cursor: pointer;
-    background: #1e2530;
-    border: 1px solid var(--border);
-    color: var(--fg);
-    padding: 7px 12px;
-    border-radius: 10px;
-    transition: all 0.15s ease;
-    font-weight: 600;
-  }
-  .btn:hover { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.15) inset; }
-  .btn.primary { background: linear-gradient(180deg, #1f2a44, #1a2136); border-color: #304571; color: #e7efff; }
-  .btn.warn { background: #3a2a17; border-color: #6b4d27; color: #ffe7ba; }
-  .btn.ok { background: #11261f; border-color: #1f6b53; color: #cafdf0; }
-  .btn.ghost { background: transparent; }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; border-color: var(--border); }
-  .input, textarea, select {
-    width: 100%;
-    padding: 8px 10px;
-    color: var(--fg);
-    background: #10151e;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    outline: none;
-  }
-  textarea { resize: vertical; }
-  .muted { color: var(--muted); }
-  .small { font-size: 12px; }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-  .tight { max-width: 200px; }
-  .tabs { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab-button {
-    border-radius: 999px;
-    padding: 8px 16px;
-    border: 1px solid transparent;
-    background: rgba(16, 21, 30, 0.6);
-    color: var(--muted);
-  }
-  .tab-button.active {
-    color: var(--fg);
-    background: rgba(122, 162, 247, 0.18);
-    border-color: rgba(122, 162, 247, 0.4);
-  }
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-  .panel-grid { display: grid; gap: 12px; }
-  .grid { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
-  .log-panel { display: flex; flex-direction: column; gap: 16px; min-height: 480px; }
-  .log-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .log-body { background: rgba(8, 10, 16, 0.55); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; height: 200px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; color: var(--muted); }
-  .log-entry + .log-entry { margin-top: 6px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; background: rgba(122,162,247,0.15); color: var(--acc); }
-  .op-group { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: rgba(15, 20, 30, 0.6); display: grid; gap: 10px; }
-  .op-group h4 { font-size: 14px; margin: 0; }
-  .inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .inline .input { max-width: 160px; }
-  .history-actions { display: flex; gap: 8px; }
-  .export-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-  .bag-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 0 12px 12px;
-    align-items: center;
-  }
-  .bag-actions .status { flex: 1; min-width: 140px; }
-</style>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --fg: #e6e6e6;
+      --muted: #9aa0a6;
+      --acc: #7aa2f7;
+      --warn: #f6bd60;
+      --ok: #34d399;
+      --err: #f06272;
+      --card: #151a22;
+      --border: #2a2f3a;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 14px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px 24px 32px;
+    }
+
+    .app>header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 18px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 280px;
+      gap: 18px;
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .sidebar,
+      .main,
+      .log-panel {
+        order: initial;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 480px;
+    }
+
+    .bag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bag-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(15, 20, 30, 0.6);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bag-card.dragging {
+      opacity: 0.55;
+    }
+
+    .bag-card.drag-over::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(122, 162, 247, 0.75);
+      top: 0;
+    }
+
+    .bag-card>summary {
+      cursor: pointer;
+      padding: 10px 12px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .bag-card>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .bag-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .bag-meta {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 12px 12px;
+      white-space: pre-wrap;
+    }
+
+    .preview-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 12px 10px;
+      align-items: center;
+    }
+
+    .preview-bar label {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .preview {
+      width: 100%;
+      border: none;
+      border-top: 1px solid var(--border);
+      padding: 12px;
+      background: rgba(8, 10, 16, 0.6);
+      color: var(--fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      resize: vertical;
+    }
+
+    .btn {
+      cursor: pointer;
+      background: #1e2530;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 7px 12px;
+      border-radius: 10px;
+      transition: all 0.15s ease;
+      font-weight: 600;
+    }
+
+    .btn:hover {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.15) inset;
+    }
+
+    .btn.primary {
+      background: linear-gradient(180deg, #1f2a44, #1a2136);
+      border-color: #304571;
+      color: #e7efff;
+    }
+
+    .btn.warn {
+      background: #3a2a17;
+      border-color: #6b4d27;
+      color: #ffe7ba;
+    }
+
+    .btn.ok {
+      background: #11261f;
+      border-color: #1f6b53;
+      color: #cafdf0;
+    }
+
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+      border-color: var(--border);
+    }
+
+    .input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      color: var(--fg);
+      background: #10151e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .tight {
+      max-width: 200px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      border-radius: 999px;
+      padding: 8px 16px;
+      border: 1px solid transparent;
+      background: rgba(16, 21, 30, 0.6);
+      color: var(--muted);
+    }
+
+    .tab-button.active {
+      color: var(--fg);
+      background: rgba(122, 162, 247, 0.18);
+      border-color: rgba(122, 162, 247, 0.4);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .panel-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .log-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 480px;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-body {
+      background: rgba(8, 10, 16, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .log-entry+.log-entry {
+      margin-top: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(122, 162, 247, 0.15);
+      color: var(--acc);
+    }
+
+    .op-group {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(15, 20, 30, 0.6);
+      display: grid;
+      gap: 10px;
+    }
+
+    .op-group h4 {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .inline {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .inline>* {
+      margin: 0;
+      align-self: center;
+    }
+
+    .inline .input {
+      max-width: 160px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .export-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .bag-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 0 12px 12px;
+      align-items: center;
+    }
+
+    .bag-actions .status {
+      flex: 1;
+      min-width: 140px;
+    }
+  </style>
 </head>
+
 <body>
-<div class="app">
-  <header>
-    <div>
-      <h1>Word Serial Lab</h1>
-      <div class="subtitle">Bag → Operation → New Bag | JSON ロード / 正規化 / 集合演算 / 編集</div>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Word Serial Lab</h1>
+        <div class="subtitle">Bag → Operation → New Bag | JSON ロード / 正規化 / 集合演算 / 編集</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar card">
+        <nav class="tabs">
+          <button class="btn tab-button active" data-tab="import">Import</button>
+          <button class="btn tab-button" data-tab="operations">Operations</button>
+          <button class="btn tab-button" data-tab="export">Export</button>
+        </nav>
+
+        <section class="tab-panel active" data-panel="import">
+          <h3>0) 入力データ</h3>
+          <!-- general description removed -->
+          <div class="panel-grid">
+            <div>
+              <div class="muted small" style="margin-bottom:4px;">1) サーバー上のプリセットから選択</div>
+              <div class="inline">
+                <span class="muted small" style="padding: 0 8px;">デフォルトバッグ:</span>
+                <select id="selFile" class="input" style="min-width:220px"></select>
+                <button id="btnLoad" class="btn primary">選択 JSON を Bag 化</button>
+              </div>
+            </div>
+            <div>
+              <div class="muted small" style="margin-bottom:4px;">2) ローカルの JSON ファイルを読み込み</div>
+              <div class="inline" style="display: flex; align-items: center; gap: 10px;">
+                <input type="file" id="filePick" accept=".json" style="display: none" />
+                <button id="btnFileSelect" class="btn">ローカル JSON を選択</button>
+              </div>
+              <div class="muted small" style="margin-top:4px;">JSON 形式： <span
+                  class="mono">[{"id":"…","lemmas":["語1","語2"],"glosses":[…]}]</span>（lemmas を単語として取り込み）</div>
+            </div>
+            <div>
+              <div class="muted small" style="margin-bottom:4px;">3) テキスト貼り付けから作成</div>
+              <input id="bagNameInput" class="input" placeholder="Bag 名（省略可）" />
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <textarea id="pasteArea" rows="8" class="mono" placeholder="一行に一語（任意）"></textarea>
+                <button id="btnMakeBagFromText" class="btn">貼り付けテキストからBag化</button>
+              </div>
+            </div>
+            <div id="importLog" class="muted mono small"></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="operations">
+          <h3>1) 操作</h3>
+          <div class="panel-grid">
+            <div class="op-group">
+              <h4>かな正規化</h4>
+              <div class="muted small" style="margin-bottom:5px;">Bag 内の全単語をひらがな・カタカナに統一します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcNorm" class="input"></select>
+              <div class="inline">
+                <button id="btnNorm" class="btn ok">ひらがな化</button>
+                <button id="btnKatakana" class="btn">カタカナ化</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>文字変換</h4>
+              <div class="muted small" style="margin-bottom:5px;">ローマ字化・大文字小文字変換・文字列反転などを行います。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcTransform" class="input"></select>
+              <div class="inline">
+                <button id="btnRomaji" class="btn">ローマ字化</button>
+                <button id="btnUpper" class="btn">大文字化</button>
+                <button id="btnLower" class="btn">小文字化</button>
+                <button id="btnReverse" class="btn">反転</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>文字削除</h4>
+              <div class="muted small" style="margin-bottom:5px;">指定した文字を Bag 内の全単語から削除します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcDel" class="input"></select>
+              <div class="inline">
+                <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
+                <label class="muted small"><input type="checkbox" id="ckNormDel" checked /> 入力をひらがな化</label>
+                <label class="muted small"><input type="checkbox" id="ckPreNormDel"> Bag をひらがな化</label>
+                <button id="btnDel" class="btn warn">delete chars</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>集合演算</h4>
+              <div class="muted small" style="margin-bottom:5px;">2つの Bag 間で和・差・積・対称差集合を作ります。</div>
+              <div class="inline">
+                <div>
+                  <div class="muted small">Bag A</div>
+                  <select id="selSrcUnionA" class="input"></select>
+                </div>
+                <div>
+                  <div class="muted small">Bag B</div>
+                  <select id="selSrcUnionB" class="input"></select>
+                </div>
+              </div>
+              <div class="inline">
+                <button id="btnUnion" class="btn">和集合 (Union)</button>
+                <button id="btnDiff" class="btn">差集合 (Difference)</button>
+                <button id="btnIntersect" class="btn">積集合 (Intersection)</button>
+                <button id="btnSymDiff" class="btn">対称差 (Symmetric)</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>包含フィルタ</h4>
+              <div class="muted small" style="margin-bottom:5px;">Lookup Bag に存在する単語のみを残します（積集合的なフィルタ）。</div>
+              <div class="inline">
+                <div>
+                  <div class="muted small">Target Bag</div>
+                  <select id="selSrcFlt" class="input"></select>
+                </div>
+                <div>
+                  <div class="muted small">Lookup Bag</div>
+                  <select id="selLkpFlt" class="input"></select>
+                </div>
+                <button id="btnFlt" class="btn" style="margin-top: 18px;">filter_in（交差）</button>
+              </div>
+              <div class="inline">
+                <label class="muted small"><input type="checkbox" id="ckPreNormFltSrc"> Bag をひらがな化</label>
+                <label class="muted small"><input type="checkbox" id="ckPreNormFltLookup"> Lookup をひらがな化</label>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>長さフィルタ</h4>
+              <div class="muted small" style="margin-bottom:5px;">文字数が指定範囲内の単語のみを抽出します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcLen" class="input"></select>
+              <div class="inline">
+                <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight"
+                    value="1"></label>
+                <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight"
+                    value="10"></label>
+                <button id="btnLengthFilter" class="btn">適用</button>
+              </div>
+              <div class="inline">
+                <label class="muted small"><input type="checkbox" id="ckPreNormLen"> Bag をひらがな化</label>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>前後一致フィルタ</h4>
+              <div class="muted small" style="margin-bottom:5px;">指定した文字列で始まる、または終わる単語を抽出します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcAffix" class="input"></select>
+              <div class="inline">
+                <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
+              </div>
+              <div class="inline">
+                <input id="prefixValue" class="input" placeholder="前方一致（prefix）" />
+                <button id="btnPrefix" class="btn">prefix filter</button>
+              </div>
+              <div class="inline">
+                <input id="suffixValue" class="input" placeholder="後方一致（suffix）" />
+                <button id="btnSuffix" class="btn">suffix filter</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>部分一致フィルタ</h4>
+              <div class="muted small" style="margin-bottom:5px;">指定した文字列を含む単語を抽出します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcContains" class="input"></select>
+              <div class="inline">
+                <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
+              </div>
+              <div class="inline">
+                <input id="containsValue" class="input" placeholder="入力文字列を含む語" />
+                <button id="btnContains" class="btn">contains filter</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>正規表現フィルタ</h4>
+              <div class="muted small" style="margin-bottom:5px;">JavaScript 正規表現にマッチする単語を抽出します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcRegex" class="input"></select>
+              <div class="inline">
+                <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
+                <label class="muted small"><input type="checkbox" id="regexInvert"> 逆一致</label>
+                <button id="btnRegex" class="btn">filter_regex</button>
+              </div>
+              <div class="inline">
+                <label class="muted small"><input type="checkbox" id="ckPreNormRegex"> Bag をひらがな化</label>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>整形・置換</h4>
+              <div class="muted small" style="margin-bottom:5px;">重複文字削除、ソート、文字列置換などを行います。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcFormat" class="input"></select>
+              <div class="inline">
+                <button id="btnDedupe" class="btn">重複文字除去</button>
+                <button id="btnSortAsc" class="btn">昇順ソート</button>
+                <button id="btnSortDesc" class="btn">降順ソート</button>
+              </div>
+              <div class="inline">
+                <input id="replaceFrom" class="input" placeholder="置換 from" />
+                <input id="replaceTo" class="input" placeholder="to" />
+                <button id="btnReplace" class="btn">置換</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>n-gram 抽出</h4>
+              <div class="muted small" style="margin-bottom:5px;">単語から N-gram（文字の組み合わせ）を生成します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcNgram" class="input"></select>
+              <div class="inline">
+                <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight"
+                    value="2"></label>
+                <button id="btnNgram" class="btn">抽出</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>サンプリング</h4>
+              <div class="muted small" style="margin-bottom:5px;">Bag から指定した数の単語をランダムに選び出します。</div>
+              <div class="muted small">Target Bag</div>
+              <select id="selSrcSample" class="input"></select>
+              <div class="inline">
+                <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight"
+                    value="20"></label>
+                <input id="sampleSeed" class="input" placeholder="seed（任意）" />
+                <button id="btnSample" class="btn">sample</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="export">
+          <h3>2) Export</h3>
+          <div class="panel-grid">
+            <select id="selExport" class="input"></select>
+            <div class="export-actions">
+              <button class="btn" data-format="txt">TXT</button>
+              <button class="btn" data-format="csv">CSV</button>
+              <button class="btn primary" data-format="json">JSON</button>
+            </div>
+            <div class="muted small">選択した Bag をダウンロードします。CSV では 1 行に 1 語、JSON では <span class="mono">{"name":…,
+                "items":[…]}</span> を出力。</div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main card">
+        <div>
+          <h2>Bag 一覧</h2>
+          <div class="subtitle small">プレビューを開くと編集・コピーができます。</div>
+        </div>
+        <button id="btnApplyAll" class="btn ok">全バッグを再適用</button>
+        <div id="bagsArea" class="bag-list"></div>
+      </main>
+
+      <aside class="log-panel card">
+        <div class="log-header">
+          <h3>操作履歴</h3>
+          <div class="history-actions">
+            <button id="btnUndo" class="btn ghost" disabled>Undo</button>
+            <button id="btnRedo" class="btn ghost" disabled>Redo</button>
+          </div>
+        </div>
+        <div id="opLog" class="log-body"></div>
+        <div>
+          <h3>ログ</h3>
+        </div>
+        <div id="log" class="log-body"></div>
+      </aside>
     </div>
-  </header>
-
-  <div class="layout">
-    <aside class="sidebar card">
-      <div>
-        <h2>Bag 一覧</h2>
-        <div class="subtitle small">プレビューを開くと編集・コピーができます。</div>
-      </div>
-      <button id="btnApplyAll" class="btn ok">全バッグを再適用</button>
-      <div id="bagsArea" class="bag-list"></div>
-    </aside>
-
-    <main class="main card">
-      <nav class="tabs">
-        <button class="btn tab-button active" data-tab="import">Import</button>
-        <button class="btn tab-button" data-tab="operations">Operations</button>
-        <button class="btn tab-button" data-tab="export">Export</button>
-      </nav>
-
-      <section class="tab-panel active" data-panel="import">
-        <h3>0) 入力データ</h3>
-        <div class="panel-grid">
-          <div class="inline">
-            <button id="btnList" class="btn">bag/ を列挙</button>
-            <select id="selFile" class="input" style="min-width:220px"></select>
-            <button id="btnLoad" class="btn primary">選択 JSON を Bag 化</button>
-          </div>
-          <div class="inline">
-            <span class="muted small">または</span>
-            <input type="file" id="filePick" class="input" accept=".json" />
-          </div>
-          <div class="muted small">JSON 形式： <span class="mono">[{"id":"…","lemmas":["語1","語2"],"glosses":[…]}]</span>（lemmas を単語として取り込み）</div>
-          <div class="grid">
-            <textarea id="pasteArea" rows="8" class="mono" placeholder="一行に一語（任意）"></textarea>
-            <button id="btnMakeBagFromText" class="btn">貼り付け → Bag</button>
-          </div>
-          <div class="grid">
-            <input id="bagNameInput" class="input" placeholder="Bag 名（省略可）" />
-            <div></div>
-          </div>
-          <div id="importLog" class="muted mono small"></div>
-        </div>
-      </section>
-
-      <section class="tab-panel" data-panel="operations">
-        <h3>1) 操作</h3>
-        <div class="panel-grid">
-          <div class="op-group">
-            <h4>かな正規化</h4>
-            <select id="selSrcNorm" class="input"></select>
-            <div class="inline">
-              <button id="btnNorm" class="btn ok">ひらがな化</button>
-              <button id="btnKatakana" class="btn">カタカナ化</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>文字変換</h4>
-            <select id="selSrcTransform" class="input"></select>
-            <div class="inline">
-              <button id="btnRomaji" class="btn">ローマ字化</button>
-              <button id="btnUpper" class="btn">大文字化</button>
-              <button id="btnLower" class="btn">小文字化</button>
-              <button id="btnReverse" class="btn">反転</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>文字削除</h4>
-            <select id="selSrcDel" class="input"></select>
-            <div class="inline">
-              <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
-              <label class="muted small"><input type="checkbox" id="ckNormDel" checked /> 入力をひらがな化</label>
-              <label class="muted small"><input type="checkbox" id="ckPreNormDel"> Bag をひらがな化</label>
-              <button id="btnDel" class="btn warn">delete chars</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>集合演算</h4>
-            <div class="inline">
-              <select id="selSrcUnionA" class="input"></select>
-              <select id="selSrcUnionB" class="input"></select>
-            </div>
-            <div class="inline">
-              <button id="btnUnion" class="btn">和集合 (Union)</button>
-              <button id="btnDiff" class="btn">差集合 (Difference)</button>
-              <button id="btnIntersect" class="btn">積集合 (Intersection)</button>
-              <button id="btnSymDiff" class="btn">対称差 (Symmetric)</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>包含フィルタ</h4>
-            <div class="inline">
-              <select id="selSrcFlt" class="input"></select>
-              <select id="selLkpFlt" class="input"></select>
-              <button id="btnFlt" class="btn">filter_in（交差）</button>
-            </div>
-            <div class="inline">
-              <label class="muted small"><input type="checkbox" id="ckPreNormFltSrc"> Bag をひらがな化</label>
-              <label class="muted small"><input type="checkbox" id="ckPreNormFltLookup"> Lookup をひらがな化</label>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>長さフィルタ</h4>
-            <select id="selSrcLen" class="input"></select>
-            <div class="inline">
-              <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight" value="1"></label>
-              <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight" value="10"></label>
-              <button id="btnLengthFilter" class="btn">適用</button>
-            </div>
-            <div class="inline">
-              <label class="muted small"><input type="checkbox" id="ckPreNormLen"> Bag をひらがな化</label>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>前後一致フィルタ</h4>
-            <select id="selSrcAffix" class="input"></select>
-            <div class="inline">
-              <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
-            </div>
-            <div class="inline">
-              <input id="prefixValue" class="input" placeholder="前方一致（prefix）" />
-              <button id="btnPrefix" class="btn">prefix filter</button>
-            </div>
-            <div class="inline">
-              <input id="suffixValue" class="input" placeholder="後方一致（suffix）" />
-              <button id="btnSuffix" class="btn">suffix filter</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>部分一致フィルタ</h4>
-            <select id="selSrcContains" class="input"></select>
-            <div class="inline">
-              <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
-            </div>
-            <div class="inline">
-              <input id="containsValue" class="input" placeholder="入力文字列を含む語" />
-              <button id="btnContains" class="btn">contains filter</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>正規表現フィルタ</h4>
-            <select id="selSrcRegex" class="input"></select>
-            <div class="inline">
-              <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
-              <label class="muted small"><input type="checkbox" id="regexInvert"> 逆一致</label>
-              <button id="btnRegex" class="btn">filter_regex</button>
-            </div>
-            <div class="inline">
-              <label class="muted small"><input type="checkbox" id="ckPreNormRegex"> Bag をひらがな化</label>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>整形・置換</h4>
-            <select id="selSrcFormat" class="input"></select>
-            <div class="inline">
-              <button id="btnDedupe" class="btn">重複文字除去</button>
-              <button id="btnSortAsc" class="btn">昇順ソート</button>
-              <button id="btnSortDesc" class="btn">降順ソート</button>
-            </div>
-            <div class="inline">
-              <input id="replaceFrom" class="input" placeholder="置換 from" />
-              <input id="replaceTo" class="input" placeholder="to" />
-              <button id="btnReplace" class="btn">置換</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>n-gram 抽出</h4>
-            <select id="selSrcNgram" class="input"></select>
-            <div class="inline">
-              <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight" value="2"></label>
-              <button id="btnNgram" class="btn">抽出</button>
-            </div>
-          </div>
-
-          <div class="op-group">
-            <h4>サンプリング</h4>
-            <select id="selSrcSample" class="input"></select>
-            <div class="inline">
-              <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight" value="20"></label>
-              <input id="sampleSeed" class="input" placeholder="seed（任意）" />
-              <button id="btnSample" class="btn">sample</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="tab-panel" data-panel="export">
-        <h3>2) Export</h3>
-        <div class="panel-grid">
-          <select id="selExport" class="input"></select>
-          <div class="export-actions">
-            <button class="btn" data-format="txt">TXT</button>
-            <button class="btn" data-format="csv">CSV</button>
-            <button class="btn primary" data-format="json">JSON</button>
-          </div>
-          <div class="muted small">選択した Bag をダウンロードします。CSV では 1 行に 1 語、JSON では <span class="mono">{"name":…, "items":[…]}</span> を出力。</div>
-        </div>
-      </section>
-    </main>
-
-    <aside class="log-panel card">
-      <div class="log-header">
-        <h3>操作履歴</h3>
-        <div class="history-actions">
-          <button id="btnUndo" class="btn ghost" disabled>Undo</button>
-          <button id="btnRedo" class="btn ghost" disabled>Redo</button>
-        </div>
-      </div>
-      <div id="opLog" class="log-body"></div>
-      <div>
-        <h3>ログ</h3>
-      </div>
-      <div id="log" class="log-body"></div>
-    </aside>
   </div>
-</div>
 
-<script>
-/* ====== 共通ユーティリティ ====== */
-const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-const uniq = a => Array.from(new Set(a));
-const normNFKC = s => (s || "").normalize('NFKC').trim();
-const el = q => document.querySelector(q);
-const parseIntSafe = (value, fallback = 0) => {
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) ? n : fallback;
-};
-function log(msg) {
-  const host = el('#log');
-  if (!host) return;
-  const div = document.createElement('div');
-  div.className = 'log-entry';
-  div.textContent = `[${nowISO()}] ${msg}`;
-  host.prepend(div);
-  while (host.children.length > 150) host.removeChild(host.lastChild);
-}
-function appendOpLog(msg) {
-  const host = el('#opLog');
-  if (!host) return;
-  const div = document.createElement('div');
-  div.className = 'log-entry';
-  div.textContent = `[${nowISO()}] ${msg}`;
-  host.prepend(div);
-  while (host.children.length > 150) host.removeChild(host.lastChild);
-}
-
-function setsAreEqual(a, b) {
-  if (a === b) return true;
-  if (!(a instanceof Set) || !(b instanceof Set)) return false;
-  if (a.size !== b.size) return false;
-  for (const value of a) {
-    if (!b.has(value)) return false;
-  }
-  return true;
-}
-
-function findBagStatusElement(bagId) {
-  return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
-}
-
-function setBagStatusMessage(bagId, message) {
-  const statusEl = findBagStatusElement(bagId);
-  if (statusEl) {
-    const text = message || '';
-    statusEl.textContent = text;
-    statusEl.title = text;
-  }
-}
-
-function describeBagLifecycle(bag) {
-  if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
-  if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
-  if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
-  if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
-  return '';
-}
-function setSelectOptions(sel, opts) {
-  if (!sel) return;
-  const v = sel.value;
-  sel.innerHTML = '';
-  for (const o of opts) {
-    const op = document.createElement('option');
-    op.value = o.value;
-    op.textContent = o.label;
-    sel.appendChild(op);
-  }
-  if (opts.length) {
-    sel.value = v && opts.some(o => o.value === v) ? v : opts[opts.length - 1].value;
-  }
-}
-
-/* ====== Kuroshiro（かな正規化） ====== */
-let K = null, kuroReady = false;
-async function ensureKuro() {
-  if (kuroReady) return;
-  K = new window.Kuroshiro();
-  const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
-  await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
-  kuroReady = true;
-}
-function katakanaToHiragana(value) {
-  if (!value) return '';
-  return value.replace(/[\u30A1-\u30FA\u30FD\u30FE]/g, ch => {
-    const code = ch.charCodeAt(0);
-    if (code === 0x30FD) return 'ゝ'; // ヽ → ゝ
-    if (code === 0x30FE) return 'ゞ'; // ヾ → ゞ
-    return String.fromCharCode(code - 0x60);
-  });
-}
-
-function normalizeKatakanaFallback(value) {
-  if (!value) return '';
-  return katakanaToHiragana(value);
-}
-
-function safeWanakanaConvert(method, value) {
-  const wk = window.wanakana;
-  if (wk && typeof wk[method] === 'function') {
-    return wk[method](value);
-  }
-  if (method === 'toHiragana') {
-    return normalizeKatakanaFallback(value);
-  }
-  return value;
-}
-async function toHiragana(s) {
-  if (!s) return '';
-  try {
-    await ensureKuro();
-    return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
-  } catch {
-    return safeWanakanaConvert('toHiragana', normNFKC(s));
-  }
-}
-async function toKatakana(s) {
-  if (!s) return '';
-  try {
-    await ensureKuro();
-    return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
-  } catch {
-    return safeWanakanaConvert('toKatakana', normNFKC(s));
-  }
-}
-async function toRomaji(s) {
-  if (!s) return '';
-  try {
-    await ensureKuro();
-    return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
-  } catch {
-    return safeWanakanaConvert('toRomaji', normNFKC(s));
-  }
-  return out;
-}
-
-async function maybeNormalizeItems(items, shouldNormalize) {
-  if (!shouldNormalize) return new Set(items);
-  const arr = await convertItemsToHiragana(items);
-  return new Set(arr);
-}
-
-async function maybeNormalizeBagItems(bag, shouldNormalize) {
-  if (!bag) return new Set();
-  return maybeNormalizeItems(bag.items, shouldNormalize);
-}
-
-async function maybeNormalizeQueryValue(value, shouldNormalize) {
-  const base = normNFKC(value || '');
-  if (!base) return '';
-  if (!shouldNormalize) return base;
-  const hira = await toHiragana(base);
-  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
-  return normalized || base;
-}
-
-function waitFrame() {
-  return new Promise(resolve => setTimeout(resolve, 0));
-}
-
-async function convertItemsToHiragana(items) {
-  const out = [];
-  let i = 0;
-  for (const w of items) {
-    const h = await toHiragana(w);
-    if (h) out.push(h.replace(/\s+/g, ''));
-    if (++i % 2000 === 0) await waitFrame();
-  }
-  return out;
-}
-
-async function maybeNormalizeItems(items, shouldNormalize) {
-  if (!shouldNormalize) return new Set(items);
-  const arr = await convertItemsToHiragana(items);
-  return new Set(arr);
-}
-
-async function maybeNormalizeBagItems(bag, shouldNormalize) {
-  if (!bag) return new Set();
-  return maybeNormalizeItems(bag.items, shouldNormalize);
-}
-
-async function maybeNormalizeQueryValue(value, shouldNormalize) {
-  const base = normNFKC(value || '');
-  if (!base) return '';
-  if (!shouldNormalize) return base;
-  const hira = await toHiragana(base);
-  const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
-  return normalized || base;
-}
-
-/* ====== Bag / Registry ====== */
-let _nextId = 0;
-class Bag {
-  constructor(name, items, meta = {}) {
-    this.id = _nextId++;
-    this.name = name || `bag#${this.id}`;
-    this.items = new Set(items || []);
-    this.meta = Object.assign({}, meta);
-    if (!this.meta.created_at) this.meta.created_at = nowISO();
-    this.meta.size = this.items.size;
-  }
-  label() { return `[${this.id}] ${this.name} (${this.items.size})`; }
-}
-class BagRegistry {
-  constructor() { this._bags = []; }
-  add(b) { this._bags.push(b); return b.id; }
-  get(id) { return this._bags.find(x => x.id === Number(id)); }
-  all() { return this._bags.slice(); }
-  indexOf(id) { return this._bags.findIndex(x => x.id === Number(id)); }
-  remove(id) {
-    const idx = this.indexOf(id);
-    if (idx < 0) return false;
-    this._bags.splice(idx, 1);
-    return true;
-  }
-  clone(id, nameSuffix = ' copy') {
-    const src = this.get(id);
-    if (!src) return null;
-    const clonedMeta = Object.assign({}, src.meta, {
-      cloned_from: src.id,
-      cloned_op: src.meta?.op || null,
-      op: 'clone',
-      src: src.id
-    });
-    delete clonedMeta.reapply_status;
-    delete clonedMeta.reapply_error;
-    const clone = new Bag(`${src.name}${nameSuffix}`, Array.from(src.items), clonedMeta);
-    this.add(clone);
-    return clone;
-  }
-  moveRelative(sourceId, targetId, placeBefore = false) {
-    const fromIdx = this.indexOf(sourceId);
-    const targetIdx = this.indexOf(targetId);
-    if (fromIdx < 0 || targetIdx < 0 || sourceId === targetId) return false;
-    const [bag] = this._bags.splice(fromIdx, 1);
-    let insertIdx = this.indexOf(targetId);
-    if (insertIdx < 0) return false;
-    if (!placeBefore) insertIdx += 1;
-    this._bags.splice(insertIdx, 0, bag);
-    return true;
-  }
-  choices() { return this._bags.map(b => ({ label: b.label(), value: String(b.id) })); }
-  serialize() {
-    return {
-      nextId: _nextId,
-      bags: this._bags.map(b => ({
-        id: b.id,
-        name: b.name,
-        items: Array.from(b.items),
-        meta: Object.assign({}, b.meta)
-      }))
+  <script>
+    /* ====== 共通ユーティリティ ====== */
+    const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const uniq = a => Array.from(new Set(a));
+    const normNFKC = s => (s || "").normalize('NFKC').trim();
+    const el = q => document.querySelector(q);
+    const parseIntSafe = (value, fallback = 0) => {
+      const n = Number.parseInt(value, 10);
+      return Number.isFinite(n) ? n : fallback;
     };
-  }
-  restore(snapshot) {
-    this._bags = snapshot.bags.map(data => {
-      const bag = new Bag(data.name, data.items, Object.assign({}, data.meta));
-      bag.id = data.id;
-      bag.meta.size = bag.items.size;
-      return bag;
-    });
-    _nextId = snapshot.nextId;
-  }
-}
-const REG = new BagRegistry();
+    function log(msg) {
+      const host = el('#log');
+      if (!host) return;
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.textContent = `[${nowISO()}] ${msg}`;
+      host.prepend(div);
+      while (host.children.length > 150) host.removeChild(host.lastChild);
+    }
+    function appendOpLog(msg) {
+      const host = el('#opLog');
+      if (!host) return;
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.textContent = `[${nowISO()}] ${msg}`;
+      host.prepend(div);
+      while (host.children.length > 150) host.removeChild(host.lastChild);
+    }
 
-/* ====== 履歴管理 ====== */
-const history = [];
-let historyIndex = -1;
-function captureState() {
-  const snapshot = REG.serialize();
-  history.splice(historyIndex + 1);
-  history.push(snapshot);
-  historyIndex = history.length - 1;
-  updateUndoRedoButtons();
-}
-function restoreFromHistory() {
-  if (historyIndex < 0 || historyIndex >= history.length) return;
-  const snapshot = history[historyIndex];
-  REG.restore(snapshot);
-  renderBags();
-  applyChoices();
-  updateUndoRedoButtons();
-}
-function updateUndoRedoButtons() {
-  const undoBtn = el('#btnUndo');
-  const redoBtn = el('#btnRedo');
-  if (undoBtn) undoBtn.disabled = historyIndex <= 0;
-  if (redoBtn) redoBtn.disabled = historyIndex >= history.length - 1;
-}
-function initHistory() {
-  captureState();
-}
-
-/* ====== Ops（シリアル） ====== */
-async function op_normalize_hiragana(srcBag) {
-  const out = new Set();
-  let i = 0;
-  for (const w of srcBag.items) {
-    const h = await toHiragana(w);
-    if (h) out.add(h.replace(/\s+/g, ''));
-    if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-  }
-  return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
-}
-async function op_normalize_katakana(srcBag) {
-  const out = new Set();
-  let i = 0;
-  for (const w of srcBag.items) {
-    const h = await toKatakana(w);
-    if (h) out.add(h.replace(/\s+/g, ''));
-    if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-  }
-  return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
-}
-async function op_to_romaji(srcBag) {
-  const out = new Set();
-  let i = 0;
-  for (const w of srcBag.items) {
-    const r = await toRomaji(w);
-    if (r) out.add(r.replace(/\s+/g, ''));
-    if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-  }
-  return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
-}
-async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
-  const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
-  const dels = Array.from(new Set((del || '').split('')));
-  const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
-  const out = new Set();
-  for (const w of srcItems) {
-    let wNew = w;
-    for (const c of dels) if (c) wNew = wNew.split(c).join('');
-    if (wNew !== w) out.add(wNew);
-  }
-  return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, {
-    op: 'delete_chars',
-    src: srcBag.id,
-    deleted: dels.join(''),
-    normalize_input: normalizeInput,
-    normalize_before: normalizeBefore
-  });
-}
-function op_to_upper(srcBag) {
-  const out = new Set();
-  for (const w of srcBag.items) {
-    out.add(normNFKC(w).toUpperCase());
-  }
-  return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
-}
-function op_to_lower(srcBag) {
-  const out = new Set();
-  for (const w of srcBag.items) {
-    out.add(normNFKC(w).toLowerCase());
-  }
-  return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
-}
-function op_reverse(srcBag) {
-  const out = new Set();
-  for (const w of srcBag.items) {
-    const reversed = Array.from(normNFKC(w)).reverse().join('');
-    if (reversed) out.add(reversed);
-  }
-  return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
-}
-function op_dedupe_chars(srcBag) {
-  const out = new Set();
-  for (const w of srcBag.items) {
-    const seen = new Set();
-    const result = [];
-    for (const ch of Array.from(normNFKC(w))) {
-      if (seen.has(ch)) continue;
-      seen.add(ch);
-      result.push(ch);
-    }
-    if (result.length) out.add(result.join(''));
-  }
-  return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
-}
-function op_replace(srcBag, fromValue, toValue) {
-  const needle = normNFKC(fromValue);
-  const replacement = normNFKC(toValue ?? '');
-  const out = new Set();
-  if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement });
-  for (const w of srcBag.items) {
-    const normed = normNFKC(w);
-    const replaced = normed.split(needle).join(replacement);
-    out.add(replaced);
-  }
-  return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
-}
-function op_sort(srcBag, order = 'asc', locale = 'ja') {
-  const arr = Array.from(srcBag.items);
-  arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
-  if (order === 'desc') arr.reverse();
-  return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
-}
-async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
-  const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
-  const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
-  const out = new Set();
-  for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
-  return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, {
-    op: 'filter_in',
-    src: srcBag.id,
-    lookup: lookupBag.id,
-    normalize_src_before: normalizeSrc,
-    normalize_lookup_before: normalizeLookup
-  });
-}
-function op_union(bagA, bagB) {
-  const out = new Set([...bagA.items, ...bagB.items]);
-  return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
-    op: 'union',
-    src: [bagA.id, bagB.id].join(','),
-    src_a: bagA.id,
-    src_b: bagB.id,
-    size_a: bagA.items.size,
-    size_b: bagB.items.size
-  });
-}
-function op_difference(bagA, bagB) {
-  const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
-  return new Bag(`${bagA.name} - ${bagB.name}`, out, {
-    op: 'difference',
-    src: [bagA.id, bagB.id].join(','),
-    src_a: bagA.id,
-    src_b: bagB.id,
-    size_a: bagA.items.size,
-    size_b: bagB.items.size
-  });
-}
-function op_intersection(bagA, bagB) {
-  const out = new Set();
-  for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
-  return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
-    op: 'intersection',
-    src: [bagA.id, bagB.id].join(','),
-    src_a: bagA.id,
-    src_b: bagB.id,
-    size_a: bagA.items.size,
-    size_b: bagB.items.size
-  });
-}
-function op_symmetric_difference(bagA, bagB) {
-  const out = new Set();
-  for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
-  for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
-  return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
-    op: 'symmetric_difference',
-    src: [bagA.id, bagB.id].join(','),
-    src_a: bagA.id,
-    src_b: bagB.id,
-    size_a: bagA.items.size,
-    size_b: bagB.items.size
-  });
-}
-async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-  const out = new Set();
-  for (const w of srcItems) {
-    const len = normNFKC(w).length;
-    if (len >= minLen && len <= maxLen) out.add(w);
-  }
-  return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, {
-    op: 'filter_length',
-    src: bag.id,
-    range: `${minLen}-${maxLen}`,
-    min: minLen,
-    max: maxLen,
-    normalize_before: normalizeBefore
-  });
-}
-async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
-  const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
-  const out = new Set();
-  if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-  for (const w of srcItems) {
-    if (normNFKC(w).startsWith(needle)) out.add(w);
-  }
-  return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
-}
-async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
-  const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
-  const out = new Set();
-  if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-  for (const w of srcItems) {
-    if (normNFKC(w).endsWith(needle)) out.add(w);
-  }
-  return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
-}
-async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
-  const needle = await maybeNormalizeQueryValue(needleRaw, normalizeBefore);
-  const out = new Set();
-  if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-  for (const w of srcItems) {
-    if (normNFKC(w).includes(needle)) out.add(w);
-  }
-  return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
-}
-async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
-  const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-  const re = new RegExp(pattern, 'u');
-  const out = new Set();
-  for (const w of srcItems) {
-    const matched = re.test(w);
-    if ((matched && !invert) || (!matched && invert)) out.add(w);
-  }
-  return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
-}
-function op_ngrams(bag, n) {
-  const size = Number.isFinite(n) ? Math.max(1, n) : 1;
-  const out = new Set();
-  for (const w of bag.items) {
-    const norm = normNFKC(w);
-    if (!norm || norm.length < size) continue;
-    for (let i = 0; i <= norm.length - size; i += 1) {
-      out.add(norm.slice(i, i + size));
-    }
-  }
-  return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size });
-}
-function makeSeedFromString(seed) {
-  if (typeof seed === 'number') return seed >>> 0;
-  let h = 1779033703 ^ (seed?.length || 0);
-  for (let i = 0; i < (seed?.length || 0); i += 1) {
-    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  return (Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0;
-}
-function mulberry32(a) {
-  return function() {
-    let t = (a += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function op_sample(bag, count, seed) {
-  const items = Array.from(bag.items);
-  const safeCount = Number.isFinite(count) ? count : 0;
-  const need = Math.min(Math.max(0, safeCount), items.length);
-  if (need === items.length) {
-    return new Bag(`${bag.name} → sample(all)`, new Set(items), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
-  }
-  let rand = Math.random;
-  if (seed) {
-    rand = mulberry32(makeSeedFromString(seed));
-  }
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(rand() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  const sampled = items.slice(0, need);
-  return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
-}
-
-const OP_REBUILDERS = {
-  async normalize_hiragana(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    return new Set(await convertItemsToHiragana(src.items));
-  },
-  async normalize_katakana(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    let i = 0;
-    for (const w of src.items) {
-      const k = await toKatakana(w);
-      if (k) out.add(k.replace(/\s+/g, ''));
-      if (++i % 2000 === 0) await waitFrame();
-    }
-    return out;
-  },
-  async to_romaji(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    let i = 0;
-    for (const w of src.items) {
-      const r = await toRomaji(w);
-      if (r) out.add(r.replace(/\s+/g, ''));
-      if (++i % 2000 === 0) await waitFrame();
-    }
-    return out;
-  },
-  async delete_chars(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const dels = Array.from(new Set((meta.deleted || '').split('')));
-    const out = new Set();
-    for (const w of srcItems) {
-      let wNew = w;
-      for (const c of dels) if (c) wNew = wNew.split(c).join('');
-      if (wNew !== w) out.add(wNew);
-    }
-    return out;
-  },
-  async to_upper(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    for (const w of src.items) out.add(normNFKC(w).toUpperCase());
-    return out;
-  },
-  async to_lower(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    for (const w of src.items) out.add(normNFKC(w).toLowerCase());
-    return out;
-  },
-  async reverse(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    for (const w of src.items) {
-      const reversed = Array.from(normNFKC(w)).reverse().join('');
-      if (reversed) out.add(reversed);
-    }
-    return out;
-  },
-  async dedupe_chars(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const out = new Set();
-    for (const w of src.items) {
-      const seen = new Set();
-      const result = [];
-      for (const ch of Array.from(normNFKC(w))) {
-        if (seen.has(ch)) continue;
-        seen.add(ch);
-        result.push(ch);
+    function setsAreEqual(a, b) {
+      if (a === b) return true;
+      if (!(a instanceof Set) || !(b instanceof Set)) return false;
+      if (a.size !== b.size) return false;
+      for (const value of a) {
+        if (!b.has(value)) return false;
       }
-      if (result.length) out.add(result.join(''));
+      return true;
     }
-    return out;
-  },
-  async replace(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const needle = meta.from || '';
-    const replacement = meta.to || '';
-    const out = new Set();
-    if (!needle) return out;
-    for (const w of src.items) {
-      const normed = normNFKC(w);
-      const replaced = normed.split(needle).join(replacement);
-      out.add(replaced);
-    }
-    return out;
-  },
-  async sort(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const order = meta.order || 'asc';
-    const locale = meta.locale || 'ja';
-    const arr = Array.from(src.items);
-    arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
-    if (order === 'desc') arr.reverse();
-    return new Set(arr);
-  },
-  async filter_in(meta) {
-    const src = REG.get(meta.src);
-    const lookup = REG.get(meta.lookup);
-    if (!src || !lookup) throw new Error('source or lookup bag not found');
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_src_before);
-    const lookupItems = await maybeNormalizeBagItems(lookup, !!meta.normalize_lookup_before);
-    const out = new Set();
-    for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
-    return out;
-  },
-  async union(meta) {
-    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-    if (!a || !b) throw new Error('union source missing');
-    return new Set([...a.items, ...b.items]);
-  },
-  async difference(meta) {
-    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-    if (!a || !b) throw new Error('difference source missing');
-    return new Set([...a.items].filter(w => !b.items.has(w)));
-  },
-  async intersection(meta) {
-    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-    if (!a || !b) throw new Error('intersection source missing');
-    const out = new Set();
-    for (const w of a.items) if (b.items.has(w)) out.add(w);
-    return out;
-  },
-  async symmetric_difference(meta) {
-    const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-    const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-    if (!a || !b) throw new Error('symmetric difference source missing');
-    const out = new Set();
-    for (const w of a.items) if (!b.items.has(w)) out.add(w);
-    for (const w of b.items) if (!a.items.has(w)) out.add(w);
-    return out;
-  },
-  async filter_length(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const min = Number.isFinite(meta.min) ? meta.min : Number(meta.range?.split('-')[0]) || 0;
-    const max = Number.isFinite(meta.max) ? meta.max : Number(meta.range?.split('-')[1]) || min;
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const out = new Set();
-    for (const w of srcItems) {
-      const len = normNFKC(w).length;
-      if (len >= min && len <= max) out.add(w);
-    }
-    return out;
-  },
-  async filter_prefix(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const prefix = await maybeNormalizeQueryValue(meta.prefix || '', !!meta.normalize_before);
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const out = new Set();
-    if (!prefix) return out;
-    for (const w of srcItems) if (normNFKC(w).startsWith(prefix)) out.add(w);
-    return out;
-  },
-  async filter_suffix(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const suffix = await maybeNormalizeQueryValue(meta.suffix || '', !!meta.normalize_before);
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const out = new Set();
-    if (!suffix) return out;
-    for (const w of srcItems) if (normNFKC(w).endsWith(suffix)) out.add(w);
-    return out;
-  },
-  async filter_contains(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const needle = await maybeNormalizeQueryValue(meta.needle || meta.contains || '', !!meta.normalize_before);
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const out = new Set();
-    if (!needle) return out;
-    for (const w of srcItems) if (normNFKC(w).includes(needle)) out.add(w);
-    return out;
-  },
-  async filter_regex(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-    const pattern = meta.pattern;
-    const invert = !!meta.invert;
-    if (!pattern) return new Set();
-    const re = new RegExp(pattern, 'u');
-    const out = new Set();
-    for (const w of srcItems) {
-      const matched = re.test(w);
-      if ((matched && !invert) || (!matched && invert)) out.add(w);
-    }
-    return out;
-  },
-  async ngrams(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const n = Number.isFinite(meta.n) ? Math.max(1, meta.n) : 1;
-    const out = new Set();
-    for (const w of src.items) {
-      const norm = normNFKC(w);
-      if (!norm || norm.length < n) continue;
-      for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
-    }
-    return out;
-  },
-  async sample(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('source bag not found');
-    const items = Array.from(src.items);
-    const count = Number.isFinite(meta.count) ? meta.count : 0;
-    const need = Math.min(Math.max(0, count), items.length);
-    if (need === items.length) return new Set(items);
-    let rand = Math.random;
-    if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
-    for (let i = items.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(rand() * (i + 1));
-      [items[i], items[j]] = [items[j], items[i]];
-    }
-    return new Set(items.slice(0, need));
-  },
-  async clone(meta) {
-    const src = REG.get(meta.src);
-    if (!src) throw new Error('clone source not found');
-    return new Set(src.items);
-  },
-  async manual_edit() {
-    return null;
-  }
-};
 
-async function recomputeBagByMeta(bag) {
-  const meta = bag?.meta || {};
-  const op = meta.op;
-  if (!op) return { changed: false, reason: 'no-op' };
-  const runner = OP_REBUILDERS[op];
-  if (!runner) return { changed: false, reason: 'unsupported' };
-  const before = bag.items instanceof Set ? new Set(bag.items) : new Set(Array.from(bag.items || []));
-  const result = await runner(meta);
-  if (!result) {
-    bag.meta.reapplied_at = nowISO();
-    return { changed: false, reason: 'no-change' };
-  }
-  const nextItems = result instanceof Set ? result : new Set(result);
-  const changed = !setsAreEqual(before, nextItems);
-  bag.items = nextItems;
-  bag.meta.size = bag.items.size;
-  bag.meta.reapplied_at = nowISO();
-  if (changed) bag.meta.updated_at = nowISO();
-  return { changed, reason: changed ? 'updated' : 'no-change' };
-}
+    function findBagStatusElement(bagId) {
+      return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
+    }
 
-async function reapplySeries(limitBagId = null) {
-  const limit = limitBagId === null ? null : Number(limitBagId);
-  const label = limit === null ? 'all bags' : `bag ${limit}`;
-  appendOpLog(`↻ Reapply start (${label})`);
-  const bags = REG.all();
-  let updated = 0;
-  for (const bag of bags) {
-    try {
-      const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
-      if (!runnable) {
-        bag.meta.reapply_status = '⏭ 再適用対象外';
-        delete bag.meta.reapply_error;
-        setBagStatusMessage(bag.id, bag.meta.reapply_status);
-      } else {
-        bag.meta.reapply_status = '⟳ 再適用中…';
-        setBagStatusMessage(bag.id, bag.meta.reapply_status);
-        const result = await recomputeBagByMeta(bag);
-        delete bag.meta.reapply_error;
-        if (result.changed) {
-          updated += 1;
-          bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
-        } else {
-          bag.meta.reapply_status = '＝ 変更なし';
+    function setBagStatusMessage(bagId, message) {
+      const statusEl = findBagStatusElement(bagId);
+      if (statusEl) {
+        const text = message || '';
+        statusEl.textContent = text;
+        statusEl.title = text;
+      }
+    }
+
+    function describeBagLifecycle(bag) {
+      if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
+      if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
+      if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
+      if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
+      return '';
+    }
+    function setSelectOptions(sel, opts) {
+      if (!sel) return;
+      const v = sel.value;
+      sel.innerHTML = '';
+      for (const o of opts) {
+        const op = document.createElement('option');
+        op.value = o.value;
+        op.textContent = o.label;
+        sel.appendChild(op);
+      }
+      if (opts.length) {
+        sel.value = v && opts.some(o => o.value === v) ? v : opts[opts.length - 1].value;
+      }
+    }
+
+    /* ====== Kuroshiro（かな正規化） ====== */
+    let K = null, kuroReady = false;
+    async function ensureKuro() {
+      if (kuroReady) return;
+      K = new window.Kuroshiro();
+      const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
+      await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
+      kuroReady = true;
+    }
+    function katakanaToHiragana(value) {
+      if (!value) return '';
+      return value.replace(/[\u30A1-\u30FA\u30FD\u30FE]/g, ch => {
+        const code = ch.charCodeAt(0);
+        if (code === 0x30FD) return 'ゝ'; // ヽ → ゝ
+        if (code === 0x30FE) return 'ゞ'; // ヾ → ゞ
+        return String.fromCharCode(code - 0x60);
+      });
+    }
+
+    function normalizeKatakanaFallback(value) {
+      if (!value) return '';
+      return katakanaToHiragana(value);
+    }
+
+    function safeWanakanaConvert(method, value) {
+      const wk = window.wanakana;
+      if (wk && typeof wk[method] === 'function') {
+        return wk[method](value);
+      }
+      if (method === 'toHiragana') {
+        return normalizeKatakanaFallback(value);
+      }
+      return value;
+    }
+    async function toHiragana(s) {
+      if (!s) return '';
+      try {
+        await ensureKuro();
+        return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+      } catch {
+        return safeWanakanaConvert('toHiragana', normNFKC(s));
+      }
+    }
+    async function toKatakana(s) {
+      if (!s) return '';
+      try {
+        await ensureKuro();
+        return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
+      } catch {
+        return safeWanakanaConvert('toKatakana', normNFKC(s));
+      }
+    }
+    async function toRomaji(s) {
+      if (!s) return '';
+      try {
+        await ensureKuro();
+        return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
+      } catch {
+        return safeWanakanaConvert('toRomaji', normNFKC(s));
+      }
+      return out;
+    }
+
+    async function maybeNormalizeItems(items, shouldNormalize) {
+      if (!shouldNormalize) return new Set(items);
+      const arr = await convertItemsToHiragana(items);
+      return new Set(arr);
+    }
+
+    async function maybeNormalizeBagItems(bag, shouldNormalize) {
+      if (!bag) return new Set();
+      return maybeNormalizeItems(bag.items, shouldNormalize);
+    }
+
+    async function maybeNormalizeQueryValue(value, shouldNormalize) {
+      const base = normNFKC(value || '');
+      if (!base) return '';
+      if (!shouldNormalize) return base;
+      const hira = await toHiragana(base);
+      const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+      return normalized || base;
+    }
+
+    function waitFrame() {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    async function convertItemsToHiragana(items) {
+      const out = [];
+      let i = 0;
+      for (const w of items) {
+        const h = await toHiragana(w);
+        if (h) out.push(h.replace(/\s+/g, ''));
+        if (++i % 2000 === 0) await waitFrame();
+      }
+      return out;
+    }
+
+    async function maybeNormalizeItems(items, shouldNormalize) {
+      if (!shouldNormalize) return new Set(items);
+      const arr = await convertItemsToHiragana(items);
+      return new Set(arr);
+    }
+
+    async function maybeNormalizeBagItems(bag, shouldNormalize) {
+      if (!bag) return new Set();
+      return maybeNormalizeItems(bag.items, shouldNormalize);
+    }
+
+    async function maybeNormalizeQueryValue(value, shouldNormalize) {
+      const base = normNFKC(value || '');
+      if (!base) return '';
+      if (!shouldNormalize) return base;
+      const hira = await toHiragana(base);
+      const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
+      return normalized || base;
+    }
+
+    /* ====== Bag / Registry ====== */
+    let _nextId = 0;
+    class Bag {
+      constructor(name, items, meta = {}) {
+        this.id = _nextId++;
+        this.name = name || `bag#${this.id}`;
+        this.items = new Set(items || []);
+        this.meta = Object.assign({}, meta);
+        if (!this.meta.created_at) this.meta.created_at = nowISO();
+        this.meta.size = this.items.size;
+      }
+      label() { return `[${this.id}] ${this.name} (${this.items.size})`; }
+    }
+    class BagRegistry {
+      constructor() { this._bags = []; }
+      add(b) { this._bags.push(b); return b.id; }
+      get(id) { return this._bags.find(x => x.id === Number(id)); }
+      all() { return this._bags.slice(); }
+      indexOf(id) { return this._bags.findIndex(x => x.id === Number(id)); }
+      remove(id) {
+        const idx = this.indexOf(id);
+        if (idx < 0) return false;
+        this._bags.splice(idx, 1);
+        return true;
+      }
+      clone(id, nameSuffix = ' copy') {
+        const src = this.get(id);
+        if (!src) return null;
+        const clonedMeta = Object.assign({}, src.meta, {
+          cloned_from: src.id,
+          cloned_op: src.meta?.op || null,
+          op: 'clone',
+          src: src.id
+        });
+        delete clonedMeta.reapply_status;
+        delete clonedMeta.reapply_error;
+        const clone = new Bag(`${src.name}${nameSuffix}`, Array.from(src.items), clonedMeta);
+        this.add(clone);
+        return clone;
+      }
+      moveRelative(sourceId, targetId, placeBefore = false) {
+        const fromIdx = this.indexOf(sourceId);
+        const targetIdx = this.indexOf(targetId);
+        if (fromIdx < 0 || targetIdx < 0 || sourceId === targetId) return false;
+        const [bag] = this._bags.splice(fromIdx, 1);
+        let insertIdx = this.indexOf(targetId);
+        if (insertIdx < 0) return false;
+        if (!placeBefore) insertIdx += 1;
+        this._bags.splice(insertIdx, 0, bag);
+        return true;
+      }
+      choices() { return this._bags.map(b => ({ label: b.label(), value: String(b.id) })); }
+      serialize() {
+        return {
+          nextId: _nextId,
+          bags: this._bags.map(b => ({
+            id: b.id,
+            name: b.name,
+            items: Array.from(b.items),
+            meta: Object.assign({}, b.meta)
+          }))
+        };
+      }
+      restore(snapshot) {
+        this._bags = snapshot.bags.map(data => {
+          const bag = new Bag(data.name, data.items, Object.assign({}, data.meta));
+          bag.id = data.id;
+          bag.meta.size = bag.items.size;
+          return bag;
+        });
+        _nextId = snapshot.nextId;
+      }
+    }
+    const REG = new BagRegistry();
+
+    /* ====== 履歴管理 ====== */
+    const history = [];
+    let historyIndex = -1;
+    function captureState() {
+      const snapshot = REG.serialize();
+      history.splice(historyIndex + 1);
+      history.push(snapshot);
+      historyIndex = history.length - 1;
+      updateUndoRedoButtons();
+    }
+    function restoreFromHistory() {
+      if (historyIndex < 0 || historyIndex >= history.length) return;
+      const snapshot = history[historyIndex];
+      REG.restore(snapshot);
+      renderBags();
+      applyChoices();
+      updateUndoRedoButtons();
+    }
+    function updateUndoRedoButtons() {
+      const undoBtn = el('#btnUndo');
+      const redoBtn = el('#btnRedo');
+      if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+      if (redoBtn) redoBtn.disabled = historyIndex >= history.length - 1;
+    }
+    function initHistory() {
+      captureState();
+    }
+
+    /* ====== Ops（シリアル） ====== */
+    async function op_normalize_hiragana(srcBag) {
+      const out = new Set();
+      let i = 0;
+      for (const w of srcBag.items) {
+        const h = await toHiragana(w);
+        if (h) out.add(h.replace(/\s+/g, ''));
+        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
+    }
+    async function op_normalize_katakana(srcBag) {
+      const out = new Set();
+      let i = 0;
+      for (const w of srcBag.items) {
+        const h = await toKatakana(w);
+        if (h) out.add(h.replace(/\s+/g, ''));
+        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
+    }
+    async function op_to_romaji(srcBag) {
+      const out = new Set();
+      let i = 0;
+      for (const w of srcBag.items) {
+        const r = await toRomaji(w);
+        if (r) out.add(r.replace(/\s+/g, ''));
+        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
+    }
+    async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
+      const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
+      const dels = Array.from(new Set((del || '').split('')));
+      const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
+      const out = new Set();
+      for (const w of srcItems) {
+        let wNew = w;
+        for (const c of dels) if (c) wNew = wNew.split(c).join('');
+        if (wNew !== w) out.add(wNew);
+      }
+      return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, {
+        op: 'delete_chars',
+        src: srcBag.id,
+        deleted: dels.join(''),
+        normalize_input: normalizeInput,
+        normalize_before: normalizeBefore
+      });
+    }
+    function op_to_upper(srcBag) {
+      const out = new Set();
+      for (const w of srcBag.items) {
+        out.add(normNFKC(w).toUpperCase());
+      }
+      return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
+    }
+    function op_to_lower(srcBag) {
+      const out = new Set();
+      for (const w of srcBag.items) {
+        out.add(normNFKC(w).toLowerCase());
+      }
+      return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
+    }
+    function op_reverse(srcBag) {
+      const out = new Set();
+      for (const w of srcBag.items) {
+        const reversed = Array.from(normNFKC(w)).reverse().join('');
+        if (reversed) out.add(reversed);
+      }
+      return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
+    }
+    function op_dedupe_chars(srcBag) {
+      const out = new Set();
+      for (const w of srcBag.items) {
+        const seen = new Set();
+        const result = [];
+        for (const ch of Array.from(normNFKC(w))) {
+          if (seen.has(ch)) continue;
+          seen.add(ch);
+          result.push(ch);
         }
-        setBagStatusMessage(bag.id, bag.meta.reapply_status);
+        if (result.length) out.add(result.join(''));
       }
-    } catch (e) {
-      log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
-      appendOpLog(`× Reapply failed [${bag.id}] ${bag.name}: ${e.message}`);
-      bag.meta.reapply_error = e.message;
-      bag.meta.reapplied_at = nowISO();
-      bag.meta.reapply_status = `× エラー: ${e.message}`;
-      setBagStatusMessage(bag.id, bag.meta.reapply_status);
-      break;
+      return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
     }
-    if (limit !== null && bag.id === limit) break;
-  }
-  if (updated > 0) {
-    renderBags();
-    applyChoices();
-    captureState();
-    appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
-  } else {
-    appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
-  }
-}
+    function op_replace(srcBag, fromValue, toValue) {
+      const needle = normNFKC(fromValue);
+      const replacement = normNFKC(toValue ?? '');
+      const out = new Set();
+      if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement });
+      for (const w of srcBag.items) {
+        const normed = normNFKC(w);
+        const replaced = normed.split(needle).join(replacement);
+        out.add(replaced);
+      }
+      return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
+    }
+    function op_sort(srcBag, order = 'asc', locale = 'ja') {
+      const arr = Array.from(srcBag.items);
+      arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
+      if (order === 'desc') arr.reverse();
+      return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
+    }
+    async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
+      const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
+      const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
+      const out = new Set();
+      for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+      return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, {
+        op: 'filter_in',
+        src: srcBag.id,
+        lookup: lookupBag.id,
+        normalize_src_before: normalizeSrc,
+        normalize_lookup_before: normalizeLookup
+      });
+    }
+    function op_union(bagA, bagB) {
+      const out = new Set([...bagA.items, ...bagB.items]);
+      return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
+        op: 'union',
+        src: [bagA.id, bagB.id].join(','),
+        src_a: bagA.id,
+        src_b: bagB.id,
+        size_a: bagA.items.size,
+        size_b: bagB.items.size
+      });
+    }
+    function op_difference(bagA, bagB) {
+      const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
+      return new Bag(`${bagA.name} - ${bagB.name}`, out, {
+        op: 'difference',
+        src: [bagA.id, bagB.id].join(','),
+        src_a: bagA.id,
+        src_b: bagB.id,
+        size_a: bagA.items.size,
+        size_b: bagB.items.size
+      });
+    }
+    function op_intersection(bagA, bagB) {
+      const out = new Set();
+      for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
+      return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
+        op: 'intersection',
+        src: [bagA.id, bagB.id].join(','),
+        src_a: bagA.id,
+        src_b: bagB.id,
+        size_a: bagA.items.size,
+        size_b: bagB.items.size
+      });
+    }
+    function op_symmetric_difference(bagA, bagB) {
+      const out = new Set();
+      for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
+      for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
+      return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
+        op: 'symmetric_difference',
+        src: [bagA.id, bagB.id].join(','),
+        src_a: bagA.id,
+        src_b: bagB.id,
+        size_a: bagA.items.size,
+        size_b: bagB.items.size
+      });
+    }
+    async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
+      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+      const out = new Set();
+      for (const w of srcItems) {
+        const len = normNFKC(w).length;
+        if (len >= minLen && len <= maxLen) out.add(w);
+      }
+      return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, {
+        op: 'filter_length',
+        src: bag.id,
+        range: `${minLen}-${maxLen}`,
+        min: minLen,
+        max: maxLen,
+        normalize_before: normalizeBefore
+      });
+    }
+    async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
+      const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
+      const out = new Set();
+      if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
+      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+      for (const w of srcItems) {
+        if (normNFKC(w).startsWith(needle)) out.add(w);
+      }
+      return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
+    }
+    async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
+      const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
+      const out = new Set();
+      if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
+      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+      for (const w of srcItems) {
+        if (normNFKC(w).endsWith(needle)) out.add(w);
+      }
+      return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
+    }
+    async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
+      const needle = await maybeNormalizeQueryValue(needleRaw, normalizeBefore);
+      const out = new Set();
+      if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
+      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+      for (const w of srcItems) {
+        if (normNFKC(w).includes(needle)) out.add(w);
+      }
+      return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
+    }
+    async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
+      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+      const re = new RegExp(pattern, 'u');
+      const out = new Set();
+      for (const w of srcItems) {
+        const matched = re.test(w);
+        if ((matched && !invert) || (!matched && invert)) out.add(w);
+      }
+      return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
+    }
+    function op_ngrams(bag, n) {
+      const size = Number.isFinite(n) ? Math.max(1, n) : 1;
+      const out = new Set();
+      for (const w of bag.items) {
+        const norm = normNFKC(w);
+        if (!norm || norm.length < size) continue;
+        for (let i = 0; i <= norm.length - size; i += 1) {
+          out.add(norm.slice(i, i + size));
+        }
+      }
+      return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size });
+    }
+    function makeSeedFromString(seed) {
+      if (typeof seed === 'number') return seed >>> 0;
+      let h = 1779033703 ^ (seed?.length || 0);
+      for (let i = 0; i < (seed?.length || 0); i += 1) {
+        h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return (Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0;
+    }
+    function mulberry32(a) {
+      return function () {
+        let t = (a += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function op_sample(bag, count, seed) {
+      const items = Array.from(bag.items);
+      const safeCount = Number.isFinite(count) ? count : 0;
+      const need = Math.min(Math.max(0, safeCount), items.length);
+      if (need === items.length) {
+        return new Bag(`${bag.name} → sample(all)`, new Set(items), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
+      }
+      let rand = Math.random;
+      if (seed) {
+        rand = mulberry32(makeSeedFromString(seed));
+      }
+      for (let i = items.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rand() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      const sampled = items.slice(0, need);
+      return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
+    }
 
-/* ====== JSON列挙・ロード（bag/*.json） ====== */
-const BAG_DIR = './bag/';
-function applyChoices() {
-  const choices = REG.choices();
-  const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
-  ids.forEach(id => setSelectOptions(el(id), choices));
-}
-function addBagFromWords(name, words, meta) {
-  const b = new Bag(name, uniq(words.map(normNFKC).filter(Boolean)), meta || {});
-  REG.add(b);
-  applyChoices();
-  renderBags();
-  captureState();
-  appendOpLog(`+ Bag [${b.id}] '${b.name}' size=${b.items.size}`);
-  return b;
-}
+    const OP_REBUILDERS = {
+      async normalize_hiragana(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        return new Set(await convertItemsToHiragana(src.items));
+      },
+      async normalize_katakana(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        let i = 0;
+        for (const w of src.items) {
+          const k = await toKatakana(w);
+          if (k) out.add(k.replace(/\s+/g, ''));
+          if (++i % 2000 === 0) await waitFrame();
+        }
+        return out;
+      },
+      async to_romaji(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        let i = 0;
+        for (const w of src.items) {
+          const r = await toRomaji(w);
+          if (r) out.add(r.replace(/\s+/g, ''));
+          if (++i % 2000 === 0) await waitFrame();
+        }
+        return out;
+      },
+      async delete_chars(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const dels = Array.from(new Set((meta.deleted || '').split('')));
+        const out = new Set();
+        for (const w of srcItems) {
+          let wNew = w;
+          for (const c of dels) if (c) wNew = wNew.split(c).join('');
+          if (wNew !== w) out.add(wNew);
+        }
+        return out;
+      },
+      async to_upper(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        for (const w of src.items) out.add(normNFKC(w).toUpperCase());
+        return out;
+      },
+      async to_lower(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        for (const w of src.items) out.add(normNFKC(w).toLowerCase());
+        return out;
+      },
+      async reverse(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        for (const w of src.items) {
+          const reversed = Array.from(normNFKC(w)).reverse().join('');
+          if (reversed) out.add(reversed);
+        }
+        return out;
+      },
+      async dedupe_chars(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const out = new Set();
+        for (const w of src.items) {
+          const seen = new Set();
+          const result = [];
+          for (const ch of Array.from(normNFKC(w))) {
+            if (seen.has(ch)) continue;
+            seen.add(ch);
+            result.push(ch);
+          }
+          if (result.length) out.add(result.join(''));
+        }
+        return out;
+      },
+      async replace(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const needle = meta.from || '';
+        const replacement = meta.to || '';
+        const out = new Set();
+        if (!needle) return out;
+        for (const w of src.items) {
+          const normed = normNFKC(w);
+          const replaced = normed.split(needle).join(replacement);
+          out.add(replaced);
+        }
+        return out;
+      },
+      async sort(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const order = meta.order || 'asc';
+        const locale = meta.locale || 'ja';
+        const arr = Array.from(src.items);
+        arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
+        if (order === 'desc') arr.reverse();
+        return new Set(arr);
+      },
+      async filter_in(meta) {
+        const src = REG.get(meta.src);
+        const lookup = REG.get(meta.lookup);
+        if (!src || !lookup) throw new Error('source or lookup bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_src_before);
+        const lookupItems = await maybeNormalizeBagItems(lookup, !!meta.normalize_lookup_before);
+        const out = new Set();
+        for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+        return out;
+      },
+      async union(meta) {
+        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+        if (!a || !b) throw new Error('union source missing');
+        return new Set([...a.items, ...b.items]);
+      },
+      async difference(meta) {
+        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+        if (!a || !b) throw new Error('difference source missing');
+        return new Set([...a.items].filter(w => !b.items.has(w)));
+      },
+      async intersection(meta) {
+        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+        if (!a || !b) throw new Error('intersection source missing');
+        const out = new Set();
+        for (const w of a.items) if (b.items.has(w)) out.add(w);
+        return out;
+      },
+      async symmetric_difference(meta) {
+        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
+        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
+        if (!a || !b) throw new Error('symmetric difference source missing');
+        const out = new Set();
+        for (const w of a.items) if (!b.items.has(w)) out.add(w);
+        for (const w of b.items) if (!a.items.has(w)) out.add(w);
+        return out;
+      },
+      async filter_length(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const min = Number.isFinite(meta.min) ? meta.min : Number(meta.range?.split('-')[0]) || 0;
+        const max = Number.isFinite(meta.max) ? meta.max : Number(meta.range?.split('-')[1]) || min;
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const out = new Set();
+        for (const w of srcItems) {
+          const len = normNFKC(w).length;
+          if (len >= min && len <= max) out.add(w);
+        }
+        return out;
+      },
+      async filter_prefix(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const prefix = await maybeNormalizeQueryValue(meta.prefix || '', !!meta.normalize_before);
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const out = new Set();
+        if (!prefix) return out;
+        for (const w of srcItems) if (normNFKC(w).startsWith(prefix)) out.add(w);
+        return out;
+      },
+      async filter_suffix(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const suffix = await maybeNormalizeQueryValue(meta.suffix || '', !!meta.normalize_before);
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const out = new Set();
+        if (!suffix) return out;
+        for (const w of srcItems) if (normNFKC(w).endsWith(suffix)) out.add(w);
+        return out;
+      },
+      async filter_contains(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const needle = await maybeNormalizeQueryValue(meta.needle || meta.contains || '', !!meta.normalize_before);
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const out = new Set();
+        if (!needle) return out;
+        for (const w of srcItems) if (normNFKC(w).includes(needle)) out.add(w);
+        return out;
+      },
+      async filter_regex(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const pattern = meta.pattern;
+        const invert = !!meta.invert;
+        if (!pattern) return new Set();
+        const re = new RegExp(pattern, 'u');
+        const out = new Set();
+        for (const w of srcItems) {
+          const matched = re.test(w);
+          if ((matched && !invert) || (!matched && invert)) out.add(w);
+        }
+        return out;
+      },
+      async ngrams(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const n = Number.isFinite(meta.n) ? Math.max(1, meta.n) : 1;
+        const out = new Set();
+        for (const w of src.items) {
+          const norm = normNFKC(w);
+          if (!norm || norm.length < n) continue;
+          for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
+        }
+        return out;
+      },
+      async sample(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('source bag not found');
+        const items = Array.from(src.items);
+        const count = Number.isFinite(meta.count) ? meta.count : 0;
+        const need = Math.min(Math.max(0, count), items.length);
+        if (need === items.length) return new Set(items);
+        let rand = Math.random;
+        if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
+        for (let i = items.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(rand() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return new Set(items.slice(0, need));
+      },
+      async clone(meta) {
+        const src = REG.get(meta.src);
+        if (!src) throw new Error('clone source not found');
+        return new Set(src.items);
+      },
+      async manual_edit() {
+        return null;
+      }
+    };
 
-async function listJson() {
-  const sel = el('#selFile');
-  if (!sel) return;
-  sel.innerHTML = '';
-  try {
-    const r = await fetch(BAG_DIR + '_files.txt', { cache: 'no-cache' });
-    if (r.ok) {
-      const t = await r.text();
-      const files = t.split(/\r?\n/).map(s => s.trim()).filter(s => s && /\.json$/i.test(s));
-      if (files.length) {
-        setSelectOptions(sel, files.map(f => ({ label: f, value: f })));
-        log('一覧: _files.txt から ' + files.length + ' 件');
+    async function recomputeBagByMeta(bag) {
+      const meta = bag?.meta || {};
+      const op = meta.op;
+      if (!op) return { changed: false, reason: 'no-op' };
+      const runner = OP_REBUILDERS[op];
+      if (!runner) return { changed: false, reason: 'unsupported' };
+      const before = bag.items instanceof Set ? new Set(bag.items) : new Set(Array.from(bag.items || []));
+      const result = await runner(meta);
+      if (!result) {
+        bag.meta.reapplied_at = nowISO();
+        return { changed: false, reason: 'no-change' };
+      }
+      const nextItems = result instanceof Set ? result : new Set(result);
+      const changed = !setsAreEqual(before, nextItems);
+      bag.items = nextItems;
+      bag.meta.size = bag.items.size;
+      bag.meta.reapplied_at = nowISO();
+      if (changed) bag.meta.updated_at = nowISO();
+      return { changed, reason: changed ? 'updated' : 'no-change' };
+    }
+
+    async function reapplySeries(limitBagId = null) {
+      const limit = limitBagId === null ? null : Number(limitBagId);
+      const label = limit === null ? 'all bags' : `bag ${limit}`;
+      appendOpLog(`↻ Reapply start (${label})`);
+      const bags = REG.all();
+      let updated = 0;
+      for (const bag of bags) {
+        try {
+          const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
+          if (!runnable) {
+            bag.meta.reapply_status = '⏭ 再適用対象外';
+            delete bag.meta.reapply_error;
+            setBagStatusMessage(bag.id, bag.meta.reapply_status);
+          } else {
+            bag.meta.reapply_status = '⟳ 再適用中…';
+            setBagStatusMessage(bag.id, bag.meta.reapply_status);
+            const result = await recomputeBagByMeta(bag);
+            delete bag.meta.reapply_error;
+            if (result.changed) {
+              updated += 1;
+              bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
+            } else {
+              bag.meta.reapply_status = '＝ 変更なし';
+            }
+            setBagStatusMessage(bag.id, bag.meta.reapply_status);
+          }
+        } catch (e) {
+          log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
+          appendOpLog(`× Reapply failed [${bag.id}] ${bag.name}: ${e.message}`);
+          bag.meta.reapply_error = e.message;
+          bag.meta.reapplied_at = nowISO();
+          bag.meta.reapply_status = `× エラー: ${e.message}`;
+          setBagStatusMessage(bag.id, bag.meta.reapply_status);
+          break;
+        }
+        if (limit !== null && bag.id === limit) break;
+      }
+      if (updated > 0) {
+        renderBags();
+        applyChoices();
+        captureState();
+        appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
+      } else {
+        appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
+      }
+    }
+
+    /* ====== JSON列挙・ロード（bag/*.json） ====== */
+    const BAG_DIR = './bag/';
+    function applyChoices() {
+      const choices = REG.choices();
+      const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
+      ids.forEach(id => setSelectOptions(el(id), choices));
+    }
+    function addBagFromWords(name, words, meta) {
+      const b = new Bag(name, uniq(words.map(normNFKC).filter(Boolean)), meta || {});
+      REG.add(b);
+      applyChoices();
+      renderBags();
+      captureState();
+      appendOpLog(`+ Bag [${b.id}] '${b.name}' size=${b.items.size}`);
+      return b;
+    }
+
+    async function listJson() {
+      const sel = el('#selFile');
+      if (!sel) return;
+      sel.innerHTML = '';
+      try {
+        const r = await fetch(BAG_DIR + '_files.txt', { cache: 'no-cache' });
+        if (r.ok) {
+          const t = await r.text();
+          const files = t.split(/\r?\n/).map(s => s.trim()).filter(s => s && /\.json$/i.test(s));
+          if (files.length) {
+            setSelectOptions(sel, files.map(f => ({ label: f, value: f })));
+            log('一覧: _files.txt から ' + files.length + ' 件');
+            return;
+          }
+        }
+      } catch (_) { }
+      try {
+        const r = await fetch(BAG_DIR, { cache: 'no-cache' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const html = await r.text();
+        const files = [...html.matchAll(/href="([^"]+?\.json)"/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
+        const files2 = [...html.matchAll(/href='([^']+?\.json)'/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
+        const all = uniq([...(files || []), ...(files2 || [])]);
+        if (all.length) {
+          setSelectOptions(sel, all.map(f => ({ label: f, value: f })));
+          log('一覧: ディレクトリ HTML から ' + all.length + ' 件');
+          return;
+        }
+        throw new Error('解析失敗');
+      } catch (e) {
+        log('列挙失敗: ' + e.message + '（bag/_files.txt を置くか、HTTP サーバのディレクトリ一覧を有効にしろ）');
+      }
+    }
+    async function loadSelectedJson() {
+      const sel = el('#selFile');
+      const f = sel && sel.value;
+      if (!f) { log('ファイル未選択'); return; }
+      try {
+        const r = await fetch(BAG_DIR + f, { cache: 'no-cache' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const raw = await r.text();
+        const head = raw.trim()[0];
+        if (head !== '[' && head !== '{') throw new Error('JSON ではなく HTML 等が返っている');
+        const data = JSON.parse(raw);
+        const words = [];
+        for (const obj of (Array.isArray(data) ? data : [data])) {
+          if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
+        }
+        addBagFromWords(f.replace(/\.json$/i, ''), words, { from: 'json', format: 'lemmas' });
+        log(`読み込み OK: ${f} | 語数=${words.length}`);
+      } catch (e) { log('読み込み失敗: ' + e.message); }
+    }
+
+    /* ====== 手動アップロード / 貼り付け ====== */
+    el('#filePick')?.addEventListener('change', async (ev) => {
+      const f = ev.target.files[0]; if (!f) return;
+      try {
+        const txt = await f.text();
+        const head = txt.trim()[0];
+        if (head !== '[' && head !== '{') throw new Error('JSON でない');
+        const data = JSON.parse(txt);
+        const words = [];
+        for (const obj of (Array.isArray(data) ? data : [data])) {
+          if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
+        }
+        addBagFromWords(f.name.replace(/\.json$/i, ''), words, { from: 'upload', format: 'lemmas' });
+        log(`手動読み込み OK: ${f.name} | 語数=${words.length}`);
+      } catch (e) { log('手動読み込み失敗: ' + e.message); }
+    });
+    el('#btnMakeBagFromText')?.addEventListener('click', () => {
+      const name = normNFKC(el('#bagNameInput').value) || 'input bag';
+      const words = uniq(el('#pasteArea').value.split(/\r?\n/).map(s => normNFKC(s)).filter(Boolean));
+      if (!words.length) {
+        el('#importLog').textContent += (el('#importLog').textContent ? '\n' : '') + '空入力';
         return;
       }
+      addBagFromWords(name, words, { from: 'paste', normalized: 'NFKC' });
+    });
+
+    /* ====== 操作ボタン ====== */
+    el('#btnNorm')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcNorm').value); if (!src) return;
+      appendOpLog(`normalize(hiragana)… [${src.id}] ${src.name}`);
+      const nb = await op_normalize_hiragana(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnKatakana')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcNorm').value); if (!src) return;
+      appendOpLog(`normalize(katakana)… [${src.id}] ${src.name}`);
+      const nb = await op_normalize_katakana(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnRomaji')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+      appendOpLog(`to_romaji … [${src.id}] ${src.name}`);
+      const nb = await op_to_romaji(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnUpper')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+      appendOpLog(`to_upper … [${src.id}] ${src.name}`);
+      const nb = op_to_upper(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnLower')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+      appendOpLog(`to_lower … [${src.id}] ${src.name}`);
+      const nb = op_to_lower(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnReverse')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcTransform').value); if (!src) return;
+      appendOpLog(`reverse … [${src.id}] ${src.name}`);
+      const nb = op_reverse(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnDel')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcDel').value); if (!src) return;
+      const chars = el('#delChars').value || '';
+      const normIn = el('#ckNormDel').checked;
+      const normBag = el('#ckPreNormDel').checked;
+      appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      const nb = await op_delete_chars(src, chars, normIn, normBag);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnFlt')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcFlt').value), lkp = REG.get(el('#selLkpFlt').value);
+      if (!src || !lkp) return;
+      const normSrc = el('#ckPreNormFltSrc').checked;
+      const normLookup = el('#ckPreNormFltLookup').checked;
+      appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) … [${src.id}] ${src.name}`);
+      const nb = await op_filter_in(src, lkp, normSrc, normLookup);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnUnion')?.addEventListener('click', () => {
+      const a = REG.get(el('#selSrcUnionA').value);
+      const b = REG.get(el('#selSrcUnionB').value);
+      if (!a || !b) return;
+      appendOpLog(`union … [${a.id}] ${a.name} + [${b.id}] ${b.name}`);
+      const nb = op_union(a, b);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnDiff')?.addEventListener('click', () => {
+      const a = REG.get(el('#selSrcUnionA').value);
+      const b = REG.get(el('#selSrcUnionB').value);
+      if (!a || !b) return;
+      appendOpLog(`difference … [${a.id}] ${a.name} - [${b.id}] ${b.name}`);
+      const nb = op_difference(a, b);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnIntersect')?.addEventListener('click', () => {
+      const a = REG.get(el('#selSrcUnionA').value);
+      const b = REG.get(el('#selSrcUnionB').value);
+      if (!a || !b) return;
+      appendOpLog(`intersection … [${a.id}] ${a.name} ∩ [${b.id}] ${b.name}`);
+      const nb = op_intersection(a, b);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnSymDiff')?.addEventListener('click', () => {
+      const a = REG.get(el('#selSrcUnionA').value);
+      const b = REG.get(el('#selSrcUnionB').value);
+      if (!a || !b) return;
+      appendOpLog(`symmetric difference … [${a.id}] ${a.name} △ [${b.id}] ${b.name}`);
+      const nb = op_symmetric_difference(a, b);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnLengthFilter')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcLen').value);
+      if (!src) return;
+      const min = Math.max(0, parseIntSafe(el('#lenMin').value, 0));
+      const max = Math.max(min, parseIntSafe(el('#lenMax').value, min));
+      const normBag = el('#ckPreNormLen').checked;
+      appendOpLog(`filter length [${min}, ${max}] (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      const nb = await op_filter_length(src, min, max, normBag);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnPrefix')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcAffix').value);
+      if (!src) return;
+      const prefixRaw = el('#prefixValue').value;
+      const prefix = normNFKC(prefixRaw);
+      if (!prefix) { log('prefix を入力してください'); return; }
+      const normBag = el('#ckPreNormAffix').checked;
+      appendOpLog(`filter prefix "${prefix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      const nb = await op_filter_prefix(src, prefixRaw, normBag);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnSuffix')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcAffix').value);
+      if (!src) return;
+      const suffixRaw = el('#suffixValue').value;
+      const suffix = normNFKC(suffixRaw);
+      if (!suffix) { log('suffix を入力してください'); return; }
+      const normBag = el('#ckPreNormAffix').checked;
+      appendOpLog(`filter suffix "${suffix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      const nb = await op_filter_suffix(src, suffixRaw, normBag);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnContains')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcContains').value);
+      if (!src) return;
+      const needleRaw = el('#containsValue').value;
+      const needle = normNFKC(needleRaw);
+      if (!needle) { log('検索文字列を入力してください'); return; }
+      const normBag = el('#ckPreNormContains').checked;
+      appendOpLog(`filter contains "${needle}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      const nb = await op_filter_contains(src, needleRaw, normBag);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnRegex')?.addEventListener('click', async () => {
+      const src = REG.get(el('#selSrcRegex').value);
+      const pattern = el('#regexPattern').value;
+      const invert = el('#regexInvert').checked;
+      if (!src) return;
+      if (!pattern) { log('正規表現を入力してください'); return; }
+      const invertLabel = invert ? ' (invert)' : '';
+      const normBag = el('#ckPreNormRegex').checked;
+      appendOpLog(`filter_regex /${pattern}/${invertLabel} (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      let nb;
+      try {
+        nb = await op_filter_regex(src, pattern, invert, normBag);
+      } catch (e) {
+        log(`正規表現エラー: ${e.message}`);
+        appendOpLog('× 正規表現エラー');
+        return;
+      }
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnDedupe')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+      appendOpLog(`dedupe_chars … [${src.id}] ${src.name}`);
+      const nb = op_dedupe_chars(src);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnSortAsc')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+      appendOpLog(`sort asc … [${src.id}] ${src.name}`);
+      const nb = op_sort(src, 'asc');
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnSortDesc')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+      appendOpLog(`sort desc … [${src.id}] ${src.name}`);
+      const nb = op_sort(src, 'desc');
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnReplace')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcFormat').value); if (!src) return;
+      const fromRaw = el('#replaceFrom').value;
+      const toRaw = el('#replaceTo').value || '';
+      const from = normNFKC(fromRaw);
+      const to = normNFKC(toRaw);
+      if (!from) { log('置換対象 (from) を入力してください'); return; }
+      appendOpLog(`replace "${from}" → "${to}" … [${src.id}] ${src.name}`);
+      const nb = op_replace(src, fromRaw, toRaw);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnNgram')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcNgram').value);
+      if (!src) return;
+      const n = Math.max(1, parseIntSafe(el('#ngramN').value, 2));
+      appendOpLog(`ngrams n=${n} … [${src.id}] ${src.name}`);
+      const nb = op_ngrams(src, n);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+    el('#btnSample')?.addEventListener('click', () => {
+      const src = REG.get(el('#selSrcSample').value);
+      if (!src) return;
+      const count = Math.max(1, parseIntSafe(el('#sampleCount').value, 20));
+      const seedRaw = normNFKC(el('#sampleSeed').value);
+      const seedInfo = seedRaw ? ` seed=${seedRaw}` : '';
+      appendOpLog(`sample count=${count}${seedInfo} … [${src.id}] ${src.name}`);
+      const nb = op_sample(src, count, seedRaw || null);
+      REG.add(nb); applyChoices(); renderBags(); captureState();
+      appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
+    });
+
+    /* ====== Export ====== */
+    function downloadBag(bag, format) {
+      if (!bag) return;
+      let blob, filename;
+      const stamp = nowISO().replace(/[:T-]/g, '').slice(0, 14);
+      if (format === 'json') {
+        const data = { name: bag.name, id: bag.id, items: Array.from(bag.items) };
+        blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        filename = `${bag.name || 'bag'}_${stamp}.json`;
+      } else if (format === 'csv') {
+        blob = new Blob([Array.from(bag.items).join('\n')], { type: 'text/csv' });
+        filename = `${bag.name || 'bag'}_${stamp}.csv`;
+      } else {
+        blob = new Blob([Array.from(bag.items).join('\n')], { type: 'text/plain' });
+        filename = `${bag.name || 'bag'}_${stamp}.txt`;
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      log(`Export ${format.toUpperCase()}: ${filename}`);
     }
-  } catch (_) {}
-  try {
-    const r = await fetch(BAG_DIR, { cache: 'no-cache' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const html = await r.text();
-    const files = [...html.matchAll(/href="([^"]+?\.json)"/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
-    const files2 = [...html.matchAll(/href='([^']+?\.json)'/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
-    const all = uniq([...(files || []), ...(files2 || [])]);
-    if (all.length) {
-      setSelectOptions(sel, all.map(f => ({ label: f, value: f })));
-      log('一覧: ディレクトリ HTML から ' + all.length + ' 件');
-      return;
-    }
-    throw new Error('解析失敗');
-  } catch (e) {
-    log('列挙失敗: ' + e.message + '（bag/_files.txt を置くか、HTTP サーバのディレクトリ一覧を有効にしろ）');
-  }
-}
-async function loadSelectedJson() {
-  const sel = el('#selFile');
-  const f = sel && sel.value;
-  if (!f) { log('ファイル未選択'); return; }
-  try {
-    const r = await fetch(BAG_DIR + f, { cache: 'no-cache' });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const raw = await r.text();
-    const head = raw.trim()[0];
-    if (head !== '[' && head !== '{') throw new Error('JSON ではなく HTML 等が返っている');
-    const data = JSON.parse(raw);
-    const words = [];
-    for (const obj of (Array.isArray(data) ? data : [data])) {
-      if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
-    }
-    addBagFromWords(f.replace(/\.json$/i, ''), words, { from: 'json', format: 'lemmas' });
-    log(`読み込み OK: ${f} | 語数=${words.length}`);
-  } catch (e) { log('読み込み失敗: ' + e.message); }
-}
+    document.querySelectorAll('.export-actions button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bag = REG.get(el('#selExport').value);
+        if (!bag) { log('Export 対象が選択されていません'); return; }
+        downloadBag(bag, btn.dataset.format);
+      });
+    });
 
-/* ====== 手動アップロード / 貼り付け ====== */
-el('#filePick')?.addEventListener('change', async (ev) => {
-  const f = ev.target.files[0]; if (!f) return;
-  try {
-    const txt = await f.text();
-    const head = txt.trim()[0];
-    if (head !== '[' && head !== '{') throw new Error('JSON でない');
-    const data = JSON.parse(txt);
-    const words = [];
-    for (const obj of (Array.isArray(data) ? data : [data])) {
-      if (obj && Array.isArray(obj.lemmas)) words.push(...obj.lemmas);
-    }
-    addBagFromWords(f.name.replace(/\.json$/i, ''), words, { from: 'upload', format: 'lemmas' });
-    log(`手動読み込み OK: ${f.name} | 語数=${words.length}`);
-  } catch (e) { log('手動読み込み失敗: ' + e.message); }
-});
-el('#btnMakeBagFromText')?.addEventListener('click', () => {
-  const name = normNFKC(el('#bagNameInput').value) || 'input bag';
-  const words = uniq(el('#pasteArea').value.split(/\r?\n/).map(s => normNFKC(s)).filter(Boolean));
-  if (!words.length) {
-    el('#importLog').textContent += (el('#importLog').textContent ? '\n' : '') + '空入力';
-    return;
-  }
-  addBagFromWords(name, words, { from: 'paste', normalized: 'NFKC' });
-});
+    /* ====== Undo / Redo ====== */
+    el('#btnUndo')?.addEventListener('click', () => {
+      if (historyIndex <= 0) return;
+      historyIndex -= 1;
+      restoreFromHistory();
+      appendOpLog('⮪ Undo');
+    });
+    el('#btnRedo')?.addEventListener('click', () => {
+      if (historyIndex >= history.length - 1) return;
+      historyIndex += 1;
+      restoreFromHistory();
+      appendOpLog('⮫ Redo');
+    });
 
-/* ====== 操作ボタン ====== */
-el('#btnNorm')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcNorm').value); if (!src) return;
-  appendOpLog(`normalize(hiragana)… [${src.id}] ${src.name}`);
-  const nb = await op_normalize_hiragana(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnKatakana')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcNorm').value); if (!src) return;
-  appendOpLog(`normalize(katakana)… [${src.id}] ${src.name}`);
-  const nb = await op_normalize_katakana(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnRomaji')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
-  appendOpLog(`to_romaji … [${src.id}] ${src.name}`);
-  const nb = await op_to_romaji(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnUpper')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
-  appendOpLog(`to_upper … [${src.id}] ${src.name}`);
-  const nb = op_to_upper(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnLower')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
-  appendOpLog(`to_lower … [${src.id}] ${src.name}`);
-  const nb = op_to_lower(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnReverse')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcTransform').value); if (!src) return;
-  appendOpLog(`reverse … [${src.id}] ${src.name}`);
-  const nb = op_reverse(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnDel')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcDel').value); if (!src) return;
-  const chars = el('#delChars').value || '';
-  const normIn = el('#ckNormDel').checked;
-  const normBag = el('#ckPreNormDel').checked;
-  appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  const nb = await op_delete_chars(src, chars, normIn, normBag);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnFlt')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcFlt').value), lkp = REG.get(el('#selLkpFlt').value);
-  if (!src || !lkp) return;
-  const normSrc = el('#ckPreNormFltSrc').checked;
-  const normLookup = el('#ckPreNormFltLookup').checked;
-  appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) … [${src.id}] ${src.name}`);
-  const nb = await op_filter_in(src, lkp, normSrc, normLookup);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnUnion')?.addEventListener('click', () => {
-  const a = REG.get(el('#selSrcUnionA').value);
-  const b = REG.get(el('#selSrcUnionB').value);
-  if (!a || !b) return;
-  appendOpLog(`union … [${a.id}] ${a.name} + [${b.id}] ${b.name}`);
-  const nb = op_union(a, b);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnDiff')?.addEventListener('click', () => {
-  const a = REG.get(el('#selSrcUnionA').value);
-  const b = REG.get(el('#selSrcUnionB').value);
-  if (!a || !b) return;
-  appendOpLog(`difference … [${a.id}] ${a.name} - [${b.id}] ${b.name}`);
-  const nb = op_difference(a, b);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnIntersect')?.addEventListener('click', () => {
-  const a = REG.get(el('#selSrcUnionA').value);
-  const b = REG.get(el('#selSrcUnionB').value);
-  if (!a || !b) return;
-  appendOpLog(`intersection … [${a.id}] ${a.name} ∩ [${b.id}] ${b.name}`);
-  const nb = op_intersection(a, b);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnSymDiff')?.addEventListener('click', () => {
-  const a = REG.get(el('#selSrcUnionA').value);
-  const b = REG.get(el('#selSrcUnionB').value);
-  if (!a || !b) return;
-  appendOpLog(`symmetric difference … [${a.id}] ${a.name} △ [${b.id}] ${b.name}`);
-  const nb = op_symmetric_difference(a, b);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnLengthFilter')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcLen').value);
-  if (!src) return;
-  const min = Math.max(0, parseIntSafe(el('#lenMin').value, 0));
-  const max = Math.max(min, parseIntSafe(el('#lenMax').value, min));
-  const normBag = el('#ckPreNormLen').checked;
-  appendOpLog(`filter length [${min}, ${max}] (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  const nb = await op_filter_length(src, min, max, normBag);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnPrefix')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcAffix').value);
-  if (!src) return;
-  const prefixRaw = el('#prefixValue').value;
-  const prefix = normNFKC(prefixRaw);
-  if (!prefix) { log('prefix を入力してください'); return; }
-  const normBag = el('#ckPreNormAffix').checked;
-  appendOpLog(`filter prefix "${prefix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  const nb = await op_filter_prefix(src, prefixRaw, normBag);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnSuffix')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcAffix').value);
-  if (!src) return;
-  const suffixRaw = el('#suffixValue').value;
-  const suffix = normNFKC(suffixRaw);
-  if (!suffix) { log('suffix を入力してください'); return; }
-  const normBag = el('#ckPreNormAffix').checked;
-  appendOpLog(`filter suffix "${suffix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  const nb = await op_filter_suffix(src, suffixRaw, normBag);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnContains')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcContains').value);
-  if (!src) return;
-  const needleRaw = el('#containsValue').value;
-  const needle = normNFKC(needleRaw);
-  if (!needle) { log('検索文字列を入力してください'); return; }
-  const normBag = el('#ckPreNormContains').checked;
-  appendOpLog(`filter contains "${needle}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  const nb = await op_filter_contains(src, needleRaw, normBag);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnRegex')?.addEventListener('click', async () => {
-  const src = REG.get(el('#selSrcRegex').value);
-  const pattern = el('#regexPattern').value;
-  const invert = el('#regexInvert').checked;
-  if (!src) return;
-  if (!pattern) { log('正規表現を入力してください'); return; }
-  const invertLabel = invert ? ' (invert)' : '';
-  const normBag = el('#ckPreNormRegex').checked;
-  appendOpLog(`filter_regex /${pattern}/${invertLabel} (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-  let nb;
-  try {
-    nb = await op_filter_regex(src, pattern, invert, normBag);
-  } catch (e) {
-    log(`正規表現エラー: ${e.message}`);
-    appendOpLog('× 正規表現エラー');
-    return;
-  }
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnDedupe')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
-  appendOpLog(`dedupe_chars … [${src.id}] ${src.name}`);
-  const nb = op_dedupe_chars(src);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnSortAsc')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
-  appendOpLog(`sort asc … [${src.id}] ${src.name}`);
-  const nb = op_sort(src, 'asc');
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnSortDesc')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
-  appendOpLog(`sort desc … [${src.id}] ${src.name}`);
-  const nb = op_sort(src, 'desc');
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnReplace')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcFormat').value); if (!src) return;
-  const fromRaw = el('#replaceFrom').value;
-  const toRaw = el('#replaceTo').value || '';
-  const from = normNFKC(fromRaw);
-  const to = normNFKC(toRaw);
-  if (!from) { log('置換対象 (from) を入力してください'); return; }
-  appendOpLog(`replace "${from}" → "${to}" … [${src.id}] ${src.name}`);
-  const nb = op_replace(src, fromRaw, toRaw);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnNgram')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcNgram').value);
-  if (!src) return;
-  const n = Math.max(1, parseIntSafe(el('#ngramN').value, 2));
-  appendOpLog(`ngrams n=${n} … [${src.id}] ${src.name}`);
-  const nb = op_ngrams(src, n);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
-el('#btnSample')?.addEventListener('click', () => {
-  const src = REG.get(el('#selSrcSample').value);
-  if (!src) return;
-  const count = Math.max(1, parseIntSafe(el('#sampleCount').value, 20));
-  const seedRaw = normNFKC(el('#sampleSeed').value);
-  const seedInfo = seedRaw ? ` seed=${seedRaw}` : '';
-  appendOpLog(`sample count=${count}${seedInfo} … [${src.id}] ${src.name}`);
-  const nb = op_sample(src, count, seedRaw || null);
-  REG.add(nb); applyChoices(); renderBags(); captureState();
-  appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
-});
+    let dragSourceId = null;
 
-/* ====== Export ====== */
-function downloadBag(bag, format) {
-  if (!bag) return;
-  let blob, filename;
-  const stamp = nowISO().replace(/[:T-]/g, '').slice(0, 14);
-  if (format === 'json') {
-    const data = { name: bag.name, id: bag.id, items: Array.from(bag.items) };
-    blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    filename = `${bag.name || 'bag'}_${stamp}.json`;
-  } else if (format === 'csv') {
-    blob = new Blob([Array.from(bag.items).join('\n')], { type: 'text/csv' });
-    filename = `${bag.name || 'bag'}_${stamp}.csv`;
-  } else {
-    blob = new Blob([Array.from(bag.items).join('\n')], { type: 'text/plain' });
-    filename = `${bag.name || 'bag'}_${stamp}.txt`;
-  }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  log(`Export ${format.toUpperCase()}: ${filename}`);
-}
-document.querySelectorAll('.export-actions button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const bag = REG.get(el('#selExport').value);
-    if (!bag) { log('Export 対象が選択されていません'); return; }
-    downloadBag(bag, btn.dataset.format);
-  });
-});
+    /* ====== Bag一覧（編集/適用 + 範囲/全表示） ====== */
+    function renderBags() {
+      const host = el('#bagsArea');
+      if (!host) return;
+      dragSourceId = null;
+      host.innerHTML = '';
+      for (const b of REG.all()) {
+        const details = document.createElement('details');
+        details.className = 'bag-card';
+        details.dataset.id = b.id;
+        details.draggable = true;
+        const sum = document.createElement('summary');
+        sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
+        details.appendChild(sum);
 
-/* ====== Undo / Redo ====== */
-el('#btnUndo')?.addEventListener('click', () => {
-  if (historyIndex <= 0) return;
-  historyIndex -= 1;
-  restoreFromHistory();
-  appendOpLog('⮪ Undo');
-});
-el('#btnRedo')?.addEventListener('click', () => {
-  if (historyIndex >= history.length - 1) return;
-  historyIndex += 1;
-  restoreFromHistory();
-  appendOpLog('⮫ Redo');
-});
+        const meta = document.createElement('div');
+        meta.className = 'bag-meta';
+        meta.textContent = Object.entries(b.meta).map(([k, v]) => `${k}: ${v}`).join('\n');
+        details.appendChild(meta);
 
-let dragSourceId = null;
-
-/* ====== Bag一覧（編集/適用 + 範囲/全表示） ====== */
-function renderBags() {
-  const host = el('#bagsArea');
-  if (!host) return;
-  dragSourceId = null;
-  host.innerHTML = '';
-  for (const b of REG.all()) {
-    const details = document.createElement('details');
-    details.className = 'bag-card';
-    details.dataset.id = b.id;
-    details.draggable = true;
-    const sum = document.createElement('summary');
-    sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
-    details.appendChild(sum);
-
-    const meta = document.createElement('div');
-    meta.className = 'bag-meta';
-    meta.textContent = Object.entries(b.meta).map(([k, v]) => `${k}: ${v}`).join('\n');
-    details.appendChild(meta);
-
-    const bar = document.createElement('div');
-    bar.className = 'preview-bar';
-    bar.innerHTML = `
+        const bar = document.createElement('div');
+        bar.className = 'preview-bar';
+        bar.innerHTML = `
       <span class="muted small badge">Preview</span>
       <label class="muted small">offset <input class="input tight" type="number" min="0" value="0" data-k="off"></label>
       <label class="muted small">limit <input class="input tight" type="number" min="1" value="200" data-k="lim"></label>
@@ -1691,198 +1952,202 @@ function renderBags() {
       <button class="btn ok" data-k="apply" disabled>編集を適用</button>
       <span class="muted mono small" data-k="count"></span>
     `;
-    details.appendChild(bar);
+        details.appendChild(bar);
 
-    const ta = document.createElement('textarea');
-    ta.className = 'preview mono';
-    ta.rows = 10;
-    ta.readOnly = true;
-    details.appendChild(ta);
+        const ta = document.createElement('textarea');
+        ta.className = 'preview mono';
+        ta.rows = 10;
+        ta.readOnly = true;
+        details.appendChild(ta);
 
-    const offEl = bar.querySelector('input[data-k="off"]');
-    const limEl = bar.querySelector('input[data-k="lim"]');
-    const allEl = bar.querySelector('input[data-k="all"]');
-    const copyBtn = bar.querySelector('[data-k="copy"]');
-    const editBtn = bar.querySelector('[data-k="edit"]');
-    const applyBtn = bar.querySelector('[data-k="apply"]');
-    const cntEl = bar.querySelector('[data-k="count"]');
-    const copyOriginalLabel = copyBtn?.textContent || '';
+        const offEl = bar.querySelector('input[data-k="off"]');
+        const limEl = bar.querySelector('input[data-k="lim"]');
+        const allEl = bar.querySelector('input[data-k="all"]');
+        const copyBtn = bar.querySelector('[data-k="copy"]');
+        const editBtn = bar.querySelector('[data-k="edit"]');
+        const applyBtn = bar.querySelector('[data-k="apply"]');
+        const cntEl = bar.querySelector('[data-k="count"]');
+        const copyOriginalLabel = copyBtn?.textContent || '';
 
-    function renderRange() {
-      const items = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja'));
-      cntEl.textContent = `total=${items.length}`;
-      let off = Math.max(0, parseInt(offEl.value || 0, 10));
-      let lim = Math.max(1, parseInt(limEl.value || 200, 10));
-      if (allEl.checked) { off = 0; lim = items.length; }
-      ta.value = items.slice(off, off + lim).join('\n');
-    }
-    offEl.addEventListener('input', renderRange);
-    limEl.addEventListener('input', renderRange);
-    allEl.addEventListener('change', renderRange);
-    copyBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(ta.value);
-        copyBtn.textContent = 'コピー済み';
-        setTimeout(() => {
-          copyBtn.textContent = copyOriginalLabel;
-        }, 1200);
-      } catch {}
-    });
+        function renderRange() {
+          const items = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja'));
+          cntEl.textContent = `total=${items.length}`;
+          let off = Math.max(0, parseInt(offEl.value || 0, 10));
+          let lim = Math.max(1, parseInt(limEl.value || 200, 10));
+          if (allEl.checked) { off = 0; lim = items.length; }
+          ta.value = items.slice(off, off + lim).join('\n');
+        }
+        offEl.addEventListener('input', renderRange);
+        limEl.addEventListener('input', renderRange);
+        allEl.addEventListener('change', renderRange);
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(ta.value);
+            copyBtn.textContent = 'コピー済み';
+            setTimeout(() => {
+              copyBtn.textContent = copyOriginalLabel;
+            }, 1200);
+          } catch { }
+        });
 
-    let editing = false;
-    editBtn.addEventListener('click', () => {
-      editing = !editing;
-      ta.readOnly = !editing;
-      editBtn.textContent = editing ? '編集中…' : '編集モード';
-      applyBtn.disabled = !editing;
-      if (editing) {
-        ta.value = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja')).join('\n');
-      } else {
-        renderRange();
-      }
-    });
-    applyBtn.addEventListener('click', () => {
-      const lines = ta.value.split(/\r?\n/).map(normNFKC).filter(Boolean);
-      b.items = new Set(uniq(lines));
-      b.meta.size = b.items.size;
-      b.meta.op = 'manual_edit';
-      b.meta.updated_at = nowISO();
-      delete b.meta.reapply_status;
-      delete b.meta.reapply_error;
-      ta.readOnly = true;
-      editing = false;
-      applyBtn.disabled = true;
-      editBtn.textContent = '編集モード';
-      sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
-      renderRange();
-      applyChoices();
-      captureState();
-      appendOpLog(`edit → Bag [${b.id}] size=${b.items.size}`);
-    });
+        let editing = false;
+        editBtn.addEventListener('click', () => {
+          editing = !editing;
+          ta.readOnly = !editing;
+          editBtn.textContent = editing ? '編集中…' : '編集モード';
+          applyBtn.disabled = !editing;
+          if (editing) {
+            ta.value = Array.from(b.items).sort((a, c) => a.localeCompare(c, 'ja')).join('\n');
+          } else {
+            renderRange();
+          }
+        });
+        applyBtn.addEventListener('click', () => {
+          const lines = ta.value.split(/\r?\n/).map(normNFKC).filter(Boolean);
+          b.items = new Set(uniq(lines));
+          b.meta.size = b.items.size;
+          b.meta.op = 'manual_edit';
+          b.meta.updated_at = nowISO();
+          delete b.meta.reapply_status;
+          delete b.meta.reapply_error;
+          ta.readOnly = true;
+          editing = false;
+          applyBtn.disabled = true;
+          editBtn.textContent = '編集モード';
+          sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
+          renderRange();
+          applyChoices();
+          captureState();
+          appendOpLog(`edit → Bag [${b.id}] size=${b.items.size}`);
+        });
 
-    details.addEventListener('toggle', () => { if (details.open) renderRange(); });
+        details.addEventListener('toggle', () => { if (details.open) renderRange(); });
 
-    const actions = document.createElement('div');
-    actions.className = 'bag-actions';
-    actions.innerHTML = `
+        const actions = document.createElement('div');
+        actions.className = 'bag-actions';
+        actions.innerHTML = `
       <button class="btn ghost" data-k="reapply">再適用</button>
       <button class="btn ghost" data-k="duplicate">複製</button>
       <button class="btn warn" data-k="remove">削除</button>
       <span class="muted small status" data-k="status"></span>
     `;
-    details.appendChild(actions);
+        details.appendChild(actions);
 
-    const statusEl = actions.querySelector('[data-k="status"]');
-    if (statusEl) {
-      const statusText = describeBagLifecycle(b);
-      statusEl.textContent = statusText;
-      statusEl.title = statusText;
+        const statusEl = actions.querySelector('[data-k="status"]');
+        if (statusEl) {
+          const statusText = describeBagLifecycle(b);
+          statusEl.textContent = statusText;
+          statusEl.title = statusText;
+        }
+
+        const reapplyBtn = actions.querySelector('[data-k="reapply"]');
+        const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
+        const removeBtn = actions.querySelector('[data-k="remove"]');
+
+        reapplyBtn.addEventListener('click', async () => {
+          reapplyBtn.disabled = true;
+          try {
+            await reapplySeries(b.id);
+          } finally {
+            reapplyBtn.disabled = false;
+          }
+        });
+
+        duplicateBtn.addEventListener('click', () => {
+          const clone = REG.clone(b.id);
+          if (!clone) return;
+          applyChoices();
+          renderBags();
+          captureState();
+          appendOpLog(`⧉ Clone → [${clone.id}] from [${b.id}] ${b.name}`);
+        });
+
+        removeBtn.addEventListener('click', () => {
+          if (!window.confirm(`Bag [${b.id}] ${b.name} を削除しますか？`)) return;
+          if (REG.remove(b.id)) {
+            applyChoices();
+            renderBags();
+            captureState();
+            appendOpLog(`− Remove Bag [${b.id}] ${b.name}`);
+          }
+        });
+
+        details.addEventListener('dragstart', e => {
+          dragSourceId = b.id;
+          details.classList.add('dragging');
+          e.dataTransfer?.setData('text/plain', String(b.id));
+          if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        });
+        details.addEventListener('dragend', () => {
+          dragSourceId = null;
+          details.classList.remove('dragging');
+          details.classList.remove('drag-over');
+        });
+        details.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (dragSourceId === null || dragSourceId === b.id) return;
+          details.classList.add('drag-over');
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        });
+        details.addEventListener('dragleave', () => {
+          details.classList.remove('drag-over');
+        });
+        details.addEventListener('drop', e => {
+          e.preventDefault();
+          details.classList.remove('drag-over');
+          const sourceId = dragSourceId;
+          dragSourceId = null;
+          if (sourceId === null || sourceId === b.id) return;
+          const rect = details.getBoundingClientRect();
+          const placeBefore = e.clientY < rect.top + rect.height / 2;
+          if (REG.moveRelative(sourceId, b.id, placeBefore)) {
+            applyChoices();
+            renderBags();
+            captureState();
+            appendOpLog(`↕ Reorder Bag [${sourceId}] ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
+          }
+        });
+
+        host.appendChild(details);
+      }
     }
 
-    const reapplyBtn = actions.querySelector('[data-k="reapply"]');
-    const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
-    const removeBtn = actions.querySelector('[data-k="remove"]');
+    /* ====== タブ操作 ====== */
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const target = document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`);
+        if (target) target.classList.add('active');
+      });
+    });
 
-    reapplyBtn.addEventListener('click', async () => {
-      reapplyBtn.disabled = true;
+    el('#btnApplyAll')?.addEventListener('click', async () => {
+      const btn = el('#btnApplyAll');
+      if (!btn) return;
+      btn.disabled = true;
       try {
-        await reapplySeries(b.id);
+        await reapplySeries();
       } finally {
-        reapplyBtn.disabled = false;
+        btn.disabled = false;
       }
     });
 
-    duplicateBtn.addEventListener('click', () => {
-      const clone = REG.clone(b.id);
-      if (!clone) return;
-      applyChoices();
-      renderBags();
-      captureState();
-      appendOpLog(`⧉ Clone → [${clone.id}] from [${b.id}] ${b.name}`);
-    });
+    el('#btnFileSelect')?.addEventListener('click', () => el('#filePick')?.click());
 
-    removeBtn.addEventListener('click', () => {
-      if (!window.confirm(`Bag [${b.id}] ${b.name} を削除しますか？`)) return;
-      if (REG.remove(b.id)) {
-        applyChoices();
-        renderBags();
-        captureState();
-        appendOpLog(`− Remove Bag [${b.id}] ${b.name}`);
-      }
-    });
-
-    details.addEventListener('dragstart', e => {
-      dragSourceId = b.id;
-      details.classList.add('dragging');
-      e.dataTransfer?.setData('text/plain', String(b.id));
-      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
-    });
-    details.addEventListener('dragend', () => {
-      dragSourceId = null;
-      details.classList.remove('dragging');
-      details.classList.remove('drag-over');
-    });
-    details.addEventListener('dragover', e => {
-      e.preventDefault();
-      if (dragSourceId === null || dragSourceId === b.id) return;
-      details.classList.add('drag-over');
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-    });
-    details.addEventListener('dragleave', () => {
-      details.classList.remove('drag-over');
-    });
-    details.addEventListener('drop', e => {
-      e.preventDefault();
-      details.classList.remove('drag-over');
-      const sourceId = dragSourceId;
-      dragSourceId = null;
-      if (sourceId === null || sourceId === b.id) return;
-      const rect = details.getBoundingClientRect();
-      const placeBefore = e.clientY < rect.top + rect.height / 2;
-      if (REG.moveRelative(sourceId, b.id, placeBefore)) {
-        applyChoices();
-        renderBags();
-        captureState();
-        appendOpLog(`↕ Reorder Bag [${sourceId}] ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
-      }
-    });
-
-    host.appendChild(details);
-  }
-}
-
-/* ====== タブ操作 ====== */
-document.querySelectorAll('.tab-button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    const target = document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`);
-    if (target) target.classList.add('active');
-  });
-});
-
-el('#btnApplyAll')?.addEventListener('click', async () => {
-  const btn = el('#btnApplyAll');
-  if (!btn) return;
-  btn.disabled = true;
-  try {
-    await reapplySeries();
-  } finally {
-    btn.disabled = false;
-  }
-});
-
-/* ====== 初期化 ====== */
-document.getElementById('btnList').onclick = listJson;
-document.getElementById('btnLoad').onclick = loadSelectedJson;
-initHistory();
-(function seed() {
-  const demo = ['狐', 'たぬき', '東京', '百科事典', 'コンピュータ', 'がっこう', 'バナナ', 'リンゴ', 'りんご', 'アップル'];
-  addBagFromWords('seed (demo few nouns)', demo, { pos: 'n', normalized: 'NFKC only', seed: true });
-})();
-renderBags();
-applyChoices();
-</script>
+    /* ====== 初期化 ====== */
+    // document.getElementById('btnList').onclick = listJson; // automated
+    document.getElementById('btnLoad').onclick = loadSelectedJson;
+    initHistory();
+    (function seed() {
+      const demo = ['狐', 'たぬき', '東京', '百科事典', 'コンピュータ', 'がっこう', 'バナナ', 'リンゴ', 'りんご', 'アップル'];
+      addBagFromWords('seed (demo few nouns)', demo, { pos: 'n', normalized: 'NFKC only', seed: true });
+    })();
+    renderBags();
+    applyChoices();
+    listJson(); // auto-load defaults
+  </script>
 </body>
+
 </html>
