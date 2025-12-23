@@ -461,8 +461,6 @@
           <div class="panel-grid">
             <div class="op-group">
               <h4>かな正規化</h4>
-              <div class="muted small" style="margin-bottom:5px;">Bag 内の全単語をひらがな・カタカナに統一します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcNorm" class="input"></select>
               <div class="inline">
                 <button id="btnNorm" class="btn ok">ひらがな化</button>
@@ -472,8 +470,6 @@
 
             <div class="op-group">
               <h4>文字変換</h4>
-              <div class="muted small" style="margin-bottom:5px;">ローマ字化・大文字小文字変換・文字列反転などを行います。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcTransform" class="input"></select>
               <div class="inline">
                 <button id="btnRomaji" class="btn">ローマ字化</button>
@@ -485,8 +481,6 @@
 
             <div class="op-group">
               <h4>文字削除</h4>
-              <div class="muted small" style="margin-bottom:5px;">指定した文字を Bag 内の全単語から削除します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcDel" class="input"></select>
               <div class="inline">
                 <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
@@ -498,16 +492,9 @@
 
             <div class="op-group">
               <h4>集合演算</h4>
-              <div class="muted small" style="margin-bottom:5px;">2つの Bag 間で和・差・積・対称差集合を作ります。</div>
               <div class="inline">
-                <div>
-                  <div class="muted small">Bag A</div>
-                  <select id="selSrcUnionA" class="input"></select>
-                </div>
-                <div>
-                  <div class="muted small">Bag B</div>
-                  <select id="selSrcUnionB" class="input"></select>
-                </div>
+                <select id="selSrcUnionA" class="input"></select>
+                <select id="selSrcUnionB" class="input"></select>
               </div>
               <div class="inline">
                 <button id="btnUnion" class="btn">和集合 (Union)</button>
@@ -519,17 +506,10 @@
 
             <div class="op-group">
               <h4>包含フィルタ</h4>
-              <div class="muted small" style="margin-bottom:5px;">Lookup Bag に存在する単語のみを残します（積集合的なフィルタ）。</div>
               <div class="inline">
-                <div>
-                  <div class="muted small">Target Bag</div>
-                  <select id="selSrcFlt" class="input"></select>
-                </div>
-                <div>
-                  <div class="muted small">Lookup Bag</div>
-                  <select id="selLkpFlt" class="input"></select>
-                </div>
-                <button id="btnFlt" class="btn" style="margin-top: 18px;">filter_in（交差）</button>
+                <select id="selSrcFlt" class="input"></select>
+                <select id="selLkpFlt" class="input"></select>
+                <button id="btnFlt" class="btn">filter_in（交差）</button>
               </div>
               <div class="inline">
                 <label class="muted small"><input type="checkbox" id="ckPreNormFltSrc"> Bag をひらがな化</label>
@@ -539,8 +519,6 @@
 
             <div class="op-group">
               <h4>長さフィルタ</h4>
-              <div class="muted small" style="margin-bottom:5px;">文字数が指定範囲内の単語のみを抽出します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcLen" class="input"></select>
               <div class="inline">
                 <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight"
@@ -556,8 +534,6 @@
 
             <div class="op-group">
               <h4>前後一致フィルタ</h4>
-              <div class="muted small" style="margin-bottom:5px;">指定した文字列で始まる、または終わる単語を抽出します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcAffix" class="input"></select>
               <div class="inline">
                 <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
@@ -574,8 +550,6 @@
 
             <div class="op-group">
               <h4>部分一致フィルタ</h4>
-              <div class="muted small" style="margin-bottom:5px;">指定した文字列を含む単語を抽出します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcContains" class="input"></select>
               <div class="inline">
                 <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
@@ -588,8 +562,6 @@
 
             <div class="op-group">
               <h4>正規表現フィルタ</h4>
-              <div class="muted small" style="margin-bottom:5px;">JavaScript 正規表現にマッチする単語を抽出します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcRegex" class="input"></select>
               <div class="inline">
                 <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
@@ -603,8 +575,6 @@
 
             <div class="op-group">
               <h4>整形・置換</h4>
-              <div class="muted small" style="margin-bottom:5px;">重複文字削除、ソート、文字列置換などを行います。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcFormat" class="input"></select>
               <div class="inline">
                 <button id="btnDedupe" class="btn">重複文字除去</button>
@@ -620,8 +590,6 @@
 
             <div class="op-group">
               <h4>n-gram 抽出</h4>
-              <div class="muted small" style="margin-bottom:5px;">単語から N-gram（文字の組み合わせ）を生成します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcNgram" class="input"></select>
               <div class="inline">
                 <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight"
@@ -632,8 +600,6 @@
 
             <div class="op-group">
               <h4>サンプリング</h4>
-              <div class="muted small" style="margin-bottom:5px;">Bag から指定した数の単語をランダムに選び出します。</div>
-              <div class="muted small">Target Bag</div>
               <select id="selSrcSample" class="input"></select>
               <div class="inline">
                 <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight"
