@@ -57,15 +57,16 @@ export async function op_normalize_katakana(srcBag) {
     }
     return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
 }
-export async function op_to_romaji(srcBag) {
+export async function op_to_romaji(srcBag, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
     let i = 0;
-    for (const w of srcBag.items) {
+    for (const w of srcItems) {
         const r = await toRomaji(w);
         if (r) out.add(r.replace(/\s+/g, ''));
         if (++i % 2000 === 0) await waitFrame();
     }
-    return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
+    return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji', normalize_before: normalizeBefore });
 }
 export async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
     const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
@@ -85,31 +86,35 @@ export async function op_delete_chars(srcBag, chars, normalizeInput = false, nor
         normalize_before: normalizeBefore
     });
 }
-export function op_to_upper(srcBag) {
+export async function op_to_upper(srcBag, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
-    for (const w of srcBag.items) {
+    for (const w of srcItems) {
         out.add(normNFKC(w).toUpperCase());
     }
-    return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
+    return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper', normalize_before: normalizeBefore });
 }
-export function op_to_lower(srcBag) {
+export async function op_to_lower(srcBag, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
-    for (const w of srcBag.items) {
+    for (const w of srcItems) {
         out.add(normNFKC(w).toLowerCase());
     }
-    return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
+    return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower', normalize_before: normalizeBefore });
 }
-export function op_reverse(srcBag) {
+export async function op_reverse(srcBag, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
-    for (const w of srcBag.items) {
+    for (const w of srcItems) {
         const reversed = Array.from(normNFKC(w)).reverse().join('');
         if (reversed) out.add(reversed);
     }
-    return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
+    return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id, normalize_before: normalizeBefore });
 }
-export function op_dedupe_chars(srcBag) {
+export async function op_dedupe_chars(srcBag, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
-    for (const w of srcBag.items) {
+    for (const w of srcItems) {
         const seen = new Set();
         const result = [];
         for (const ch of Array.from(normNFKC(w))) {
@@ -119,25 +124,27 @@ export function op_dedupe_chars(srcBag) {
         }
         if (result.length) out.add(result.join(''));
     }
-    return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
+    return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id, normalize_before: normalizeBefore });
 }
-export function op_replace(srcBag, fromValue, toValue) {
+export async function op_replace(srcBag, fromValue, toValue, normalizeBefore = false) {
     const needle = normNFKC(fromValue);
     const replacement = normNFKC(toValue ?? '');
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
     const out = new Set();
-    if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement });
-    for (const w of srcBag.items) {
+    if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement, normalize_before: normalizeBefore });
+    for (const w of srcItems) {
         const normed = normNFKC(w);
         const replaced = normed.split(needle).join(replacement);
         out.add(replaced);
     }
-    return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
+    return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement, normalize_before: normalizeBefore });
 }
-export function op_sort(srcBag, order = 'asc', locale = 'ja') {
-    const arr = Array.from(srcBag.items);
+export async function op_sort(srcBag, order = 'asc', locale = 'ja', normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
+    const arr = Array.from(srcItems);
     arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
     if (order === 'desc') arr.reverse();
-    return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
+    return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale, normalize_before: normalizeBefore });
 }
 export async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
     const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
@@ -152,51 +159,63 @@ export async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, norm
         normalize_lookup_before: normalizeLookup
     });
 }
-export function op_union(bagA, bagB) {
-    const out = new Set([...bagA.items, ...bagB.items]);
+export async function op_union(bagA, bagB, normalizeBefore = false) {
+    const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
+    const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
+    const out = new Set([...srcItemsA, ...srcItemsB]);
     return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
         op: 'union',
         src: [bagA.id, bagB.id].join(','),
         src_a: bagA.id,
         src_b: bagB.id,
         size_a: bagA.items.size,
-        size_b: bagB.items.size
+        size_b: bagB.items.size,
+        normalize_before: normalizeBefore
     });
 }
-export function op_difference(bagA, bagB) {
-    const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
+export async function op_difference(bagA, bagB, normalizeBefore = false) {
+    const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
+    const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
+    const out = new Set([...srcItemsA].filter(w => !srcItemsB.has(w)));
     return new Bag(`${bagA.name} - ${bagB.name}`, out, {
         op: 'difference',
         src: [bagA.id, bagB.id].join(','),
         src_a: bagA.id,
         src_b: bagB.id,
         size_a: bagA.items.size,
-        size_b: bagB.items.size
+        size_b: bagB.items.size,
+        normalize_before: normalizeBefore
     });
 }
-export function op_intersection(bagA, bagB) {
+export async function op_intersection(bagA, bagB, normalizeBefore = false) {
+    const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
+    const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
     const out = new Set();
-    for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
+    for (const w of srcItemsA) if (srcItemsB.has(w)) out.add(w);
     return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
         op: 'intersection',
         src: [bagA.id, bagB.id].join(','),
         src_a: bagA.id,
         src_b: bagB.id,
         size_a: bagA.items.size,
-        size_b: bagB.items.size
+        size_b: bagB.items.size,
+        normalize_before: normalizeBefore
     });
 }
-export function op_symmetric_difference(bagA, bagB) {
+export async function op_symmetric_difference(bagA, bagB, normalizeBefore = false) {
+    const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
+    const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
     const out = new Set();
-    for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
-    for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
+    for (const w of srcItemsA) if (!srcItemsB.has(w)) out.add(w);
+    for (const w of srcItemsB) if (!srcItemsA.has(w)) out.add(w);
     return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
         op: 'symmetric_difference',
         src: [bagA.id, bagB.id].join(','),
         src_a: bagA.id,
         src_b: bagB.id,
         size_a: bagA.items.size,
-        size_b: bagB.items.size
+        size_b: bagB.items.size,
+        normalize_before: normalizeBefore
     });
 }
 export async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
@@ -255,25 +274,27 @@ export async function op_filter_regex(bag, pattern, invert, normalizeBefore = fa
     }
     return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
 }
-export function op_ngrams(bag, n) {
+export async function op_ngrams(bag, n, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     const size = Number.isFinite(n) ? Math.max(1, n) : 1;
     const out = new Set();
-    for (const w of bag.items) {
+    for (const w of srcItems) {
         const norm = normNFKC(w);
         if (!norm || norm.length < size) continue;
         for (let i = 0; i <= norm.length - size; i += 1) {
             out.add(norm.slice(i, i + size));
         }
     }
-    return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size });
+    return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size, normalize_before: normalizeBefore });
 }
 
-export function op_sample(bag, count, seed) {
-    const items = Array.from(bag.items);
+export async function op_sample(bag, count, seed, normalizeBefore = false) {
+    const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
+    const items = Array.from(srcItems);
     const safeCount = Number.isFinite(count) ? count : 0;
     const need = Math.min(Math.max(0, safeCount), items.length);
     if (need === items.length) {
-        return new Bag(`${bag.name} → sample(all)`, new Set(items), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
+        return new Bag(`${bag.name} → sample(all)`, new Set(items), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null, normalize_before: normalizeBefore });
     }
     let rand = Math.random;
     if (seed) {
@@ -284,7 +305,7 @@ export function op_sample(bag, count, seed) {
         [items[i], items[j]] = [items[j], items[i]];
     }
     const sampled = items.slice(0, need);
-    return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
+    return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null, normalize_before: normalizeBefore });
 }
 
 /* ====== OP_REBUILDERS ====== */
@@ -309,9 +330,10 @@ export const OP_REBUILDERS = {
     async to_romaji(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
-        for (const w of src.items) {
+        for (const w of srcItems) {
             const r = await toRomaji(w);
             if (r) out.add(r.replace(/\s+/g, ''));
             if (++i % 2000 === 0) await waitFrame();
@@ -334,22 +356,25 @@ export const OP_REBUILDERS = {
     async to_upper(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
-        for (const w of src.items) out.add(normNFKC(w).toUpperCase());
+        for (const w of srcItems) out.add(normNFKC(w).toUpperCase());
         return out;
     },
     async to_lower(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
-        for (const w of src.items) out.add(normNFKC(w).toLowerCase());
+        for (const w of srcItems) out.add(normNFKC(w).toLowerCase());
         return out;
     },
     async reverse(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
-        for (const w of src.items) {
+        for (const w of srcItems) {
             const reversed = Array.from(normNFKC(w)).reverse().join('');
             if (reversed) out.add(reversed);
         }
@@ -358,8 +383,9 @@ export const OP_REBUILDERS = {
     async dedupe_chars(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
-        for (const w of src.items) {
+        for (const w of srcItems) {
             const seen = new Set();
             const result = [];
             for (const ch of Array.from(normNFKC(w))) {
@@ -376,9 +402,10 @@ export const OP_REBUILDERS = {
         if (!src) throw new Error('source bag not found');
         const needle = meta.from || '';
         const replacement = meta.to || '';
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         if (!needle) return out;
-        for (const w of src.items) {
+        for (const w of srcItems) {
             const normed = normNFKC(w);
             const replaced = normed.split(needle).join(replacement);
             out.add(replaced);
@@ -390,7 +417,8 @@ export const OP_REBUILDERS = {
         if (!src) throw new Error('source bag not found');
         const order = meta.order || 'asc';
         const locale = meta.locale || 'ja';
-        const arr = Array.from(src.items);
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const arr = Array.from(srcItems);
         arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
         if (order === 'desc') arr.reverse();
         return new Set(arr);
@@ -409,29 +437,37 @@ export const OP_REBUILDERS = {
         const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
         const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
         if (!a || !b) throw new Error('union source missing');
-        return new Set([...a.items, ...b.items]);
+        const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
+        const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
+        return new Set([...srcItemsA, ...srcItemsB]);
     },
     async difference(meta) {
         const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
         const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
         if (!a || !b) throw new Error('difference source missing');
-        return new Set([...a.items].filter(w => !b.items.has(w)));
+        const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
+        const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
+        return new Set([...srcItemsA].filter(w => !srcItemsB.has(w)));
     },
     async intersection(meta) {
         const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
         const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
         if (!a || !b) throw new Error('intersection source missing');
+        const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
+        const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
         const out = new Set();
-        for (const w of a.items) if (b.items.has(w)) out.add(w);
+        for (const w of srcItemsA) if (srcItemsB.has(w)) out.add(w);
         return out;
     },
     async symmetric_difference(meta) {
         const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
         const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
         if (!a || !b) throw new Error('symmetric difference source missing');
+        const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
+        const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
         const out = new Set();
-        for (const w of a.items) if (!b.items.has(w)) out.add(w);
-        for (const w of b.items) if (!a.items.has(w)) out.add(w);
+        for (const w of srcItemsA) if (!srcItemsB.has(w)) out.add(w);
+        for (const w of srcItemsB) if (!srcItemsA.has(w)) out.add(w);
         return out;
     },
     async filter_length(meta) {
@@ -497,7 +533,8 @@ export const OP_REBUILDERS = {
         if (!src) throw new Error('source bag not found');
         const n = Number.isFinite(meta.n) ? Math.max(1, meta.n) : 1;
         const out = new Set();
-        for (const w of src.items) {
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        for (const w of srcItems) {
             const norm = normNFKC(w);
             if (!norm || norm.length < n) continue;
             for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
@@ -507,9 +544,10 @@ export const OP_REBUILDERS = {
     async sample(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
-        const items = Array.from(src.items);
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
+        const items = Array.from(srcItems);
         const count = Number.isFinite(meta.count) ? meta.count : 0;
-        const need = Math.min(Math.max(0, safeCount), items.length);
+        const need = Math.min(Math.max(0, count), items.length);
         if (need === items.length) return new Set(items);
         let rand = Math.random;
         if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
@@ -526,8 +564,8 @@ export const OP_REBUILDERS = {
         const sep = meta.sep || '';
         const limit = meta.limit || 10000;
         const out = new Set();
-        const itemsA = Array.from(a.items);
-        const itemsB = Array.from(b.items);
+        const itemsA = Array.from(await maybeNormalizeBagItems(a, !!meta.normalize_before));
+        const itemsB = Array.from(await maybeNormalizeBagItems(b, !!meta.normalize_before));
 
         for (let i = 0; i < itemsA.length; i++) {
             if (out.size >= limit) break;
@@ -545,9 +583,10 @@ export const OP_REBUILDERS = {
         if (!src) throw new Error('source bag not found');
         const prefix = meta.prefix || '';
         const suffix = meta.suffix || '';
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
-        for (const w of src.items) {
+        for (const w of srcItems) {
             out.add(prefix + w + suffix);
             if (++i % 2000 === 0) await waitFrame();
         }
@@ -556,9 +595,10 @@ export const OP_REBUILDERS = {
     async anagram(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
+        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
-        for (const w of src.items) {
+        for (const w of srcItems) {
             const chars = Array.from(normNFKC(w));
             // Shuffle
             for (let k = chars.length - 1; k > 0; k--) {
@@ -669,8 +709,8 @@ export async function reapplySeries(limitBagId = null, callbacks = {}) {
 }
 
 // NOTE: Wrapper functions for interactions (return new Bags)
-export async function op_cartesian(bagA, bagB, sep, limit) {
-    const out = await OP_REBUILDERS.cartesian({ src_a: bagA.id, src_b: bagB.id, items_a: bagA.items, items_b: bagB.items, sep, limit });
+export async function op_cartesian(bagA, bagB, sep, limit, normalizeBefore) {
+    const out = await OP_REBUILDERS.cartesian({ src_a: bagA.id, src_b: bagB.id, items_a: bagA.items, items_b: bagB.items, sep, limit, normalize_before: normalizeBefore });
     return new Bag(`${bagA.name} x ${bagB.name}`, out, {
         op: 'cartesian',
         src: [bagA.id, bagB.id].join(','),
@@ -679,16 +719,17 @@ export async function op_cartesian(bagA, bagB, sep, limit) {
         sep,
         limit,
         size_a: bagA.items.size,
-        size_b: bagB.items.size
+        size_b: bagB.items.size,
+        normalize_before: normalizeBefore
     });
 }
-export async function op_append(srcBag, prefix, suffix) {
-    const out = await OP_REBUILDERS.append({ src: srcBag.id, prefix, suffix });
-    return new Bag(`${srcBag.name} → append`, out, { op: 'append', src: srcBag.id, prefix, suffix });
+export async function op_append(srcBag, prefix, suffix, normalizeBefore) {
+    const out = await OP_REBUILDERS.append({ src: srcBag.id, prefix, suffix, normalize_before: normalizeBefore });
+    return new Bag(`${srcBag.name} → append`, out, { op: 'append', src: srcBag.id, prefix, suffix, normalize_before: normalizeBefore });
 }
-export async function op_anagram(srcBag) {
-    const out = await OP_REBUILDERS.anagram({ src: srcBag.id });
-    return new Bag(`${srcBag.name} → anagram`, out, { op: 'anagram', src: srcBag.id });
+export async function op_anagram(srcBag, normalizeBefore) {
+    const out = await OP_REBUILDERS.anagram({ src: srcBag.id, normalize_before: normalizeBefore });
+    return new Bag(`${srcBag.name} → anagram`, out, { op: 'anagram', src: srcBag.id, normalize_before: normalizeBefore });
 }
 export async function op_filter_similarity(srcBag, target, dist, normalizeBefore) {
     const out = await OP_REBUILDERS.filter_similarity({ src: srcBag.id, target, dist, normalize_before: normalizeBefore });

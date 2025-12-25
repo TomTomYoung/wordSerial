@@ -84,6 +84,10 @@
               <p class="muted small" style="margin: 4px 0 8px;">ローマ字変換やケース変換、反転などを行います。</p>
               <select id="selSrcTransform" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormTransform">
+                  Bag をひらがな化</label>
+              </div>
+              <div class="inline">
                 <button id="btnRomaji" class="btn" title="ひらがな・カタカナをローマ字に変換します">ローマ字化</button>
                 <button id="btnUpper" class="btn" title="アルファベットを大文字に変換します">大文字化</button>
                 <button id="btnLower" class="btn" title="アルファベットを小文字に変換します">小文字化</button>
@@ -96,6 +100,10 @@
               <p class="muted small" style="margin: 4px 0 8px;">全ての単語の先頭や末尾に、指定した文字列を付与します。</p>
               <select id="selSrcAppend" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormAppend"> Bag
+                  をひらがな化</label>
+              </div>
+              <div class="inline">
                 <input id="appendPrefix" class="input" placeholder="prefix" title="先頭につける文字列" />
                 <input id="appendSuffix" class="input" placeholder="suffix" title="末尾につける文字列" />
                 <button id="btnAppend" class="btn" title="付与を実行します">付与</button>
@@ -106,6 +114,10 @@
               <h4>アナグラム</h4>
               <p class="muted small" style="margin: 4px 0 8px;">単語内の文字の並び順をランダムに入れ替えます。</p>
               <select id="selSrcAnagram" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormAnagram"> Bag
+                  をひらがな化</label>
+              </div>
               <div class="inline">
                 <button id="btnAnagram" class="btn" title="文字をシャッフルします">シャッフル</button>
               </div>
@@ -133,6 +145,10 @@
                 <select id="selSrcUnionB" class="input" title="Bag B を選択"></select>
               </div>
               <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormUnion"> Bag
+                  をひらがな化</label>
+              </div>
+              <div class="inline">
                 <button id="btnUnion" class="btn" title="AとBの和集合を作成します (A ∪ B)">和集合 (Union)</button>
                 <button id="btnDiff" class="btn" title="AからBに含まれる要素を除いた差集合を作成します (A - B)">差集合 (Difference)</button>
                 <button id="btnIntersect" class="btn" title="AとBの両方に含まれる要素の積集合を作成します (A ∩ B)">積集合
@@ -148,6 +164,10 @@
               <div class="inline">
                 <select id="selSrcCartesianA" class="input" title="Bag A (Prefix側) を選択"></select>
                 <select id="selSrcCartesianB" class="input" title="Bag B (Suffix側) を選択"></select>
+              </div>
+              <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormCartesian">
+                  Bag をひらがな化</label>
               </div>
               <div class="inline">
                 <input id="cartesianJoiner" class="input tight" placeholder="連結文字 (なし)" title="間に挟む文字 (例: の, -)" />
@@ -260,6 +280,10 @@
               <p class="muted small" style="margin: 4px 0 8px;">重複文字除去、置換、ソートを行います。</p>
               <select id="selSrcFormat" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormFormat"> Bag
+                  をひらがな化</label>
+              </div>
+              <div class="inline">
                 <button id="btnDedupe" class="btn" title="各単語内で重複する文字を取り除きます">重複文字除去</button>
                 <button id="btnSortAsc" class="btn" title="単語を辞書順（昇順）に並べます">昇順ソート</button>
                 <button id="btnSortDesc" class="btn" title="単語を辞書順（降順）に並べます">降順ソート</button>
@@ -276,6 +300,10 @@
               <p class="muted small" style="margin: 4px 0 8px;">単語からN文字ごとの切り出しを行い、新しいBagを作ります。</p>
               <select id="selSrcNgram" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormNgram"> Bag
+                  をひらがな化</label>
+              </div>
+              <div class="inline">
                 <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight" value="2"
                     title="切り出す文字数"></label>
                 <button id="btnNgram" class="btn" title="N-gram抽出を実行します">抽出</button>
@@ -286,6 +314,10 @@
               <h4>サンプリング</h4>
               <p class="muted small" style="margin: 4px 0 8px;">Bagからランダムに指定数を抽出します。</p>
               <select id="selSrcSample" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormSample"> Bag
+                  をひらがな化</label>
+              </div>
               <div class="inline">
                 <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight"
                     value="20" title="抽出数"></label>

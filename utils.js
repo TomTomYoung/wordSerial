@@ -88,18 +88,42 @@ let K = null, kuroReady = false;
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
-        if (!window.Kuroshiro || !window.Kuroshiro.Analyzer || !window.Kuroshiro.Analyzer.KuromojiAnalyzer) {
-            // Should be loaded via CDN script tags in index.html, so global window.Kuroshiro fits user context
-            // But strict ESM might prefer dynamic import or assumes globals exist.
-            // Since we are not changing CDN links, we assume window.Kuroshiro exists.
-            if (!window.Kuroshiro) throw new Error("Kuroshiro not loaded");
+        // Retry logic might be needed if scripts are loading asynchronously
+        if (!window.Kuroshiro) {
+            console.warn("Kuroshiro not found in window, checking again in 500ms...");
+            await new Promise(r => setTimeout(r, 500));
         }
-        K = new window.Kuroshiro();
-        const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
+
+        let KuroshiroConstructor = window.Kuroshiro;
+        // Handle case where it might be loaded as an ESM module with default export
+        if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
+            KuroshiroConstructor = KuroshiroConstructor.default;
+        }
+
+        if (typeof KuroshiroConstructor !== 'function') {
+            throw new Error("window.Kuroshiro is not a constructor. Type: " + typeof window.Kuroshiro);
+        }
+
+        // Check Analyzer
+        let Analyzer = window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
+        // Use global fallback if the structure is different
+        if (!Analyzer && window.KuromojiAnalyzer) Analyzer = window.KuromojiAnalyzer;
+
+        // If still not found, check if it's nested in default
+        if (!Analyzer && window.Kuroshiro.default?.Analyzer?.KuromojiAnalyzer) {
+            Analyzer = window.Kuroshiro.default.Analyzer.KuromojiAnalyzer;
+        }
+
+        if (!Analyzer) {
+            throw new Error("KuromojiAnalyzer not found.");
+        }
+
+        K = new KuroshiroConstructor();
         await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
         kuroReady = true;
+        console.log("Kuroshiro initialized successfully.");
     } catch (e) {
-        console.warn("Kuroshiro init warning:", e);
+        console.warn("Kuroshiro init failed, utilizing WanaKana fallback:", e);
     }
 }
 
