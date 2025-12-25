@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 
 <head>
@@ -12,418 +12,7 @@
   <script
     src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 
-  <style>
-    :root {
-      --bg: #0f1115;
-      --fg: #e6e6e6;
-      --muted: #9aa0a6;
-      --acc: #7aa2f7;
-      --warn: #f6bd60;
-      --ok: #34d399;
-      --err: #f06272;
-      --card: #151a22;
-      --border: #2a2f3a;
-      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font: 14px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4 {
-      margin: 0;
-      font-weight: 700;
-    }
-
-    h1 {
-      font-size: 24px;
-    }
-
-    h2 {
-      font-size: 18px;
-    }
-
-    h3 {
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
-
-    .app {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px 24px 32px;
-    }
-
-    .app>header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 18px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .subtitle {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 320px minmax(0, 1fr) 280px;
-      gap: 18px;
-    }
-
-    @media (max-width: 1200px) {
-      .layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .sidebar,
-      .main,
-      .log-panel {
-        order: initial;
-      }
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: var(--shadow);
-    }
-
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-height: 480px;
-    }
-
-    .bag-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .bag-card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: rgba(15, 20, 30, 0.6);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .bag-card.dragging {
-      opacity: 0.55;
-    }
-
-    .bag-card.drag-over::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: rgba(122, 162, 247, 0.75);
-      top: 0;
-    }
-
-    .bag-card>summary {
-      cursor: pointer;
-      padding: 10px 12px;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .bag-card>summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .bag-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .bag-meta {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 0 12px 12px;
-      white-space: pre-wrap;
-    }
-
-    .preview-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 12px 10px;
-      align-items: center;
-    }
-
-    .preview-bar label {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      color: var(--muted);
-    }
-
-    .preview {
-      width: 100%;
-      border: none;
-      border-top: 1px solid var(--border);
-      padding: 12px;
-      background: rgba(8, 10, 16, 0.6);
-      color: var(--fg);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      resize: vertical;
-    }
-
-    .btn {
-      cursor: pointer;
-      background: #1e2530;
-      border: 1px solid var(--border);
-      color: var(--fg);
-      padding: 7px 12px;
-      border-radius: 10px;
-      transition: all 0.15s ease;
-      font-weight: 600;
-    }
-
-    .btn:hover {
-      border-color: var(--acc);
-      box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.15) inset;
-    }
-
-    .btn.primary {
-      background: linear-gradient(180deg, #1f2a44, #1a2136);
-      border-color: #304571;
-      color: #e7efff;
-    }
-
-    .btn.warn {
-      background: #3a2a17;
-      border-color: #6b4d27;
-      color: #ffe7ba;
-    }
-
-    .btn.ok {
-      background: #11261f;
-      border-color: #1f6b53;
-      color: #cafdf0;
-    }
-
-    .btn.ghost {
-      background: transparent;
-    }
-
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      box-shadow: none;
-      border-color: var(--border);
-    }
-
-    .input,
-    textarea,
-    select {
-      width: 100%;
-      padding: 8px 10px;
-      color: var(--fg);
-      background: #10151e;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      outline: none;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    .small {
-      font-size: 12px;
-    }
-
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    }
-
-    .tight {
-      max-width: 200px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .tab-button {
-      border-radius: 999px;
-      padding: 8px 16px;
-      border: 1px solid transparent;
-      background: rgba(16, 21, 30, 0.6);
-      color: var(--muted);
-    }
-
-    .tab-button.active {
-      color: var(--fg);
-      background: rgba(122, 162, 247, 0.18);
-      border-color: rgba(122, 162, 247, 0.4);
-    }
-
-    .tab-panel {
-      display: none;
-    }
-
-    .tab-panel.active {
-      display: block;
-    }
-
-    .panel-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .log-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-height: 480px;
-    }
-
-    .log-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .log-body {
-      background: rgba(8, 10, 16, 0.55);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      height: 200px;
-      overflow-y: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .log-entry+.log-entry {
-      margin-top: 6px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      background: rgba(122, 162, 247, 0.15);
-      color: var(--acc);
-    }
-
-    .op-group {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px;
-      background: rgba(15, 20, 30, 0.6);
-      display: grid;
-      gap: 10px;
-    }
-
-    .op-group h4 {
-      font-size: 14px;
-      margin: 0;
-      cursor: pointer;
-      user-select: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .op-group h4::after {
-      content: '▼';
-      font-size: 10px;
-      color: var(--muted);
-      transition: transform 0.2s;
-    }
-
-    .op-group.closed h4::after {
-      transform: rotate(-90deg);
-    }
-
-    .op-group.closed>*:not(h4) {
-      display: none;
-    }
-
-    .inline {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .inline>* {
-      margin: 0;
-      align-self: center;
-    }
-
-    .inline .input {
-      max-width: 160px;
-    }
-
-    .history-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .export-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .bag-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 0 12px 12px;
-      align-items: center;
-    }
-
-    .bag-actions .status {
-      flex: 1;
-      min-width: 140px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -481,151 +70,227 @@
           <div class="panel-grid">
             <div class="op-group">
               <h4>かな正規化</h4>
-              <select id="selSrcNorm" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">ひらがな・カタカナの正規化や相互変換を行います。</p>
+              <select id="selSrcNorm" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <button id="btnNorm" class="btn ok">ひらがな化</button>
-                <button id="btnKatakana" class="btn">カタカナ化</button>
+                <button id="btnNorm" class="btn ok"
+                  title="選択したBagの単語をすべてひらがなに変換します (Kuroshiro / WanaKana使用)">ひらがな化</button>
+                <button id="btnKatakana" class="btn" title="選択したBagの単語をすべてカタカナに変換します">カタカナ化</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>文字変換</h4>
-              <select id="selSrcTransform" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">ローマ字変換やケース変換、反転などを行います。</p>
+              <select id="selSrcTransform" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <button id="btnRomaji" class="btn">ローマ字化</button>
-                <button id="btnUpper" class="btn">大文字化</button>
-                <button id="btnLower" class="btn">小文字化</button>
-                <button id="btnReverse" class="btn">反転</button>
+                <button id="btnRomaji" class="btn" title="ひらがな・カタカナをローマ字に変換します">ローマ字化</button>
+                <button id="btnUpper" class="btn" title="アルファベットを大文字に変換します">大文字化</button>
+                <button id="btnLower" class="btn" title="アルファベットを小文字に変換します">小文字化</button>
+                <button id="btnReverse" class="btn" title="文字列を逆順にします (例: あいう→ういあ)">反転</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>文字付与 (Appender)</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">全ての単語の先頭や末尾に、指定した文字列を付与します。</p>
+              <select id="selSrcAppend" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <input id="appendPrefix" class="input" placeholder="prefix" title="先頭につける文字列" />
+                <input id="appendSuffix" class="input" placeholder="suffix" title="末尾につける文字列" />
+                <button id="btnAppend" class="btn" title="付与を実行します">付与</button>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>アナグラム</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">単語内の文字の並び順をランダムに入れ替えます。</p>
+              <select id="selSrcAnagram" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <button id="btnAnagram" class="btn" title="文字をシャッフルします">シャッフル</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>文字削除</h4>
-              <select id="selSrcDel" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">指定した文字を単語から削除します。</p>
+              <select id="selSrcDel" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <input id="delChars" class="input" placeholder="削除する文字（例：ん）" />
-                <label class="muted small"><input type="checkbox" id="ckNormDel" checked /> 入力をひらがな化</label>
-                <label class="muted small"><input type="checkbox" id="ckPreNormDel"> Bag をひらがな化</label>
-                <button id="btnDel" class="btn warn">delete chars</button>
+                <input id="delChars" class="input" placeholder="削除する文字（例：ん）" title="削除したい文字を入力してください" />
+                <label class="muted small" title="入力欄の文字をひらがな化してから処理に使用します"><input type="checkbox" id="ckNormDel"
+                    checked /> 入力をひらがな化</label>
+                <label class="muted small" title="処理前に入力Bagの内容をひらがな化します"><input type="checkbox" id="ckPreNormDel"> Bag
+                  をひらがな化</label>
+                <button id="btnDel" class="btn warn" title="指定した文字を各単語から削除します">delete chars</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>集合演算</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">2つのBag間で和・差・積・対称差の集合演算を行います。</p>
               <div class="inline">
-                <select id="selSrcUnionA" class="input"></select>
-                <select id="selSrcUnionB" class="input"></select>
+                <select id="selSrcUnionA" class="input" title="Bag A を選択"></select>
+                <select id="selSrcUnionB" class="input" title="Bag B を選択"></select>
               </div>
               <div class="inline">
-                <button id="btnUnion" class="btn">和集合 (Union)</button>
-                <button id="btnDiff" class="btn">差集合 (Difference)</button>
-                <button id="btnIntersect" class="btn">積集合 (Intersection)</button>
-                <button id="btnSymDiff" class="btn">対称差 (Symmetric)</button>
+                <button id="btnUnion" class="btn" title="AとBの和集合を作成します (A ∪ B)">和集合 (Union)</button>
+                <button id="btnDiff" class="btn" title="AからBに含まれる要素を除いた差集合を作成します (A - B)">差集合 (Difference)</button>
+                <button id="btnIntersect" class="btn" title="AとBの両方に含まれる要素の積集合を作成します (A ∩ B)">積集合
+                  (Intersection)</button>
+                <button id="btnSymDiff" class="btn" title="AまたはBの片方だけに含まれる要素の集合を作成します (A △ B)">対称差 (Symmetric)</button>
+              </div>
+            </div>
+
+
+            <div class="op-group">
+              <h4>結合・直積 (Cartesian)</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">2つのBagの全ての組み合わせを結合します (A × B)。</p>
+              <div class="inline">
+                <select id="selSrcCartesianA" class="input" title="Bag A (Prefix側) を選択"></select>
+                <select id="selSrcCartesianB" class="input" title="Bag B (Suffix側) を選択"></select>
+              </div>
+              <div class="inline">
+                <input id="cartesianJoiner" class="input tight" placeholder="連結文字 (なし)" title="間に挟む文字 (例: の, -)" />
+                <label class="muted small">Limit <input id="cartesianLimit" type="number" min="1" class="input tight"
+                    value="10000" title="生成数の上限 (安全のため)"></label>
+                <button id="btnCartesian" class="btn" title="直積結合を実行します">結合 (Join)</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>包含フィルタ</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">辞書（Lookup Bag）に含まれる単語のみを残します。</p>
               <div class="inline">
-                <select id="selSrcFlt" class="input"></select>
-                <select id="selLkpFlt" class="input"></select>
-                <button id="btnFlt" class="btn">filter_in（交差）</button>
+                <select id="selSrcFlt" class="input" title="フィルタ対象のBagを選択"></select>
+                <select id="selLkpFlt" class="input" title="辞書として使うBagを選択"></select>
+                <button id="btnFlt" class="btn" title="辞書Bagに含まれている単語だけを残します">filter_in（交差）</button>
               </div>
               <div class="inline">
-                <label class="muted small"><input type="checkbox" id="ckPreNormFltSrc"> Bag をひらがな化</label>
-                <label class="muted small"><input type="checkbox" id="ckPreNormFltLookup"> Lookup をひらがな化</label>
+                <label class="muted small" title="処理前に対象Bagをひらがな化します"><input type="checkbox" id="ckPreNormFltSrc"> Bag
+                  をひらがな化</label>
+                <label class="muted small" title="処理前に辞書Bagをひらがな化します"><input type="checkbox" id="ckPreNormFltLookup">
+                  Lookup をひらがな化</label>
               </div>
             </div>
 
             <div class="op-group">
               <h4>長さフィルタ</h4>
-              <select id="selSrcLen" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">文字数が指定範囲内の単語のみを抽出します。</p>
+              <select id="selSrcLen" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight"
-                    value="1"></label>
-                <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight"
-                    value="10"></label>
-                <button id="btnLengthFilter" class="btn">適用</button>
+                <label class="muted small">min <input id="lenMin" type="number" min="0" class="input tight" value="1"
+                    title="最小文字数"></label>
+                <label class="muted small">max <input id="lenMax" type="number" min="1" class="input tight" value="10"
+                    title="最大文字数"></label>
+                <button id="btnLengthFilter" class="btn" title="指定した長さの範囲内の単語を抽出します">適用</button>
               </div>
               <div class="inline">
-                <label class="muted small"><input type="checkbox" id="ckPreNormLen"> Bag をひらがな化</label>
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormLen"> Bag
+                  をひらがな化</label>
               </div>
             </div>
 
             <div class="op-group">
               <h4>前後一致フィルタ</h4>
-              <select id="selSrcAffix" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">前方一致（接頭辞）または後方一致（接尾辞）でフィルタします。</p>
+              <select id="selSrcAffix" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <label class="muted small"><input type="checkbox" id="ckPreNormAffix"> Bag をひらがな化</label>
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormAffix"> Bag
+                  をひらがな化</label>
               </div>
               <div class="inline">
-                <input id="prefixValue" class="input" placeholder="前方一致（prefix）" />
-                <button id="btnPrefix" class="btn">prefix filter</button>
+                <input id="prefixValue" class="input" placeholder="前方一致（prefix）" title="開始文字列を指定" />
+                <button id="btnPrefix" class="btn" title="指定した文字列で始まる単語を抽出します">prefix filter</button>
               </div>
               <div class="inline">
-                <input id="suffixValue" class="input" placeholder="後方一致（suffix）" />
-                <button id="btnSuffix" class="btn">suffix filter</button>
+                <input id="suffixValue" class="input" placeholder="後方一致（suffix）" title="終了文字列を指定" />
+                <button id="btnSuffix" class="btn" title="指定した文字列で終わる単語を抽出します">suffix filter</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>部分一致フィルタ</h4>
-              <select id="selSrcContains" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">指定した文字列を含む単語を抽出します。</p>
+              <select id="selSrcContains" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <label class="muted small"><input type="checkbox" id="ckPreNormContains"> Bag をひらがな化</label>
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormContains"> Bag
+                  をひらがな化</label>
               </div>
               <div class="inline">
-                <input id="containsValue" class="input" placeholder="入力文字列を含む語" />
-                <button id="btnContains" class="btn">contains filter</button>
+                <input id="containsValue" class="input" placeholder="入力文字列を含む語" title="検索したい文字列" />
+                <button id="btnContains" class="btn" title="指定した文字列を含む単語を抽出します">contains filter</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>正規表現フィルタ</h4>
-              <select id="selSrcRegex" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">正規表現パターンにマッチする単語を抽出します。</p>
+              <select id="selSrcRegex" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" />
-                <label class="muted small"><input type="checkbox" id="regexInvert"> 逆一致</label>
-                <button id="btnRegex" class="btn">filter_regex</button>
+                <input id="regexPattern" class="input" placeholder="例：^[ぁ-ゔ]{2,3}$" title="正規表現パターンを入力" />
+                <label class="muted small" title="マッチしないものを抽出する場合にチェック"><input type="checkbox" id="regexInvert">
+                  逆一致</label>
+                <button id="btnRegex" class="btn" title="正規表現でフィルタします">filter_regex</button>
               </div>
               <div class="inline">
-                <label class="muted small"><input type="checkbox" id="ckPreNormRegex"> Bag をひらがな化</label>
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormRegex"> Bag
+                  をひらがな化</label>
+              </div>
+            </div>
+
+            <div class="op-group">
+              <h4>類似度フィルタ (Levenshtein)</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">ターゲット文字列に近い単語（編集距離が近い）を抽出します。</p>
+              <select id="selSrcSimilarity" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <input id="similarityTarget" class="input" placeholder="ターゲット文字列" title="比較対象の単語" />
+                <label class="muted small">dist <input id="similarityDist" type="number" min="0" class="input tight"
+                    value="2" title="許容する最大編集距離"></label>
+                <button id="btnSimilarity" class="btn" title="類似度フィルタを実行します">抽出</button>
+              </div>
+              <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormSimilarity">
+                  Bag
+                  をひらがな化</label>
               </div>
             </div>
 
             <div class="op-group">
               <h4>整形・置換</h4>
-              <select id="selSrcFormat" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">重複文字除去、置換、ソートを行います。</p>
+              <select id="selSrcFormat" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <button id="btnDedupe" class="btn">重複文字除去</button>
-                <button id="btnSortAsc" class="btn">昇順ソート</button>
-                <button id="btnSortDesc" class="btn">降順ソート</button>
+                <button id="btnDedupe" class="btn" title="各単語内で重複する文字を取り除きます">重複文字除去</button>
+                <button id="btnSortAsc" class="btn" title="単語を辞書順（昇順）に並べます">昇順ソート</button>
+                <button id="btnSortDesc" class="btn" title="単語を辞書順（降順）に並べます">降順ソート</button>
               </div>
               <div class="inline">
-                <input id="replaceFrom" class="input" placeholder="置換 from" />
-                <input id="replaceTo" class="input" placeholder="to" />
-                <button id="btnReplace" class="btn">置換</button>
+                <input id="replaceFrom" class="input" placeholder="置換 from" title="置換されれる文字列" />
+                <input id="replaceTo" class="input" placeholder="to" title="置換後の文字列" />
+                <button id="btnReplace" class="btn" title="文字列置換を実行します">置換</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>n-gram 抽出</h4>
-              <select id="selSrcNgram" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">単語からN文字ごとの切り出しを行い、新しいBagを作ります。</p>
+              <select id="selSrcNgram" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
-                <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight"
-                    value="2"></label>
-                <button id="btnNgram" class="btn">抽出</button>
+                <label class="muted small">n <input id="ngramN" type="number" min="1" class="input tight" value="2"
+                    title="切り出す文字数"></label>
+                <button id="btnNgram" class="btn" title="N-gram抽出を実行します">抽出</button>
               </div>
             </div>
 
             <div class="op-group">
               <h4>サンプリング</h4>
-              <select id="selSrcSample" class="input"></select>
+              <p class="muted small" style="margin: 4px 0 8px;">Bagからランダムに指定数を抽出します。</p>
+              <select id="selSrcSample" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
                 <label class="muted small">count <input id="sampleCount" type="number" min="1" class="input tight"
-                    value="20"></label>
-                <input id="sampleSeed" class="input" placeholder="seed（任意）" />
-                <button id="btnSample" class="btn">sample</button>
+                    value="20" title="抽出数"></label>
+                <input id="sampleSeed" class="input" placeholder="seed（任意）" title="乱数シード（固定すると再現性が出ます）" />
+                <button id="btnSample" class="btn" title="ランダムサンプリングを実行します">sample</button>
               </div>
             </div>
           </div>
@@ -699,6 +364,24 @@
       div.textContent = `[${nowISO()}] ${msg}`;
       host.prepend(div);
       while (host.children.length > 150) host.removeChild(host.lastChild);
+    }
+
+    /* Levenshtein Distance */
+    function levenshtein(s, t) {
+      if (!s) return t.length;
+      if (!t) return s.length;
+      const d = [];
+      const n = s.length;
+      const m = t.length;
+      for (let i = 0; i <= n; i++) d[i] = [i];
+      for (let j = 0; j <= m; j++) d[0][j] = j;
+      for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+          const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+        }
+      }
+      return d[n][m];
     }
 
     function setsAreEqual(a, b) {
@@ -809,60 +492,7 @@
       return out;
     }
 
-    async function maybeNormalizeItems(items, shouldNormalize) {
-      if (!shouldNormalize) return new Set(items);
-      const arr = await convertItemsToHiragana(items);
-      return new Set(arr);
-    }
 
-    async function maybeNormalizeBagItems(bag, shouldNormalize) {
-      if (!bag) return new Set();
-      return maybeNormalizeItems(bag.items, shouldNormalize);
-    }
-
-    async function maybeNormalizeQueryValue(value, shouldNormalize) {
-      const base = normNFKC(value || '');
-      if (!base) return '';
-      if (!shouldNormalize) return base;
-      const hira = await toHiragana(base);
-      const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
-      return normalized || base;
-    }
-
-    function waitFrame() {
-      return new Promise(resolve => setTimeout(resolve, 0));
-    }
-
-    async function convertItemsToHiragana(items) {
-      const out = [];
-      let i = 0;
-      for (const w of items) {
-        const h = await toHiragana(w);
-        if (h) out.push(h.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await waitFrame();
-      }
-      return out;
-    }
-
-    async function maybeNormalizeItems(items, shouldNormalize) {
-      if (!shouldNormalize) return new Set(items);
-      const arr = await convertItemsToHiragana(items);
-      return new Set(arr);
-    }
-
-    async function maybeNormalizeBagItems(bag, shouldNormalize) {
-      if (!bag) return new Set();
-      return maybeNormalizeItems(bag.items, shouldNormalize);
-    }
-
-    async function maybeNormalizeQueryValue(value, shouldNormalize) {
-      const base = normNFKC(value || '');
-      if (!base) return '';
-      if (!shouldNormalize) return base;
-      const hira = await toHiragana(base);
-      const normalized = normNFKC((hira || '').replace(/\s+/g, ''));
-      return normalized || base;
-    }
 
     /* ====== Bag / Registry ====== */
     let _nextId = 0;
@@ -967,587 +597,17 @@
       captureState();
     }
 
-    /* ====== Ops（シリアル） ====== */
-    async function op_normalize_hiragana(srcBag) {
-      const out = new Set();
-      let i = 0;
-      for (const w of srcBag.items) {
-        const h = await toHiragana(w);
-        if (h) out.add(h.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-      }
-      return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
-    }
-    async function op_normalize_katakana(srcBag) {
-      const out = new Set();
-      let i = 0;
-      for (const w of srcBag.items) {
-        const h = await toKatakana(w);
-        if (h) out.add(h.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-      }
-      return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
-    }
-    async function op_to_romaji(srcBag) {
-      const out = new Set();
-      let i = 0;
-      for (const w of srcBag.items) {
-        const r = await toRomaji(w);
-        if (r) out.add(r.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
-      }
-      return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
-    }
-    async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
-      const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
-      const dels = Array.from(new Set((del || '').split('')));
-      const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
-      const out = new Set();
-      for (const w of srcItems) {
-        let wNew = w;
-        for (const c of dels) if (c) wNew = wNew.split(c).join('');
-        if (wNew !== w) out.add(wNew);
-      }
-      return new Bag(`${srcBag.name} → delete(${dels.join('') || '∅'})`, out, {
-        op: 'delete_chars',
-        src: srcBag.id,
-        deleted: dels.join(''),
-        normalize_input: normalizeInput,
-        normalize_before: normalizeBefore
-      });
-    }
-    function op_to_upper(srcBag) {
-      const out = new Set();
-      for (const w of srcBag.items) {
-        out.add(normNFKC(w).toUpperCase());
-      }
-      return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
-    }
-    function op_to_lower(srcBag) {
-      const out = new Set();
-      for (const w of srcBag.items) {
-        out.add(normNFKC(w).toLowerCase());
-      }
-      return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
-    }
-    function op_reverse(srcBag) {
-      const out = new Set();
-      for (const w of srcBag.items) {
-        const reversed = Array.from(normNFKC(w)).reverse().join('');
-        if (reversed) out.add(reversed);
-      }
-      return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
-    }
-    function op_dedupe_chars(srcBag) {
-      const out = new Set();
-      for (const w of srcBag.items) {
-        const seen = new Set();
-        const result = [];
-        for (const ch of Array.from(normNFKC(w))) {
-          if (seen.has(ch)) continue;
-          seen.add(ch);
-          result.push(ch);
-        }
-        if (result.length) out.add(result.join(''));
-      }
-      return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
-    }
-    function op_replace(srcBag, fromValue, toValue) {
-      const needle = normNFKC(fromValue);
-      const replacement = normNFKC(toValue ?? '');
-      const out = new Set();
-      if (!needle) return new Bag(`${srcBag.name} → replace(∅)`, out, { op: 'replace', src: srcBag.id, from: '', to: replacement });
-      for (const w of srcBag.items) {
-        const normed = normNFKC(w);
-        const replaced = normed.split(needle).join(replacement);
-        out.add(replaced);
-      }
-      return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
-    }
-    function op_sort(srcBag, order = 'asc', locale = 'ja') {
-      const arr = Array.from(srcBag.items);
-      arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
-      if (order === 'desc') arr.reverse();
-      return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
-    }
-    async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
-      const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
-      const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
-      const out = new Set();
-      for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
-      return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, {
-        op: 'filter_in',
-        src: srcBag.id,
-        lookup: lookupBag.id,
-        normalize_src_before: normalizeSrc,
-        normalize_lookup_before: normalizeLookup
-      });
-    }
-    function op_union(bagA, bagB) {
-      const out = new Set([...bagA.items, ...bagB.items]);
-      return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
-        op: 'union',
-        src: [bagA.id, bagB.id].join(','),
-        src_a: bagA.id,
-        src_b: bagB.id,
-        size_a: bagA.items.size,
-        size_b: bagB.items.size
-      });
-    }
-    function op_difference(bagA, bagB) {
-      const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
-      return new Bag(`${bagA.name} - ${bagB.name}`, out, {
-        op: 'difference',
-        src: [bagA.id, bagB.id].join(','),
-        src_a: bagA.id,
-        src_b: bagB.id,
-        size_a: bagA.items.size,
-        size_b: bagB.items.size
-      });
-    }
-    function op_intersection(bagA, bagB) {
-      const out = new Set();
-      for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
-      return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
-        op: 'intersection',
-        src: [bagA.id, bagB.id].join(','),
-        src_a: bagA.id,
-        src_b: bagB.id,
-        size_a: bagA.items.size,
-        size_b: bagB.items.size
-      });
-    }
-    function op_symmetric_difference(bagA, bagB) {
-      const out = new Set();
-      for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
-      for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
-      return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
-        op: 'symmetric_difference',
-        src: [bagA.id, bagB.id].join(','),
-        src_a: bagA.id,
-        src_b: bagB.id,
-        size_a: bagA.items.size,
-        size_b: bagB.items.size
-      });
-    }
-    async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
-      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-      const out = new Set();
-      for (const w of srcItems) {
-        const len = normNFKC(w).length;
-        if (len >= minLen && len <= maxLen) out.add(w);
-      }
-      return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, {
-        op: 'filter_length',
-        src: bag.id,
-        range: `${minLen}-${maxLen}`,
-        min: minLen,
-        max: maxLen,
-        normalize_before: normalizeBefore
-      });
-    }
-    async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
-      const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
-      const out = new Set();
-      if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
-      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-      for (const w of srcItems) {
-        if (normNFKC(w).startsWith(needle)) out.add(w);
-      }
-      return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
-    }
-    async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
-      const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
-      const out = new Set();
-      if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
-      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-      for (const w of srcItems) {
-        if (normNFKC(w).endsWith(needle)) out.add(w);
-      }
-      return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
-    }
-    async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
-      const needle = await maybeNormalizeQueryValue(needleRaw, normalizeBefore);
-      const out = new Set();
-      if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
-      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-      for (const w of srcItems) {
-        if (normNFKC(w).includes(needle)) out.add(w);
-      }
-      return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
-    }
-    async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
-      const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
-      const re = new RegExp(pattern, 'u');
-      const out = new Set();
-      for (const w of srcItems) {
-        const matched = re.test(w);
-        if ((matched && !invert) || (!matched && invert)) out.add(w);
-      }
-      return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
-    }
-    function op_ngrams(bag, n) {
-      const size = Number.isFinite(n) ? Math.max(1, n) : 1;
-      const out = new Set();
-      for (const w of bag.items) {
-        const norm = normNFKC(w);
-        if (!norm || norm.length < size) continue;
-        for (let i = 0; i <= norm.length - size; i += 1) {
-          out.add(norm.slice(i, i + size));
-        }
-      }
-      return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size });
-    }
-    function makeSeedFromString(seed) {
-      if (typeof seed === 'number') return seed >>> 0;
-      let h = 1779033703 ^ (seed?.length || 0);
-      for (let i = 0; i < (seed?.length || 0); i += 1) {
-        h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-      }
-      return (Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0;
-    }
-    function mulberry32(a) {
-      return function () {
-        let t = (a += 0x6d2b79f5);
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-    function op_sample(bag, count, seed) {
-      const items = Array.from(bag.items);
-      const safeCount = Number.isFinite(count) ? count : 0;
-      const need = Math.min(Math.max(0, safeCount), items.length);
-      if (need === items.length) {
-        return new Bag(`${bag.name} → sample(all)`, new Set(items), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
-      }
-      let rand = Math.random;
-      if (seed) {
-        rand = mulberry32(makeSeedFromString(seed));
-      }
-      for (let i = items.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rand() * (i + 1));
-        [items[i], items[j]] = [items[j], items[i]];
-      }
-      const sampled = items.slice(0, need);
-      return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
-    }
-
-    const OP_REBUILDERS = {
-      async normalize_hiragana(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        return new Set(await convertItemsToHiragana(src.items));
-      },
-      async normalize_katakana(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        let i = 0;
-        for (const w of src.items) {
-          const k = await toKatakana(w);
-          if (k) out.add(k.replace(/\s+/g, ''));
-          if (++i % 2000 === 0) await waitFrame();
-        }
-        return out;
-      },
-      async to_romaji(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        let i = 0;
-        for (const w of src.items) {
-          const r = await toRomaji(w);
-          if (r) out.add(r.replace(/\s+/g, ''));
-          if (++i % 2000 === 0) await waitFrame();
-        }
-        return out;
-      },
-      async delete_chars(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const dels = Array.from(new Set((meta.deleted || '').split('')));
-        const out = new Set();
-        for (const w of srcItems) {
-          let wNew = w;
-          for (const c of dels) if (c) wNew = wNew.split(c).join('');
-          if (wNew !== w) out.add(wNew);
-        }
-        return out;
-      },
-      async to_upper(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        for (const w of src.items) out.add(normNFKC(w).toUpperCase());
-        return out;
-      },
-      async to_lower(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        for (const w of src.items) out.add(normNFKC(w).toLowerCase());
-        return out;
-      },
-      async reverse(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        for (const w of src.items) {
-          const reversed = Array.from(normNFKC(w)).reverse().join('');
-          if (reversed) out.add(reversed);
-        }
-        return out;
-      },
-      async dedupe_chars(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const out = new Set();
-        for (const w of src.items) {
-          const seen = new Set();
-          const result = [];
-          for (const ch of Array.from(normNFKC(w))) {
-            if (seen.has(ch)) continue;
-            seen.add(ch);
-            result.push(ch);
-          }
-          if (result.length) out.add(result.join(''));
-        }
-        return out;
-      },
-      async replace(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const needle = meta.from || '';
-        const replacement = meta.to || '';
-        const out = new Set();
-        if (!needle) return out;
-        for (const w of src.items) {
-          const normed = normNFKC(w);
-          const replaced = normed.split(needle).join(replacement);
-          out.add(replaced);
-        }
-        return out;
-      },
-      async sort(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const order = meta.order || 'asc';
-        const locale = meta.locale || 'ja';
-        const arr = Array.from(src.items);
-        arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
-        if (order === 'desc') arr.reverse();
-        return new Set(arr);
-      },
-      async filter_in(meta) {
-        const src = REG.get(meta.src);
-        const lookup = REG.get(meta.lookup);
-        if (!src || !lookup) throw new Error('source or lookup bag not found');
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_src_before);
-        const lookupItems = await maybeNormalizeBagItems(lookup, !!meta.normalize_lookup_before);
-        const out = new Set();
-        for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
-        return out;
-      },
-      async union(meta) {
-        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-        if (!a || !b) throw new Error('union source missing');
-        return new Set([...a.items, ...b.items]);
-      },
-      async difference(meta) {
-        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-        if (!a || !b) throw new Error('difference source missing');
-        return new Set([...a.items].filter(w => !b.items.has(w)));
-      },
-      async intersection(meta) {
-        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-        if (!a || !b) throw new Error('intersection source missing');
-        const out = new Set();
-        for (const w of a.items) if (b.items.has(w)) out.add(w);
-        return out;
-      },
-      async symmetric_difference(meta) {
-        const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
-        const b = REG.get(meta.src_b ?? (meta.src?.split(',')[1]));
-        if (!a || !b) throw new Error('symmetric difference source missing');
-        const out = new Set();
-        for (const w of a.items) if (!b.items.has(w)) out.add(w);
-        for (const w of b.items) if (!a.items.has(w)) out.add(w);
-        return out;
-      },
-      async filter_length(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const min = Number.isFinite(meta.min) ? meta.min : Number(meta.range?.split('-')[0]) || 0;
-        const max = Number.isFinite(meta.max) ? meta.max : Number(meta.range?.split('-')[1]) || min;
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const out = new Set();
-        for (const w of srcItems) {
-          const len = normNFKC(w).length;
-          if (len >= min && len <= max) out.add(w);
-        }
-        return out;
-      },
-      async filter_prefix(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const prefix = await maybeNormalizeQueryValue(meta.prefix || '', !!meta.normalize_before);
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const out = new Set();
-        if (!prefix) return out;
-        for (const w of srcItems) if (normNFKC(w).startsWith(prefix)) out.add(w);
-        return out;
-      },
-      async filter_suffix(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const suffix = await maybeNormalizeQueryValue(meta.suffix || '', !!meta.normalize_before);
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const out = new Set();
-        if (!suffix) return out;
-        for (const w of srcItems) if (normNFKC(w).endsWith(suffix)) out.add(w);
-        return out;
-      },
-      async filter_contains(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const needle = await maybeNormalizeQueryValue(meta.needle || meta.contains || '', !!meta.normalize_before);
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const out = new Set();
-        if (!needle) return out;
-        for (const w of srcItems) if (normNFKC(w).includes(needle)) out.add(w);
-        return out;
-      },
-      async filter_regex(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
-        const pattern = meta.pattern;
-        const invert = !!meta.invert;
-        if (!pattern) return new Set();
-        const re = new RegExp(pattern, 'u');
-        const out = new Set();
-        for (const w of srcItems) {
-          const matched = re.test(w);
-          if ((matched && !invert) || (!matched && invert)) out.add(w);
-        }
-        return out;
-      },
-      async ngrams(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const n = Number.isFinite(meta.n) ? Math.max(1, meta.n) : 1;
-        const out = new Set();
-        for (const w of src.items) {
-          const norm = normNFKC(w);
-          if (!norm || norm.length < n) continue;
-          for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
-        }
-        return out;
-      },
-      async sample(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('source bag not found');
-        const items = Array.from(src.items);
-        const count = Number.isFinite(meta.count) ? meta.count : 0;
-        const need = Math.min(Math.max(0, count), items.length);
-        if (need === items.length) return new Set(items);
-        let rand = Math.random;
-        if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
-        for (let i = items.length - 1; i > 0; i -= 1) {
-          const j = Math.floor(rand() * (i + 1));
-          [items[i], items[j]] = [items[j], items[i]];
-        }
-        return new Set(items.slice(0, need));
-      },
-      async clone(meta) {
-        const src = REG.get(meta.src);
-        if (!src) throw new Error('clone source not found');
-        return new Set(src.items);
-      },
-      async manual_edit() {
-        return null;
-      }
-    };
-
-    async function recomputeBagByMeta(bag) {
-      const meta = bag?.meta || {};
-      const op = meta.op;
-      if (!op) return { changed: false, reason: 'no-op' };
-      const runner = OP_REBUILDERS[op];
-      if (!runner) return { changed: false, reason: 'unsupported' };
-      const before = bag.items instanceof Set ? new Set(bag.items) : new Set(Array.from(bag.items || []));
-      const result = await runner(meta);
-      if (!result) {
-        bag.meta.reapplied_at = nowISO();
-        return { changed: false, reason: 'no-change' };
-      }
-      const nextItems = result instanceof Set ? result : new Set(result);
-      const changed = !setsAreEqual(before, nextItems);
-      bag.items = nextItems;
-      bag.meta.size = bag.items.size;
-      bag.meta.reapplied_at = nowISO();
-      if (changed) bag.meta.updated_at = nowISO();
-      return { changed, reason: changed ? 'updated' : 'no-change' };
-    }
-
-    async function reapplySeries(limitBagId = null) {
-      const limit = limitBagId === null ? null : Number(limitBagId);
-      const label = limit === null ? 'all bags' : `bag ${limit}`;
-      appendOpLog(`↻ Reapply start (${label})`);
-      const bags = REG.all();
-      let updated = 0;
-      for (const bag of bags) {
-        try {
-          const runnable = bag?.meta?.op && OP_REBUILDERS[bag.meta.op];
-          if (!runnable) {
-            bag.meta.reapply_status = '⏭ 再適用対象外';
-            delete bag.meta.reapply_error;
-            setBagStatusMessage(bag.id, bag.meta.reapply_status);
-          } else {
-            bag.meta.reapply_status = '⟳ 再適用中…';
-            setBagStatusMessage(bag.id, bag.meta.reapply_status);
-            const result = await recomputeBagByMeta(bag);
-            delete bag.meta.reapply_error;
-            if (result.changed) {
-              updated += 1;
-              bag.meta.reapply_status = `✓ 更新(${bag.items.size})`;
-            } else {
-              bag.meta.reapply_status = '＝ 変更なし';
-            }
-            setBagStatusMessage(bag.id, bag.meta.reapply_status);
-          }
-        } catch (e) {
-          log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
-          appendOpLog(`× Reapply failed [${bag.id}] ${bag.name}: ${e.message}`);
-          bag.meta.reapply_error = e.message;
-          bag.meta.reapplied_at = nowISO();
-          bag.meta.reapply_status = `× エラー: ${e.message}`;
-          setBagStatusMessage(bag.id, bag.meta.reapply_status);
-          break;
-        }
-        if (limit !== null && bag.id === limit) break;
-      }
-      if (updated > 0) {
-        renderBags();
-        applyChoices();
-        captureState();
-        appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
-      } else {
-        appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
-      }
-    }
-
+  </script>
+  <script src="operations.js"></script>
+  <script>
     /* ====== JSON列挙・ロード（bag/*.json） ====== */
     const BAG_DIR = './bag/';
     function applyChoices() {
       const choices = REG.choices();
-      const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport'];
+      const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA',
+        '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat',
+        '#selSrcNgram', '#selSrcSample', '#selExport', '#selSrcCartesianA', '#selSrcCartesianB', '#selSrcAppend',
+        '#selSrcAnagram', '#selSrcSimilarity'];
       ids.forEach(id => setSelectOptions(el(id), choices));
     }
     function addBagFromWords(name, words, meta) {
@@ -1580,8 +640,10 @@
         const r = await fetch(BAG_DIR, { cache: 'no-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const html = await r.text();
-        const files = [...html.matchAll(/href="([^"]+?\.json)"/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
-        const files2 = [...html.matchAll(/href='([^']+?\.json)'/gi)].map(m => decodeURIComponent(m[1].split('/').pop()));
+        const files = [...html.matchAll(/href="([^"]+?\.json)"/gi)].map(m =>
+          decodeURIComponent(m[1].split('/').pop()));
+        const files2 = [...html.matchAll(/href='([^']+?\.json)'/gi)].map(m =>
+          decodeURIComponent(m[1].split('/').pop()));
         const all = uniq([...(files || []), ...(files2 || [])]);
         if (all.length) {
           setSelectOptions(sel, all.map(f => ({ label: f, value: f })));
@@ -1687,7 +749,8 @@
       const chars = el('#delChars').value || '';
       const normIn = el('#ckNormDel').checked;
       const normBag = el('#ckPreNormDel').checked;
-      appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}] ${src.name}`);
+      appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}]
+            ${src.name}`);
       const nb = await op_delete_chars(src, chars, normIn, normBag);
       REG.add(nb); applyChoices(); renderBags(); captureState();
       appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
@@ -1697,7 +760,8 @@
       if (!src || !lkp) return;
       const normSrc = el('#ckPreNormFltSrc').checked;
       const normLookup = el('#ckPreNormFltLookup').checked;
-      appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) … [${src.id}] ${src.name}`);
+      appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) …
+            [${src.id}] ${src.name}`);
       const nb = await op_filter_in(src, lkp, normSrc, normLookup);
       REG.add(nb); applyChoices(); renderBags(); captureState();
       appendOpLog(`→ NewBag [${nb.id}] size=${nb.items.size}`);
@@ -1892,10 +956,7 @@
 
     /* ====== Undo / Redo ====== */
     el('#btnUndo')?.addEventListener('click', () => {
-      if (historyIndex <= 0) return;
-      historyIndex -= 1;
-      restoreFromHistory();
-      appendOpLog('⮪ Undo');
+      if (historyIndex <= 0) return; historyIndex -= 1; restoreFromHistory(); appendOpLog('⮪ Undo');
     });
     el('#btnRedo')?.addEventListener('click', () => {
       if (historyIndex >= history.length - 1) return;
@@ -1918,7 +979,9 @@
         details.dataset.id = b.id;
         details.draggable = true;
         const sum = document.createElement('summary');
-        sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
+        sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div>
+              <div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized ||
+          '-'}</div>`;
         details.appendChild(sum);
 
         const meta = document.createElement('div');
@@ -1929,15 +992,17 @@
         const bar = document.createElement('div');
         bar.className = 'preview-bar';
         bar.innerHTML = `
-      <span class="muted small badge">Preview</span>
-      <label class="muted small">offset <input class="input tight" type="number" min="0" value="0" data-k="off"></label>
-      <label class="muted small">limit <input class="input tight" type="number" min="1" value="200" data-k="lim"></label>
-      <label class="muted small"><input type="checkbox" data-k="all"> 全表示</label>
-      <button class="btn ghost" data-k="copy">クリップボード</button>
-      <button class="btn" data-k="edit">編集モード</button>
-      <button class="btn ok" data-k="apply" disabled>編集を適用</button>
-      <span class="muted mono small" data-k="count"></span>
-    `;
+              <span class="muted small badge">Preview</span>
+              <label class="muted small">offset <input class="input tight" type="number" min="0" value="0"
+                  data-k="off"></label>
+              <label class="muted small">limit <input class="input tight" type="number" min="1" value="200"
+                  data-k="lim"></label>
+              <label class="muted small"><input type="checkbox" data-k="all"> 全表示</label>
+              <button class="btn ghost" data-k="copy">クリップボード</button>
+              <button class="btn" data-k="edit">編集モード</button>
+              <button class="btn ok" data-k="apply" disabled>編集を適用</button>
+              <span class="muted mono small" data-k="count"></span>
+              `;
         details.appendChild(bar);
 
         const ta = document.createElement('textarea');
@@ -2000,7 +1065,9 @@
           editing = false;
           applyBtn.disabled = true;
           editBtn.textContent = '編集モード';
-          sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div><div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized || '-'}</div>`;
+          sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div>
+              <div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized ||
+            '-'}</div>`;
           renderRange();
           applyChoices();
           captureState();
@@ -2012,11 +1079,11 @@
         const actions = document.createElement('div');
         actions.className = 'bag-actions';
         actions.innerHTML = `
-      <button class="btn ghost" data-k="reapply">再適用</button>
-      <button class="btn ghost" data-k="duplicate">複製</button>
-      <button class="btn warn" data-k="remove">削除</button>
-      <span class="muted small status" data-k="status"></span>
-    `;
+              <button class="btn ghost" data-k="reapply">再適用</button>
+              <button class="btn ghost" data-k="duplicate">複製</button>
+              <button class="btn warn" data-k="remove">削除</button>
+              <span class="muted small status" data-k="status"></span>
+              `;
         details.appendChild(actions);
 
         const statusEl = actions.querySelector('[data-k="status"]');
@@ -2085,21 +1152,15 @@
           dragSourceId = null;
           if (sourceId === null || sourceId === b.id) return;
           const rect = details.getBoundingClientRect();
-          const placeBefore = e.clientY < rect.top + rect.height / 2;
-          if (REG.moveRelative(sourceId, b.id, placeBefore)) {
-            applyChoices();
-            renderBags();
-            captureState();
-            appendOpLog(`↕ Reorder Bag [${sourceId}] ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
+          const placeBefore = e.clientY < rect.top + rect.height / 2; if (REG.moveRelative(sourceId, b.id,
+            placeBefore)) {
+              applyChoices(); renderBags(); captureState(); appendOpLog(`↕ Reorder Bag [${sourceId}]
+                ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
           }
-        });
-
-        host.appendChild(details);
+        }); host.appendChild(details);
       }
     }
-
-    /* ====== タブ操作 ====== */
-    document.querySelectorAll('.tab-button').forEach(btn => {
+                /*======タブ操作======*/ document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
