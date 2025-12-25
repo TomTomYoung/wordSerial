@@ -96,6 +96,18 @@ function resolveKuromojiDictUrl() {
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
+        // Debug: Intercept XMLHttpRequest to see what URLs are being requested
+        if (!window.__xhrInterceptInstalled) {
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, ...args) {
+                if (url.includes('.dat.gz')) {
+                    console.log("[XHR DEBUG] Dictionary request URL:", url);
+                }
+                return originalOpen.call(this, method, url, ...args);
+            };
+            window.__xhrInterceptInstalled = true;
+        }
+
         // Retry logic might be needed if scripts are loading asynchronously
         if (!window.Kuroshiro) {
             console.warn("Kuroshiro not found in window, checking again in 500ms...");
@@ -128,6 +140,8 @@ export async function ensureKuro() {
 
         K = new KuroshiroConstructor();
         const dictPath = resolveKuromojiDictUrl();
+        console.log("[DEBUG] dictPath being passed to Analyzer:", dictPath);
+        console.log("[DEBUG] window.location.href:", window.location.href);
         await K.init(new Analyzer({ dictPath }));
         kuroReady = true;
         console.log("Kuroshiro initialized successfully.");
