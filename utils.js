@@ -87,6 +87,17 @@ export function mulberry32(a) {
 let K = null, kuroReady = false;
 const KUROMOJI_DICT_URL = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
 
+function resolveKuromojiDictUrl() {
+    try {
+        const u = new URL(KUROMOJI_DICT_URL, window.location.href);
+        // Ensure trailing slash so the analyzer can append file names safely.
+        return u.href.endsWith("/") ? u.href : u.href + "/";
+    } catch {
+        // Absolute fallback to prevent relative resolution on GitHub Pages.
+        return "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+    }
+}
+
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
@@ -121,7 +132,8 @@ export async function ensureKuro() {
         }
 
         K = new KuroshiroConstructor();
-        await K.init(new Analyzer({ dictPath: KUROMOJI_DICT_URL }));
+        const dictPath = resolveKuromojiDictUrl();
+        await K.init(new Analyzer({ dictPath }));
         kuroReady = true;
         console.log("Kuroshiro initialized successfully.");
     } catch (e) {
