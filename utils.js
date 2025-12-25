@@ -14,13 +14,12 @@ export function waitFrame() {
 
 export function log(msg) {
     const host = el('#log');
-    if (!host) {
-        console.log(msg);
-        return;
-    }
+    const stamped = `[${nowISO()}] ${msg}`;
+    console.log(stamped);
+    if (!host) return;
     const div = document.createElement('div');
     div.className = 'log-entry';
-    div.textContent = `[${nowISO()}] ${msg}`;
+    div.textContent = stamped;
     host.prepend(div);
     while (host.children.length > 150) host.removeChild(host.lastChild);
 }
