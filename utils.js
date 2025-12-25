@@ -85,6 +85,8 @@ export function mulberry32(a) {
 
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
+const KUROMOJI_DICT_URL = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
@@ -119,7 +121,7 @@ export async function ensureKuro() {
         }
 
         K = new KuroshiroConstructor();
-        await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
+        await K.init(new Analyzer({ dictPath: KUROMOJI_DICT_URL }));
         kuroReady = true;
         console.log("Kuroshiro initialized successfully.");
     } catch (e) {
