@@ -1,7 +1,9 @@
+import { nowISO } from './utils.js';
+
 /* ====== Bag / Registry ====== */
 let _nextId = 0;
 
-class Bag {
+export class Bag {
     constructor(name, items, meta = {}) {
         this.id = _nextId++;
         this.name = name || `bag#${this.id}`;
@@ -13,7 +15,7 @@ class Bag {
     label() { return `[${this.id}] ${this.name} (${this.items.size})`; }
 }
 
-class BagRegistry {
+export class BagRegistry {
     constructor() { this._bags = []; }
     add(b) { this._bags.push(b); return b.id; }
     get(id) { return this._bags.find(x => x.id === Number(id)); }
@@ -74,4 +76,4 @@ class BagRegistry {
     }
 }
 
-const REG = new BagRegistry();
+export const REG = new BagRegistry();

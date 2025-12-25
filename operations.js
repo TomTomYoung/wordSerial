@@ -1,4 +1,9 @@
-
+import { REG, Bag } from './models.js';
+import {
+    toHiragana, toKatakana, toRomaji, normNFKC, waitFrame,
+    mulberry32, makeSeedFromString, setsAreEqual, levenshtein,
+    nowISO, appendOpLog, setBagStatusMessage, log
+} from './utils.js';
 
 async function convertItemsToHiragana(items) {
     const out = [];
@@ -32,37 +37,37 @@ async function maybeNormalizeQueryValue(value, shouldNormalize) {
 }
 
 /* ====== Ops (Serial) ====== */
-async function op_normalize_hiragana(srcBag) {
+export async function op_normalize_hiragana(srcBag) {
     const out = new Set();
     let i = 0;
     for (const w of srcBag.items) {
         const h = await toHiragana(w);
         if (h) out.add(h.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+        if (++i % 2000 === 0) await waitFrame();
     }
     return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
 }
-async function op_normalize_katakana(srcBag) {
+export async function op_normalize_katakana(srcBag) {
     const out = new Set();
     let i = 0;
     for (const w of srcBag.items) {
         const h = await toKatakana(w);
         if (h) out.add(h.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+        if (++i % 2000 === 0) await waitFrame();
     }
     return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
 }
-async function op_to_romaji(srcBag) {
+export async function op_to_romaji(srcBag) {
     const out = new Set();
     let i = 0;
     for (const w of srcBag.items) {
         const r = await toRomaji(w);
         if (r) out.add(r.replace(/\s+/g, ''));
-        if (++i % 2000 === 0) await new Promise(r => setTimeout(r, 0));
+        if (++i % 2000 === 0) await waitFrame();
     }
     return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji' });
 }
-async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
+export async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
     const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
     const dels = Array.from(new Set((del || '').split('')));
     const srcItems = await maybeNormalizeBagItems(srcBag, normalizeBefore);
@@ -80,21 +85,21 @@ async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeB
         normalize_before: normalizeBefore
     });
 }
-function op_to_upper(srcBag) {
+export function op_to_upper(srcBag) {
     const out = new Set();
     for (const w of srcBag.items) {
         out.add(normNFKC(w).toUpperCase());
     }
     return new Bag(`${srcBag.name} → upper`, out, { op: 'to_upper', src: srcBag.id, case: 'upper' });
 }
-function op_to_lower(srcBag) {
+export function op_to_lower(srcBag) {
     const out = new Set();
     for (const w of srcBag.items) {
         out.add(normNFKC(w).toLowerCase());
     }
     return new Bag(`${srcBag.name} → lower`, out, { op: 'to_lower', src: srcBag.id, case: 'lower' });
 }
-function op_reverse(srcBag) {
+export function op_reverse(srcBag) {
     const out = new Set();
     for (const w of srcBag.items) {
         const reversed = Array.from(normNFKC(w)).reverse().join('');
@@ -102,7 +107,7 @@ function op_reverse(srcBag) {
     }
     return new Bag(`${srcBag.name} → reverse`, out, { op: 'reverse', src: srcBag.id });
 }
-function op_dedupe_chars(srcBag) {
+export function op_dedupe_chars(srcBag) {
     const out = new Set();
     for (const w of srcBag.items) {
         const seen = new Set();
@@ -116,7 +121,7 @@ function op_dedupe_chars(srcBag) {
     }
     return new Bag(`${srcBag.name} → dedupe_chars`, out, { op: 'dedupe_chars', src: srcBag.id });
 }
-function op_replace(srcBag, fromValue, toValue) {
+export function op_replace(srcBag, fromValue, toValue) {
     const needle = normNFKC(fromValue);
     const replacement = normNFKC(toValue ?? '');
     const out = new Set();
@@ -128,13 +133,13 @@ function op_replace(srcBag, fromValue, toValue) {
     }
     return new Bag(`${srcBag.name} → replace(${needle}→${replacement})`, out, { op: 'replace', src: srcBag.id, from: needle, to: replacement });
 }
-function op_sort(srcBag, order = 'asc', locale = 'ja') {
+export function op_sort(srcBag, order = 'asc', locale = 'ja') {
     const arr = Array.from(srcBag.items);
     arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
     if (order === 'desc') arr.reverse();
     return new Bag(`${srcBag.name} → sort(${order})`, new Set(arr), { op: 'sort', src: srcBag.id, order, locale });
 }
-async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
+export async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLookup = false) {
     const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
     const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
     const out = new Set();
@@ -147,7 +152,7 @@ async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, normalizeLo
         normalize_lookup_before: normalizeLookup
     });
 }
-function op_union(bagA, bagB) {
+export function op_union(bagA, bagB) {
     const out = new Set([...bagA.items, ...bagB.items]);
     return new Bag(`${bagA.name} ∪ ${bagB.name}`, out, {
         op: 'union',
@@ -158,7 +163,7 @@ function op_union(bagA, bagB) {
         size_b: bagB.items.size
     });
 }
-function op_difference(bagA, bagB) {
+export function op_difference(bagA, bagB) {
     const out = new Set([...bagA.items].filter(w => !bagB.items.has(w)));
     return new Bag(`${bagA.name} - ${bagB.name}`, out, {
         op: 'difference',
@@ -169,7 +174,7 @@ function op_difference(bagA, bagB) {
         size_b: bagB.items.size
     });
 }
-function op_intersection(bagA, bagB) {
+export function op_intersection(bagA, bagB) {
     const out = new Set();
     for (const w of bagA.items) if (bagB.items.has(w)) out.add(w);
     return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
@@ -181,7 +186,7 @@ function op_intersection(bagA, bagB) {
         size_b: bagB.items.size
     });
 }
-function op_symmetric_difference(bagA, bagB) {
+export function op_symmetric_difference(bagA, bagB) {
     const out = new Set();
     for (const w of bagA.items) if (!bagB.items.has(w)) out.add(w);
     for (const w of bagB.items) if (!bagA.items.has(w)) out.add(w);
@@ -194,7 +199,7 @@ function op_symmetric_difference(bagA, bagB) {
         size_b: bagB.items.size
     });
 }
-async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
+export async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     const out = new Set();
     for (const w of srcItems) {
@@ -210,7 +215,7 @@ async function op_filter_length(bag, minLen, maxLen, normalizeBefore = false) {
         normalize_before: normalizeBefore
     });
 }
-async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
+export async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
     const needle = await maybeNormalizeQueryValue(prefix, normalizeBefore);
     const out = new Set();
     if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
@@ -220,7 +225,7 @@ async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
     }
     return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
 }
-async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
+export async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
     const needle = await maybeNormalizeQueryValue(suffix, normalizeBefore);
     const out = new Set();
     if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
@@ -230,7 +235,7 @@ async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
     }
     return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
 }
-async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
+export async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
     const needle = await maybeNormalizeQueryValue(needleRaw, normalizeBefore);
     const out = new Set();
     if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
@@ -240,7 +245,7 @@ async function op_filter_contains(bag, needleRaw, normalizeBefore = false) {
     }
     return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
 }
-async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
+export async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     const re = new RegExp(pattern, 'u');
     const out = new Set();
@@ -250,7 +255,7 @@ async function op_filter_regex(bag, pattern, invert, normalizeBefore = false) {
     }
     return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
 }
-function op_ngrams(bag, n) {
+export function op_ngrams(bag, n) {
     const size = Number.isFinite(n) ? Math.max(1, n) : 1;
     const out = new Set();
     for (const w of bag.items) {
@@ -263,7 +268,7 @@ function op_ngrams(bag, n) {
     return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size });
 }
 
-function op_sample(bag, count, seed) {
+export function op_sample(bag, count, seed) {
     const items = Array.from(bag.items);
     const safeCount = Number.isFinite(count) ? count : 0;
     const need = Math.min(Math.max(0, safeCount), items.length);
@@ -282,37 +287,8 @@ function op_sample(bag, count, seed) {
     return new Bag(`${bag.name} → sample(${need})`, new Set(sampled), { op: 'sample', src: bag.id, size: bag.items.size, count: need, seed: seed || null });
 }
 
-async function op_cartesian(meta) {
-    const itemsA = Array.from(meta.items_a || []);
-    const itemsB = Array.from(meta.items_b || []);
-    const sep = meta.sep || '';
-    const limit = meta.limit || 10000;
-    const out = new Set();
-
-    // NOTE: This op_cartesian in index.html was originally inside OP_REBUILDERS implicitly or defined ad-hoc.
-    // Wait, in index.html 'cartesian' was added to OP_REBUILDERS.
-    // There was no standalone op_cartesian function returning a Bag in the original code I viewed?
-    // Let me check. The user requested separation of "implementation".
-    // The 'op_cartesian' I implemented in previous turns was added to OP_REBUILDERS directly.
-    // The UI probably calls OP_REBUILDERS['cartesian']? 
-    // No, usually UI calls an op_* function which returns a Bag, and that Bag has meta.op = 'cartesian'.
-    // Then REBUILDER uses that meta to re-run it.
-    // So there SHOULD be an op_cartesian function that creates the Bag.
-    // In the 'Implementing New Operations' task, I might have missed creating the `op_cartesian` wrapper?
-    // Let's check the previous `index.html` content around line 1550 (Ops section) in step 123.
-    // Ah, I added `async cartesian(meta)` to `OP_REBUILDERS`.
-    // Did I add `op_cartesian` wrapper?
-    // If not, the UI button event listener would fail if it tries to call `op_cartesian`.
-    // I need to check the UI event listener for cartesian.
-    // If I missed it, I should add it now in operations.js.
-
-    // Let's assume I need to ADD these wrapper functions for the new ops (Cartesian, Append, Anagram, Similarity) 
-    // if they don't exist, OR just copy them if they do.
-    // I'll stick to extracting what IS in the file.
-}
-
 /* ====== OP_REBUILDERS ====== */
-const OP_REBUILDERS = {
+export const OP_REBUILDERS = {
     async normalize_hiragana(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
@@ -533,7 +509,7 @@ const OP_REBUILDERS = {
         if (!src) throw new Error('source bag not found');
         const items = Array.from(src.items);
         const count = Number.isFinite(meta.count) ? meta.count : 0;
-        const need = Math.min(Math.max(0, count), items.length);
+        const need = Math.min(Math.max(0, safeCount), items.length);
         if (need === items.length) return new Set(items);
         let rand = Math.random;
         if (meta.seed) rand = mulberry32(makeSeedFromString(meta.seed));
@@ -641,7 +617,11 @@ async function recomputeBagByMeta(bag) {
     return { changed, reason: changed ? 'updated' : 'no-change' };
 }
 
-async function reapplySeries(limitBagId = null) {
+/* 
+ * Reapply Series Orchestrator
+ * callbacks = { onUpdate: () => void, onStatus: (bagId, msg) => void }
+ */
+export async function reapplySeries(limitBagId = null, callbacks = {}) {
     const limit = limitBagId === null ? null : Number(limitBagId);
     const label = limit === null ? 'all bags' : `bag ${limit}`;
     appendOpLog(`↻ Reapply start (${label})`);
@@ -653,11 +633,13 @@ async function reapplySeries(limitBagId = null) {
             if (!runnable) {
                 bag.meta.reapply_status = '⏭ 再適用対象外';
                 delete bag.meta.reapply_error;
-                setBagStatusMessage(bag.id, bag.meta.reapply_status);
+                if (callbacks.onStatus) callbacks.onStatus(bag.id, bag.meta.reapply_status);
             } else {
                 bag.meta.reapply_status = '⟳ 再適用中…';
-                setBagStatusMessage(bag.id, bag.meta.reapply_status);
+                if (callbacks.onStatus) callbacks.onStatus(bag.id, bag.meta.reapply_status);
+
                 const result = await recomputeBagByMeta(bag);
+
                 delete bag.meta.reapply_error;
                 if (result.changed) {
                     updated += 1;
@@ -665,7 +647,7 @@ async function reapplySeries(limitBagId = null) {
                 } else {
                     bag.meta.reapply_status = '＝ 変更なし';
                 }
-                setBagStatusMessage(bag.id, bag.meta.reapply_status);
+                if (callbacks.onStatus) callbacks.onStatus(bag.id, bag.meta.reapply_status);
             }
         } catch (e) {
             log(`再適用エラー [${bag.id}] ${bag.name}: ${e.message}`);
@@ -673,24 +655,21 @@ async function reapplySeries(limitBagId = null) {
             bag.meta.reapply_error = e.message;
             bag.meta.reapplied_at = nowISO();
             bag.meta.reapply_status = `× エラー: ${e.message}`;
-            setBagStatusMessage(bag.id, bag.meta.reapply_status);
+            if (callbacks.onStatus) callbacks.onStatus(bag.id, bag.meta.reapply_status);
             break;
         }
         if (limit !== null && bag.id === limit) break;
     }
     if (updated > 0) {
-        renderBags();
-        applyChoices();
-        captureState();
+        if (callbacks.onUpdate) callbacks.onUpdate();
         appendOpLog(`↻ Reapply done (${label}: ${updated} bag${updated > 1 ? 's' : ''} updated)`);
     } else {
         appendOpLog(`↻ Reapply complete (${label}: 変更なし)`);
     }
 }
 
-// NOTE: I am adding wrapper functions for the new operations (cartesian, append, anagram, similarity) here 
-// because they were missing in the previous views and are needed for the UI to call them.
-async function op_cartesian(bagA, bagB, sep, limit) {
+// NOTE: Wrapper functions for interactions (return new Bags)
+export async function op_cartesian(bagA, bagB, sep, limit) {
     const out = await OP_REBUILDERS.cartesian({ src_a: bagA.id, src_b: bagB.id, items_a: bagA.items, items_b: bagB.items, sep, limit });
     return new Bag(`${bagA.name} x ${bagB.name}`, out, {
         op: 'cartesian',
@@ -703,18 +682,15 @@ async function op_cartesian(bagA, bagB, sep, limit) {
         size_b: bagB.items.size
     });
 }
-
-async function op_append(srcBag, prefix, suffix) {
+export async function op_append(srcBag, prefix, suffix) {
     const out = await OP_REBUILDERS.append({ src: srcBag.id, prefix, suffix });
     return new Bag(`${srcBag.name} → append`, out, { op: 'append', src: srcBag.id, prefix, suffix });
 }
-
-async function op_anagram(srcBag) {
+export async function op_anagram(srcBag) {
     const out = await OP_REBUILDERS.anagram({ src: srcBag.id });
     return new Bag(`${srcBag.name} → anagram`, out, { op: 'anagram', src: srcBag.id });
 }
-
-async function op_filter_similarity(srcBag, target, dist, normalizeBefore) {
+export async function op_filter_similarity(srcBag, target, dist, normalizeBefore) {
     const out = await OP_REBUILDERS.filter_similarity({ src: srcBag.id, target, dist, normalize_before: normalizeBefore });
     return new Bag(`${srcBag.name} → similarity(${target}, ${dist})`, out, { op: 'filter_similarity', src: srcBag.id, target, dist, normalize_before: normalizeBefore });
 }

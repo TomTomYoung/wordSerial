@@ -1,18 +1,18 @@
 /* ====== 共通ユーティリティ ====== */
-const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-const uniq = a => Array.from(new Set(a));
-const normNFKC = s => (s || "").normalize('NFKC').trim();
-const el = q => document.querySelector(q);
-const parseIntSafe = (value, fallback = 0) => {
+export const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+export const uniq = a => Array.from(new Set(a));
+export const normNFKC = s => (s || "").normalize('NFKC').trim();
+export const el = q => document.querySelector(q);
+export const parseIntSafe = (value, fallback = 0) => {
     const n = Number.parseInt(value, 10);
     return Number.isFinite(n) ? n : fallback;
 };
 
-function waitFrame() {
+export function waitFrame() {
     return new Promise(resolve => setTimeout(resolve, 0));
 }
 
-function log(msg) {
+export function log(msg) {
     const host = el('#log');
     if (!host) {
         console.log(msg);
@@ -25,7 +25,7 @@ function log(msg) {
     while (host.children.length > 150) host.removeChild(host.lastChild);
 }
 
-function appendOpLog(msg) {
+export function appendOpLog(msg) {
     const host = el('#opLog');
     if (!host) return;
     const div = document.createElement('div');
@@ -36,7 +36,7 @@ function appendOpLog(msg) {
 }
 
 /* Levenshtein Distance */
-function levenshtein(s, t) {
+export function levenshtein(s, t) {
     if (!s) return t.length;
     if (!t) return s.length;
     const d = [];
@@ -53,7 +53,7 @@ function levenshtein(s, t) {
     return d[n][m];
 }
 
-function setsAreEqual(a, b) {
+export function setsAreEqual(a, b) {
     if (a === b) return true;
     if (!(a instanceof Set) || !(b instanceof Set)) return false;
     if (a.size !== b.size) return false;
@@ -64,7 +64,7 @@ function setsAreEqual(a, b) {
 }
 
 /* Random Seeds */
-function makeSeedFromString(seed) {
+export function makeSeedFromString(seed) {
     if (typeof seed === 'number') return seed >>> 0;
     let h = 1779033703 ^ (seed?.length || 0);
     for (let i = 0; i < (seed?.length || 0); i += 1) {
@@ -74,7 +74,7 @@ function makeSeedFromString(seed) {
     return (Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0;
 }
 
-function mulberry32(a) {
+export function mulberry32(a) {
     return function () {
         let t = (a += 0x6d2b79f5);
         t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -85,12 +85,22 @@ function mulberry32(a) {
 
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
-async function ensureKuro() {
+export async function ensureKuro() {
     if (kuroReady) return;
-    K = new window.Kuroshiro();
-    const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
-    await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
-    kuroReady = true;
+    try {
+        if (!window.Kuroshiro || !window.Kuroshiro.Analyzer || !window.Kuroshiro.Analyzer.KuromojiAnalyzer) {
+            // Should be loaded via CDN script tags in index.html, so global window.Kuroshiro fits user context
+            // But strict ESM might prefer dynamic import or assumes globals exist.
+            // Since we are not changing CDN links, we assume window.Kuroshiro exists.
+            if (!window.Kuroshiro) throw new Error("Kuroshiro not loaded");
+        }
+        K = new window.Kuroshiro();
+        const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
+        await K.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
+        kuroReady = true;
+    } catch (e) {
+        console.warn("Kuroshiro init warning:", e);
+    }
 }
 
 function katakanaToHiragana(value) {
@@ -119,40 +129,44 @@ function safeWanakanaConvert(method, value) {
     return value;
 }
 
-async function toHiragana(s) {
+export async function toHiragana(s) {
     if (!s) return '';
     try {
         await ensureKuro();
-        return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+        if (K) return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
     } catch {
-        return safeWanakanaConvert('toHiragana', normNFKC(s));
+        // Fallback
     }
+    return safeWanakanaConvert('toHiragana', normNFKC(s));
 }
 
-async function toKatakana(s) {
+export async function toKatakana(s) {
     if (!s) return '';
     try {
         await ensureKuro();
-        return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
+        if (K) return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
     } catch {
-        return safeWanakanaConvert('toKatakana', normNFKC(s));
+        // Fallback
     }
+    return safeWanakanaConvert('toKatakana', normNFKC(s));
 }
 
-async function toRomaji(s) {
+export async function toRomaji(s) {
     if (!s) return '';
     try {
         await ensureKuro();
-        return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
+        if (K) return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
     } catch {
-        return safeWanakanaConvert('toRomaji', normNFKC(s));
+        // Fallback
     }
+    return safeWanakanaConvert('toRomaji', normNFKC(s));
 }
 
-function findBagStatusElement(bagId) {
+export function findBagStatusElement(bagId) {
     return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
 }
-function setBagStatusMessage(bagId, message) {
+
+export function setBagStatusMessage(bagId, message) {
     const statusEl = findBagStatusElement(bagId);
     if (statusEl) {
         const text = message || '';
@@ -160,14 +174,16 @@ function setBagStatusMessage(bagId, message) {
         statusEl.title = text;
     }
 }
-function describeBagLifecycle(bag) {
+
+export function describeBagLifecycle(bag) {
     if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
     if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
     if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
     if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
     return '';
 }
-function setSelectOptions(sel, opts) {
+
+export function setSelectOptions(sel, opts) {
     if (!sel) return;
     const v = sel.value;
     sel.innerHTML = '';
@@ -181,4 +197,3 @@ function setSelectOptions(sel, opts) {
         sel.value = v && opts.some(o => o.value === v) ? v : opts[opts.length - 1].value;
     }
 }
-

@@ -1,4 +1,11 @@
 /* ====== 履歴管理 ====== */
+import { REG, Bag } from './models.js';
+import * as Ops from './operations.js';
+import {
+    el, log, appendOpLog, uniq, normNFKC, parseIntSafe, nowISO,
+    setSelectOptions, describeBagLifecycle, setBagStatusMessage
+} from './utils.js';
+
 const history = [];
 let historyIndex = -1;
 
@@ -33,7 +40,7 @@ function initHistory() {
 /* ====== JSON列挙・ロード（bag/*.json） ====== */
 const BAG_DIR = './bag/';
 
-function applyChoices() {
+export function applyChoices() {
     const choices = REG.choices();
     const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA',
         '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat',
@@ -169,7 +176,7 @@ el('#btnNorm')?.addEventListener('click', async () => {
     const src = REG.get(el('#selSrcNorm').value);
     if (!src) return;
     appendOpLog(`normalize(hiragana)… [${src.id}] ${src.name}`);
-    const nb = await op_normalize_hiragana(src);
+    const nb = await Ops.op_normalize_hiragana(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -180,7 +187,7 @@ el('#btnKatakana')?.addEventListener('click', async () => {
     const src = REG.get(el('#selSrcNorm').value);
     if (!src) return;
     appendOpLog(`normalize(katakana)… [${src.id}] ${src.name}`);
-    const nb = await op_normalize_katakana(src);
+    const nb = await Ops.op_normalize_katakana(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -191,7 +198,7 @@ el('#btnRomaji')?.addEventListener('click', async () => {
     const src = REG.get(el('#selSrcTransform').value);
     if (!src) return;
     appendOpLog(`to_romaji … [${src.id}] ${src.name}`);
-    const nb = await op_to_romaji(src);
+    const nb = await Ops.op_to_romaji(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -202,7 +209,7 @@ el('#btnUpper')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcTransform').value);
     if (!src) return;
     appendOpLog(`to_upper … [${src.id}] ${src.name}`);
-    const nb = op_to_upper(src);
+    const nb = Ops.op_to_upper(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -213,7 +220,7 @@ el('#btnLower')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcTransform').value);
     if (!src) return;
     appendOpLog(`to_lower … [${src.id}] ${src.name}`);
-    const nb = op_to_lower(src);
+    const nb = Ops.op_to_lower(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -224,7 +231,7 @@ el('#btnReverse')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcTransform').value);
     if (!src) return;
     appendOpLog(`reverse … [${src.id}] ${src.name}`);
-    const nb = op_reverse(src);
+    const nb = Ops.op_reverse(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -239,7 +246,7 @@ el('#btnDel')?.addEventListener('click', async () => {
     const normBag = el('#ckPreNormDel').checked;
     appendOpLog(`delete chars "${chars}" (normalize_input=${normIn}, bag_hira=${normBag}) … [${src.id}]
         ${src.name}`);
-    const nb = await op_delete_chars(src, chars, normIn, normBag);
+    const nb = await Ops.op_delete_chars(src, chars, normIn, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -254,7 +261,7 @@ el('#btnFlt')?.addEventListener('click', async () => {
     const normLookup = el('#ckPreNormFltLookup').checked;
     appendOpLog(`filter_in lookup=[${lkp.id}:${lkp.name}] (bag_hira=${normSrc}, lookup_hira=${normLookup}) …
         [${src.id}] ${src.name}`);
-    const nb = await op_filter_in(src, lkp, normSrc, normLookup);
+    const nb = await Ops.op_filter_in(src, lkp, normSrc, normLookup);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -266,7 +273,7 @@ el('#btnUnion')?.addEventListener('click', () => {
     const b = REG.get(el('#selSrcUnionB').value);
     if (!a || !b) return;
     appendOpLog(`union … [${a.id}] ${a.name} + [${b.id}] ${b.name}`);
-    const nb = op_union(a, b);
+    const nb = Ops.op_union(a, b);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -278,7 +285,7 @@ el('#btnDiff')?.addEventListener('click', () => {
     const b = REG.get(el('#selSrcUnionB').value);
     if (!a || !b) return;
     appendOpLog(`difference … [${a.id}] ${a.name} - [${b.id}] ${b.name}`);
-    const nb = op_difference(a, b);
+    const nb = Ops.op_difference(a, b);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -290,7 +297,7 @@ el('#btnIntersect')?.addEventListener('click', () => {
     const b = REG.get(el('#selSrcUnionB').value);
     if (!a || !b) return;
     appendOpLog(`intersection … [${a.id}] ${a.name} ∩ [${b.id}] ${b.name}`);
-    const nb = op_intersection(a, b);
+    const nb = Ops.op_intersection(a, b);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -302,7 +309,7 @@ el('#btnSymDiff')?.addEventListener('click', () => {
     const b = REG.get(el('#selSrcUnionB').value);
     if (!a || !b) return;
     appendOpLog(`symmetric difference … [${a.id}] ${a.name} △ [${b.id}] ${b.name}`);
-    const nb = op_symmetric_difference(a, b);
+    const nb = Ops.op_symmetric_difference(a, b);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -316,7 +323,7 @@ el('#btnLengthFilter')?.addEventListener('click', async () => {
     const max = Math.max(min, parseIntSafe(el('#lenMax').value, min));
     const normBag = el('#ckPreNormLen').checked;
     appendOpLog(`filter length [${min}, ${max}] (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-    const nb = await op_filter_length(src, min, max, normBag);
+    const nb = await Ops.op_filter_length(src, min, max, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -334,7 +341,7 @@ el('#btnPrefix')?.addEventListener('click', async () => {
     }
     const normBag = el('#ckPreNormAffix').checked;
     appendOpLog(`filter prefix "${prefix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-    const nb = await op_filter_prefix(src, prefixRaw, normBag);
+    const nb = await Ops.op_filter_prefix(src, prefixRaw, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -352,7 +359,7 @@ el('#btnSuffix')?.addEventListener('click', async () => {
     }
     const normBag = el('#ckPreNormAffix').checked;
     appendOpLog(`filter suffix "${suffix}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-    const nb = await op_filter_suffix(src, suffixRaw, normBag);
+    const nb = await Ops.op_filter_suffix(src, suffixRaw, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -370,7 +377,7 @@ el('#btnContains')?.addEventListener('click', async () => {
     }
     const normBag = el('#ckPreNormContains').checked;
     appendOpLog(`filter contains "${needle}" (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
-    const nb = await op_filter_contains(src, needleRaw, normBag);
+    const nb = await Ops.op_filter_contains(src, needleRaw, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -391,7 +398,7 @@ el('#btnRegex')?.addEventListener('click', async () => {
     appendOpLog(`filter_regex /${pattern}/${invertLabel} (bag_hira=${normBag}) … [${src.id}] ${src.name}`);
     let nb;
     try {
-        nb = await op_filter_regex(src, pattern, invert, normBag);
+        nb = await Ops.op_filter_regex(src, pattern, invert, normBag);
     } catch (e) {
         log(`正規表現エラー: ${e.message}`);
         appendOpLog('× 正規表現エラー');
@@ -407,7 +414,7 @@ el('#btnDedupe')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcFormat').value);
     if (!src) return;
     appendOpLog(`dedupe_chars … [${src.id}] ${src.name}`);
-    const nb = op_dedupe_chars(src);
+    const nb = Ops.op_dedupe_chars(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -418,7 +425,7 @@ el('#btnSortAsc')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcFormat').value);
     if (!src) return;
     appendOpLog(`sort asc … [${src.id}] ${src.name}`);
-    const nb = op_sort(src, 'asc');
+    const nb = Ops.op_sort(src, 'asc');
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -429,7 +436,7 @@ el('#btnSortDesc')?.addEventListener('click', () => {
     const src = REG.get(el('#selSrcFormat').value);
     if (!src) return;
     appendOpLog(`sort desc … [${src.id}] ${src.name}`);
-    const nb = op_sort(src, 'desc');
+    const nb = Ops.op_sort(src, 'desc');
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -448,7 +455,7 @@ el('#btnReplace')?.addEventListener('click', () => {
         return;
     }
     appendOpLog(`replace "${from}" → "${to}" … [${src.id}] ${src.name}`);
-    const nb = op_replace(src, fromRaw, toRaw);
+    const nb = Ops.op_replace(src, fromRaw, toRaw);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -460,7 +467,7 @@ el('#btnNgram')?.addEventListener('click', () => {
     if (!src) return;
     const n = Math.max(1, parseIntSafe(el('#ngramN').value, 2));
     appendOpLog(`ngrams n=${n} … [${src.id}] ${src.name}`);
-    const nb = op_ngrams(src, n);
+    const nb = Ops.op_ngrams(src, n);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -474,7 +481,7 @@ el('#btnSample')?.addEventListener('click', () => {
     const seedRaw = normNFKC(el('#sampleSeed').value);
     const seedInfo = seedRaw ? ` seed=${seedRaw}` : '';
     appendOpLog(`sample count=${count}${seedInfo} … [${src.id}] ${src.name}`);
-    const nb = op_sample(src, count, seedRaw || null);
+    const nb = Ops.op_sample(src, count, seedRaw || null);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -490,7 +497,7 @@ el('#btnCartesian')?.addEventListener('click', async () => {
     const sep = el('#cartesianSep').value;
     const limit = Math.max(1, parseIntSafe(el('#cartesianLimit').value, 10000));
     appendOpLog(`cartesian … [${a.id}] x [${b.id}] (limit=${limit})`);
-    const nb = await op_cartesian(a, b, sep, limit);
+    const nb = await Ops.op_cartesian(a, b, sep, limit);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -503,7 +510,7 @@ el('#btnAppend')?.addEventListener('click', async () => {
     const prefix = el('#appendPrefix').value || '';
     const suffix = el('#appendSuffix').value || '';
     appendOpLog(`append … [${src.id}] ${src.name}`);
-    const nb = await op_append(src, prefix, suffix);
+    const nb = await Ops.op_append(src, prefix, suffix);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -514,7 +521,7 @@ el('#btnAnagram')?.addEventListener('click', async () => {
     const src = REG.get(el('#selSrcAnagram').value);
     if (!src) return;
     appendOpLog(`anagram … [${src.id}] ${src.name}`);
-    const nb = await op_anagram(src);
+    const nb = await Ops.op_anagram(src);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -528,7 +535,7 @@ el('#btnSimilarity')?.addEventListener('click', async () => {
     const dist = parseIntSafe(el('#simDist').value, 2);
     const normBag = el('#ckPreNormSimilarity').checked;
     appendOpLog(`similarity … [${src.id}] target=${target}, dist=${dist}`);
-    const nb = await op_filter_similarity(src, target, dist, normBag);
+    const nb = await Ops.op_filter_similarity(src, target, dist, normBag);
     REG.add(nb);
     applyChoices();
     renderBags();
@@ -735,7 +742,15 @@ function renderBags() {
         reapplyBtn.addEventListener('click', async () => {
             reapplyBtn.disabled = true;
             try {
-                await reapplySeries(b.id);
+                // Call reapply logic with callbacks for UI updates
+                await Ops.reapplySeries(b.id, {
+                    onStatus: (bagId, msg) => setBagStatusMessage(bagId, msg),
+                    onUpdate: () => {
+                        renderBags();
+                        applyChoices();
+                        captureState();
+                    }
+                });
             } finally {
                 reapplyBtn.disabled = false;
             }
@@ -800,50 +815,38 @@ function renderBags() {
         host.appendChild(details);
     }
 }
-/*======タブ操作======*/
-document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const target = document.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`);
-        if (target) target.classList.add('active');
-    });
-});
 
-el('#btnApplyAll')?.addEventListener('click', async () => {
+/* Initialization */
+el('#btnLoad').addEventListener('click', loadSelectedJson);
+el('#btnFileSelect').addEventListener('click', () => el('#filePick').click());
+
+el('#btnApplyAll').addEventListener('click', async () => {
     const btn = el('#btnApplyAll');
-    if (!btn) return;
     btn.disabled = true;
     try {
-        await reapplySeries();
+        await Ops.reapplySeries(null, {
+            onStatus: (bagId, msg) => setBagStatusMessage(bagId, msg),
+            onUpdate: () => {
+                renderBags();
+                applyChoices();
+                captureState();
+            }
+        });
     } finally {
         btn.disabled = false;
     }
 });
 
-el('#btnFileSelect')?.addEventListener('click', () => el('#filePick')?.click());
-
-/* ====== 初期化 ====== */
-// document.getElementById('btnList').onclick = listJson; // automated
-document.getElementById('btnLoad').onclick = loadSelectedJson;
-initHistory();
-(function seed() {
-    const demo = ['狐', 'たぬき', '東京', '百科事典', 'コンピュータ', 'がっこう', 'バナナ', 'リンゴ', 'りんご', 'アップル'];
-    addBagFromWords('seed (demo few nouns)', demo, {
-        pos: 'n',
-        normalized: 'NFKC only',
-        seed: true
-    });
-})();
-renderBags();
-applyChoices();
-
-/* ====== UI Toggles ====== */
-document.querySelectorAll('.op-group h4').forEach(h4 => {
-    h4.addEventListener('click', () => {
-        h4.parentElement.classList.toggle('closed');
+/* Tabs */
+document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        el(`.tab-panel[data-panel="${tab}"]`).classList.add('active');
     });
 });
 
-listJson(); // auto-load defaults
+/* Initial load */
+listJson();
