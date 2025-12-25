@@ -88,14 +88,9 @@ let K = null, kuroReady = false;
 const KUROMOJI_DICT_URL = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
 
 function resolveKuromojiDictUrl() {
-    try {
-        const u = new URL(KUROMOJI_DICT_URL, window.location.href);
-        // Ensure trailing slash so the analyzer can append file names safely.
-        return u.href.endsWith("/") ? u.href : u.href + "/";
-    } catch {
-        // Absolute fallback to prevent relative resolution on GitHub Pages.
-        return "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
-    }
+    // KUROMOJI_DICT_URL is already an absolute URL with trailing slash,
+    // so return it directly to prevent relative path resolution on GitHub Pages
+    return KUROMOJI_DICT_URL;
 }
 
 export async function ensureKuro() {
