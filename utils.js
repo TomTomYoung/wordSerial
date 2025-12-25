@@ -87,6 +87,17 @@ export function mulberry32(a) {
 let K = null, kuroReady = false;
 let kuroFetchPatched = false;
 const kuroFetchLog = [];
+const kuroInitTrace = [];
+
+function recordKuroInit(step) {
+    const entry = { at: nowISO(), step };
+    kuroInitTrace.push(entry);
+    if (kuroInitTrace.length > 100) kuroInitTrace.shift();
+    log(`[kuro-init] ${step}`);
+    if (typeof window !== 'undefined') {
+        window.__kuroInitTrace = kuroInitTrace.slice();
+    }
+}
 
 function recordKuroFetch(original, fixed) {
     const entry = { at: nowISO(), original, fixed, same: original === fixed };
@@ -133,6 +144,7 @@ function normalizeCdnUrl(url) {
 function patchKuroFetch() {
     if (kuroFetchPatched) return;
     kuroFetchPatched = true;
+    recordKuroInit('patchKuroFetch: start');
 
     if (typeof window.fetch === 'function') {
         const originalFetch = window.fetch;
@@ -144,6 +156,7 @@ function patchKuroFetch() {
             }
             return originalFetch.apply(window, args);
         };
+        recordKuroInit('patchKuroFetch: hooked window.fetch');
     }
 
     if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype?.open) {
@@ -153,12 +166,17 @@ function patchKuroFetch() {
             if (fixed !== url) console.debug('Rewriting kuromoji XHR URL:', url, '->', fixed);
             return originalOpen.call(this, method, fixed, ...rest);
         };
+        recordKuroInit('patchKuroFetch: hooked XMLHttpRequest.open');
     }
 }
 
 export async function ensureKuro() {
-    if (kuroReady) return;
+    if (kuroReady) {
+        recordKuroInit('ensureKuro: already ready, skipping');
+        return;
+    }
     try {
+        recordKuroInit('ensureKuro: start');
         patchKuroFetch();
         // Fix path.join() for URLs before kuromoji loads
         // kuromoji uses require('path').join() which breaks URLs in browser
@@ -178,6 +196,7 @@ export async function ensureKuro() {
                     }
                     return originalJoin.apply(this, args);
                 };
+                recordKuroInit('ensureKuro: patched path.join for URL handling');
             }
         }
 
@@ -193,11 +212,13 @@ export async function ensureKuro() {
         if (typeof KuroshiroConstructor !== 'function') {
             throw new Error("window.Kuroshiro is not a constructor");
         }
+        recordKuroInit('ensureKuro: Kuroshiro constructor detected');
 
         let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
         if (!Analyzer) {
             throw new Error("KuromojiAnalyzer not found");
         }
+        recordKuroInit('ensureKuro: KuromojiAnalyzer detected, starting init');
 
         K = new KuroshiroConstructor();
         const analyzer = new Analyzer({
@@ -211,8 +232,10 @@ export async function ensureKuro() {
             new Promise((_, reject) => setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs))
         ]);
         kuroReady = true;
+        recordKuroInit('ensureKuro: Kuroshiro initialized successfully');
         console.log("Kuroshiro initialized successfully");
     } catch (e) {
+        recordKuroInit(`ensureKuro: init failed (${e?.message || e})`);
         console.warn("Kuroshiro init failed, using WanaKana fallback:", e);
         log(`Kuroshiro init failed or timed out: ${e?.message || e}`);
     }
