@@ -85,10 +85,56 @@ export function mulberry32(a) {
 
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
+let kuroFetchPatched = false;
+
+function normalizeCdnUrl(url) {
+    if (typeof url !== 'string') return url;
+
+    // path.join() inside kuromoji drops one of the slashes (https:/...), which then
+    // becomes a host-relative path on GitHub Pages and 404s. Fix a few known patterns.
+    const addMissingSlash = url.replace(/^(https?:)\/([^/])/, '$1//$2');
+    if (addMissingSlash.startsWith('/cdn.jsdelivr.net/')) {
+        return `https://cdn.jsdelivr.net${addMissingSlash}`;
+    }
+    if (addMissingSlash.startsWith('https:/cdn.jsdelivr.net/')) {
+        return addMissingSlash.replace('https:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+    }
+    if (addMissingSlash.startsWith('http:/cdn.jsdelivr.net/')) {
+        return addMissingSlash.replace('http:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+    }
+    return addMissingSlash;
+}
+
+function patchKuroFetch() {
+    if (kuroFetchPatched) return;
+    kuroFetchPatched = true;
+
+    if (typeof window.fetch === 'function') {
+        const originalFetch = window.fetch;
+        window.fetch = (...args) => {
+            if (typeof args[0] === 'string') {
+                const fixed = normalizeCdnUrl(args[0]);
+                if (fixed !== args[0]) console.debug('Rewriting kuromoji fetch URL:', args[0], '->', fixed);
+                args[0] = fixed;
+            }
+            return originalFetch.apply(window, args);
+        };
+    }
+
+    if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype?.open) {
+        const originalOpen = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+            const fixed = normalizeCdnUrl(url);
+            if (fixed !== url) console.debug('Rewriting kuromoji XHR URL:', url, '->', fixed);
+            return originalOpen.call(this, method, fixed, ...rest);
+        };
+    }
+}
 
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
+        patchKuroFetch();
         // Fix path.join() for URLs before kuromoji loads
         // kuromoji uses require('path').join() which breaks URLs in browser
         if (typeof window.require === 'function') {
