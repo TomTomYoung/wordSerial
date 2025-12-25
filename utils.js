@@ -85,12 +85,12 @@ export function mulberry32(a) {
 
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
-const KUROMOJI_DICT_URL = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
 
 function resolveKuromojiDictUrl() {
-    // KUROMOJI_DICT_URL is already an absolute URL with trailing slash,
-    // so return it directly to prevent relative path resolution on GitHub Pages
-    return KUROMOJI_DICT_URL;
+    // Use relative path to local dictionary files
+    // This avoids kuromoji.js path.join() bug with absolute URLs (Issue #37)
+    // Dictionary files are downloaded during GitHub Pages deployment via workflow
+    return './dict/';
 }
 
 export async function ensureKuro() {
