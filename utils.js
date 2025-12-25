@@ -86,18 +86,63 @@ export function mulberry32(a) {
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
 
-function resolveKuromojiDictUrl() {
-    // Use relative path to local dictionary files
-    // This avoids kuromoji.js path.join() bug with absolute URLs (Issue #37)
-    // Dictionary files are downloaded during GitHub Pages deployment via workflow
-    return './dict/';
-}
-
 export async function ensureKuro() {
-    // Skip Kuroshiro initialization due to kuromoji dictionary loading issues
-    // Use WanaKana fallback instead (see toHiragana/toKatakana/toRomaji functions)
-    console.log("Skipping Kuroshiro, using WanaKana fallback");
-    return;
+    if (kuroReady) return;
+    try {
+        if (!window.Kuroshiro) {
+            console.warn("Kuroshiro not found in window, checking again in 500ms...");
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        let KuroshiroConstructor = window.Kuroshiro;
+        if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
+            KuroshiroConstructor = KuroshiroConstructor.default;
+        }
+
+        if (typeof KuroshiroConstructor !== 'function') {
+            throw new Error("window.Kuroshiro is not a constructor");
+        }
+
+        let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
+        if (!Analyzer) {
+            throw new Error("KuromojiAnalyzer not found");
+        }
+
+        K = new KuroshiroConstructor();
+
+        // Use @aiktb/kuromoji CDN with uncompressed dict files
+        // Workaround for path.join() issue: custom loader that removes .gz extension
+        const dictPath = 'https://cdn.jsdelivr.net/npm/@aiktb/kuromoji@1.0.2/dict/';
+
+        // Custom loader to handle uncompressed files
+        const customAnalyzer = new Analyzer({
+            dictPath: dictPath
+        });
+
+        // Override loadArrayBuffer to use uncompressed files
+        if (customAnalyzer._dictPath) {
+            const originalLoad = customAnalyzer.constructor.prototype.loadArrayBuffer;
+            customAnalyzer.loadArrayBuffer = async function(url, callback) {
+                // Remove .gz extension for @aiktb/kuromoji uncompressed files
+                const uncompressedUrl = url.replace('.gz', '');
+                console.log("[DEBUG] Loading uncompressed dict:", uncompressedUrl);
+
+                try {
+                    const response = await fetch(uncompressedUrl);
+                    const buffer = await response.arrayBuffer();
+                    callback(null, buffer);
+                } catch (err) {
+                    callback(err, null);
+                }
+            };
+        }
+
+        await K.init(customAnalyzer);
+        kuroReady = true;
+        console.log("Kuroshiro initialized with @aiktb/kuromoji uncompressed dict");
+    } catch (e) {
+        console.warn("Kuroshiro init failed, using WanaKana fallback:", e);
+    }
 }
 
 function katakanaToHiragana(value) {
