@@ -88,6 +88,8 @@ let K = null, kuroReady = false;
 let kuroFetchPatched = false;
 const kuroFetchLog = [];
 const kuroInitTrace = [];
+const MAX_KURO_CONVERT_LOGS = 100;
+let kuroConvertLogCount = 0;
 
 function recordKuroInit(step) {
     const entry = { at: nowISO(), step };
@@ -97,6 +99,12 @@ function recordKuroInit(step) {
     if (typeof window !== 'undefined') {
         window.__kuroInitTrace = kuroInitTrace.slice();
     }
+}
+
+function recordKuroConvert(step) {
+    if (kuroConvertLogCount >= MAX_KURO_CONVERT_LOGS) return;
+    kuroConvertLogCount += 1;
+    recordKuroInit(step);
 }
 
 function recordKuroFetch(original, fixed) {
@@ -269,34 +277,49 @@ function safeWanakanaConvert(method, value) {
 
 export async function toHiragana(s) {
     if (!s) return '';
+    recordKuroConvert('toHiragana: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toHiragana: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toHiragana: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toHiragana: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toHiragana: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toHiragana', normNFKC(s));
 }
 
 export async function toKatakana(s) {
     if (!s) return '';
+    recordKuroConvert('toKatakana: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toKatakana: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toKatakana: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toKatakana: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toKatakana: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toKatakana', normNFKC(s));
 }
 
 export async function toRomaji(s) {
     if (!s) return '';
+    recordKuroConvert('toRomaji: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toRomaji: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toRomaji: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toRomaji: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toRomaji: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toRomaji', normNFKC(s));
 }
 
