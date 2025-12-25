@@ -88,7 +88,9 @@ let kuroFetchPatched = false;
 const kuroFetchLog = [];
 const kuroInitTrace = [];
 const MAX_KURO_CONVERT_LOGS = 100;
+const KURO_CONVERT_LOG_AGG_INTERVAL = 20;
 let kuroConvertLogCount = 0;
+const kuroConvertStepCounts = new Map();
 
 function recordKuroInit(step) {
     const entry = { at: nowISO(), step };
@@ -103,7 +105,12 @@ function recordKuroInit(step) {
 function recordKuroConvert(step) {
     if (kuroConvertLogCount >= MAX_KURO_CONVERT_LOGS) return;
     kuroConvertLogCount += 1;
-    recordKuroInit(step);
+    const current = (kuroConvertStepCounts.get(step) || 0) + 1;
+    kuroConvertStepCounts.set(step, current);
+    if (current === 1 || current % KURO_CONVERT_LOG_AGG_INTERVAL === 0) {
+        const suffix = current === 1 ? '' : ` (x${current})`;
+        recordKuroInit(`${step}${suffix}`);
+    }
 }
 
 function recordKuroFetch(original, fixed) {
