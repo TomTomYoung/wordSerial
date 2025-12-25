@@ -86,67 +86,56 @@ export function mulberry32(a) {
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
 
-function resolveKuromojiDictUrl() {
-    // Use relative path to local dictionary files
-    // This avoids kuromoji.js path.join() bug with absolute URLs (Issue #37)
-    // Dictionary files are downloaded during GitHub Pages deployment via workflow
-    return './dict/';
-}
-
 export async function ensureKuro() {
     if (kuroReady) return;
     try {
-        // Debug: Intercept XMLHttpRequest to see what URLs are being requested
-        if (!window.__xhrInterceptInstalled) {
-            const originalOpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function(method, url, ...args) {
-                if (url.includes('.dat.gz')) {
-                    console.log("[XHR DEBUG] Dictionary request URL:", url);
-                }
-                return originalOpen.call(this, method, url, ...args);
-            };
-            window.__xhrInterceptInstalled = true;
+        // Fix path.join() for URLs before kuromoji loads
+        // kuromoji uses require('path').join() which breaks URLs in browser
+        if (typeof window.require === 'function') {
+            const pathModule = window.require('path');
+            if (pathModule && pathModule.join) {
+                const originalJoin = pathModule.join;
+                pathModule.join = function(...args) {
+                    // If first arg is a URL, use simple concatenation
+                    if (args[0] && /^https?:\/\//.test(args[0])) {
+                        let result = args[0];
+                        for (let i = 1; i < args.length; i++) {
+                            if (!result.endsWith('/')) result += '/';
+                            result += args[i].replace(/^\/+/, '');
+                        }
+                        return result;
+                    }
+                    return originalJoin.apply(this, args);
+                };
+            }
         }
 
-        // Retry logic might be needed if scripts are loading asynchronously
         if (!window.Kuroshiro) {
-            console.warn("Kuroshiro not found in window, checking again in 500ms...");
             await new Promise(r => setTimeout(r, 500));
         }
 
         let KuroshiroConstructor = window.Kuroshiro;
-        // Handle case where it might be loaded as an ESM module with default export
         if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
             KuroshiroConstructor = KuroshiroConstructor.default;
         }
 
         if (typeof KuroshiroConstructor !== 'function') {
-            throw new Error("window.Kuroshiro is not a constructor. Type: " + typeof window.Kuroshiro);
+            throw new Error("window.Kuroshiro is not a constructor");
         }
 
-        // Check Analyzer
-        let Analyzer = window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
-        // Use global fallback if the structure is different
-        if (!Analyzer && window.KuromojiAnalyzer) Analyzer = window.KuromojiAnalyzer;
-
-        // If still not found, check if it's nested in default
-        if (!Analyzer && window.Kuroshiro.default?.Analyzer?.KuromojiAnalyzer) {
-            Analyzer = window.Kuroshiro.default.Analyzer.KuromojiAnalyzer;
-        }
-
+        let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
         if (!Analyzer) {
-            throw new Error("KuromojiAnalyzer not found.");
+            throw new Error("KuromojiAnalyzer not found");
         }
 
         K = new KuroshiroConstructor();
-        const dictPath = resolveKuromojiDictUrl();
-        console.log("[DEBUG] dictPath being passed to Analyzer:", dictPath);
-        console.log("[DEBUG] window.location.href:", window.location.href);
-        await K.init(new Analyzer({ dictPath }));
+        await K.init(new Analyzer({
+            dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
+        }));
         kuroReady = true;
-        console.log("Kuroshiro initialized successfully.");
+        console.log("Kuroshiro initialized successfully");
     } catch (e) {
-        console.warn("Kuroshiro init failed, utilizing WanaKana fallback:", e);
+        console.warn("Kuroshiro init failed, using WanaKana fallback:", e);
     }
 }
 
