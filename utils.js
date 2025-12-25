@@ -14,13 +14,12 @@ export function waitFrame() {
 
 export function log(msg) {
     const host = el('#log');
-    if (!host) {
-        console.log(msg);
-        return;
-    }
+    const stamped = `[${nowISO()}] ${msg}`;
+    console.log(stamped);
+    if (!host) return;
     const div = document.createElement('div');
     div.className = 'log-entry';
-    div.textContent = `[${nowISO()}] ${msg}`;
+    div.textContent = stamped;
     host.prepend(div);
     while (host.children.length > 150) host.removeChild(host.lastChild);
 }
@@ -87,6 +86,32 @@ export function mulberry32(a) {
 let K = null, kuroReady = false;
 let kuroFetchPatched = false;
 const kuroFetchLog = [];
+const kuroInitTrace = [];
+const MAX_KURO_CONVERT_LOGS = 100;
+const KURO_CONVERT_LOG_AGG_INTERVAL = 20;
+let kuroConvertLogCount = 0;
+const kuroConvertStepCounts = new Map();
+
+function recordKuroInit(step) {
+    const entry = { at: nowISO(), step };
+    kuroInitTrace.push(entry);
+    if (kuroInitTrace.length > 100) kuroInitTrace.shift();
+    log(`[kuro-init] ${step}`);
+    if (typeof window !== 'undefined') {
+        window.__kuroInitTrace = kuroInitTrace.slice();
+    }
+}
+
+function recordKuroConvert(step) {
+    if (kuroConvertLogCount >= MAX_KURO_CONVERT_LOGS) return;
+    kuroConvertLogCount += 1;
+    const current = (kuroConvertStepCounts.get(step) || 0) + 1;
+    kuroConvertStepCounts.set(step, current);
+    if (current === 1 || current % KURO_CONVERT_LOG_AGG_INTERVAL === 0) {
+        const suffix = current === 1 ? '' : ` (x${current})`;
+        recordKuroInit(`${step}${suffix}`);
+    }
+}
 
 function recordKuroFetch(original, fixed) {
     const entry = { at: nowISO(), original, fixed, same: original === fixed };
@@ -133,6 +158,7 @@ function normalizeCdnUrl(url) {
 function patchKuroFetch() {
     if (kuroFetchPatched) return;
     kuroFetchPatched = true;
+    recordKuroInit('patchKuroFetch: start');
 
     if (typeof window.fetch === 'function') {
         const originalFetch = window.fetch;
@@ -144,6 +170,7 @@ function patchKuroFetch() {
             }
             return originalFetch.apply(window, args);
         };
+        recordKuroInit('patchKuroFetch: hooked window.fetch');
     }
 
     if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype?.open) {
@@ -153,12 +180,17 @@ function patchKuroFetch() {
             if (fixed !== url) console.debug('Rewriting kuromoji XHR URL:', url, '->', fixed);
             return originalOpen.call(this, method, fixed, ...rest);
         };
+        recordKuroInit('patchKuroFetch: hooked XMLHttpRequest.open');
     }
 }
 
 export async function ensureKuro() {
-    if (kuroReady) return;
+    if (kuroReady) {
+        recordKuroInit('ensureKuro: already ready, skipping');
+        return;
+    }
     try {
+        recordKuroInit('ensureKuro: start');
         patchKuroFetch();
         // Fix path.join() for URLs before kuromoji loads
         // kuromoji uses require('path').join() which breaks URLs in browser
@@ -178,6 +210,7 @@ export async function ensureKuro() {
                     }
                     return originalJoin.apply(this, args);
                 };
+                recordKuroInit('ensureKuro: patched path.join for URL handling');
             }
         }
 
@@ -193,11 +226,13 @@ export async function ensureKuro() {
         if (typeof KuroshiroConstructor !== 'function') {
             throw new Error("window.Kuroshiro is not a constructor");
         }
+        recordKuroInit('ensureKuro: Kuroshiro constructor detected');
 
         let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
         if (!Analyzer) {
             throw new Error("KuromojiAnalyzer not found");
         }
+        recordKuroInit('ensureKuro: KuromojiAnalyzer detected, starting init');
 
         K = new KuroshiroConstructor();
         const analyzer = new Analyzer({
@@ -211,8 +246,10 @@ export async function ensureKuro() {
             new Promise((_, reject) => setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs))
         ]);
         kuroReady = true;
+        recordKuroInit('ensureKuro: Kuroshiro initialized successfully');
         console.log("Kuroshiro initialized successfully");
     } catch (e) {
+        recordKuroInit(`ensureKuro: init failed (${e?.message || e})`);
         console.warn("Kuroshiro init failed, using WanaKana fallback:", e);
         log(`Kuroshiro init failed or timed out: ${e?.message || e}`);
     }
@@ -246,34 +283,49 @@ function safeWanakanaConvert(method, value) {
 
 export async function toHiragana(s) {
     if (!s) return '';
+    recordKuroConvert('toHiragana: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toHiragana: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toHiragana: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toHiragana: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toHiragana: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toHiragana', normNFKC(s));
 }
 
 export async function toKatakana(s) {
     if (!s) return '';
+    recordKuroConvert('toKatakana: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toKatakana: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toKatakana: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toKatakana: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toKatakana: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toKatakana', normNFKC(s));
 }
 
 export async function toRomaji(s) {
     if (!s) return '';
+    recordKuroConvert('toRomaji: start');
     try {
         await ensureKuro();
+        recordKuroConvert(`toRomaji: ensureKuro resolved (ready=${kuroReady})`);
         if (K) return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
-    } catch {
+        recordKuroConvert('toRomaji: converted via Kuroshiro');
+    } catch (e) {
+        recordKuroConvert(`toRomaji: Kuroshiro failed (${e?.message || e})`);
         // Fallback
     }
+    recordKuroConvert('toRomaji: fallback to WanaKana/normalize');
     return safeWanakanaConvert('toRomaji', normNFKC(s));
 }
 
