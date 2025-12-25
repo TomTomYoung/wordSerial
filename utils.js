@@ -86,6 +86,24 @@ export function mulberry32(a) {
 /* ====== Kuroshiro（かな正規化） ====== */
 let K = null, kuroReady = false;
 let kuroFetchPatched = false;
+const kuroFetchLog = [];
+
+function recordKuroFetch(original, fixed) {
+    const entry = { at: nowISO(), original, fixed, same: original === fixed };
+    kuroFetchLog.push(entry);
+    if (kuroFetchLog.length > 50) kuroFetchLog.shift();
+
+    if (fixed !== original) {
+        log(`kuromoji URL rewrite: ${original} -> ${fixed}`);
+    } else if (typeof window?.location?.host === 'string' && original?.includes(window.location.host)) {
+        log(`kuromoji URL stayed on host (${window.location.host}): ${original}`);
+    }
+
+    // Expose for manual inspection in DevTools
+    if (typeof window !== 'undefined') {
+        window.__kuromojiFetchLog = kuroFetchLog;
+    }
+}
 
 function normalizeCdnUrl(url) {
     if (typeof url !== 'string') return url;
@@ -94,14 +112,21 @@ function normalizeCdnUrl(url) {
     // becomes a host-relative path on GitHub Pages and 404s. Fix a few known patterns.
     const addMissingSlash = url.replace(/^(https?:)\/([^/])/, '$1//$2');
     if (addMissingSlash.startsWith('/cdn.jsdelivr.net/')) {
-        return `https://cdn.jsdelivr.net${addMissingSlash}`;
+        const fixed = `https://cdn.jsdelivr.net${addMissingSlash}`;
+        recordKuroFetch(url, fixed);
+        return fixed;
     }
     if (addMissingSlash.startsWith('https:/cdn.jsdelivr.net/')) {
-        return addMissingSlash.replace('https:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+        const fixed = addMissingSlash.replace('https:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+        recordKuroFetch(url, fixed);
+        return fixed;
     }
     if (addMissingSlash.startsWith('http:/cdn.jsdelivr.net/')) {
-        return addMissingSlash.replace('http:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+        const fixed = addMissingSlash.replace('http:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
+        recordKuroFetch(url, fixed);
+        return fixed;
     }
+    recordKuroFetch(url, addMissingSlash);
     return addMissingSlash;
 }
 
@@ -175,13 +200,21 @@ export async function ensureKuro() {
         }
 
         K = new KuroshiroConstructor();
-        await K.init(new Analyzer({
+        const analyzer = new Analyzer({
             dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
-        }));
+        });
+
+        const initPromise = K.init(analyzer);
+        const timeoutMs = 8000;
+        await Promise.race([
+            initPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs))
+        ]);
         kuroReady = true;
         console.log("Kuroshiro initialized successfully");
     } catch (e) {
         console.warn("Kuroshiro init failed, using WanaKana fallback:", e);
+        log(`Kuroshiro init failed or timed out: ${e?.message || e}`);
     }
 }
 
