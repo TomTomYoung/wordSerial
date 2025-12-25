@@ -362,6 +362,26 @@
     .op-group h4 {
       font-size: 14px;
       margin: 0;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .op-group h4::after {
+      content: '▼';
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+
+    .op-group.closed h4::after {
+      transform: rotate(-90deg);
+    }
+
+    .op-group.closed>*:not(h4) {
+      display: none;
     }
 
     .inline {
@@ -2112,6 +2132,14 @@
     })();
     renderBags();
     applyChoices();
+
+    /* ====== UI Toggles ====== */
+    document.querySelectorAll('.op-group h4').forEach(h4 => {
+      h4.addEventListener('click', () => {
+        h4.parentElement.classList.toggle('closed');
+      });
+    });
+
     listJson(); // auto-load defaults
   </script>
 </body>
