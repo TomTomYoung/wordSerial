@@ -150,7 +150,12 @@ export async function op_filter_in(srcBag, lookupBag, normalizeSrc = false, norm
     const srcItems = await maybeNormalizeBagItems(srcBag, normalizeSrc);
     const lookupItems = await maybeNormalizeBagItems(lookupBag, normalizeLookup);
     const out = new Set();
-    for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+    let i = 0;
+    const batch = getBatchSize();
+    for (const w of srcItems) {
+        if (lookupItems.has(w)) out.add(w);
+        if (++i % batch === 0) await waitFrame();
+    }
     return new Bag(`${srcBag.name} → filter_in([${lookupBag.id}:${lookupBag.name}])`, out, {
         op: 'filter_in',
         src: srcBag.id,
@@ -176,7 +181,13 @@ export async function op_union(bagA, bagB, normalizeBefore = false) {
 export async function op_difference(bagA, bagB, normalizeBefore = false) {
     const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
     const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
-    const out = new Set([...srcItemsA].filter(w => !srcItemsB.has(w)));
+    const out = new Set();
+    let i = 0;
+    const batch = getBatchSize();
+    for (const w of srcItemsA) {
+        if (!srcItemsB.has(w)) out.add(w);
+        if (++i % batch === 0) await waitFrame();
+    }
     return new Bag(`${bagA.name} - ${bagB.name}`, out, {
         op: 'difference',
         src: [bagA.id, bagB.id].join(','),
@@ -191,7 +202,12 @@ export async function op_intersection(bagA, bagB, normalizeBefore = false) {
     const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
     const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
     const out = new Set();
-    for (const w of srcItemsA) if (srcItemsB.has(w)) out.add(w);
+    let i = 0;
+    const batch = getBatchSize();
+    for (const w of srcItemsA) {
+        if (srcItemsB.has(w)) out.add(w);
+        if (++i % batch === 0) await waitFrame();
+    }
     return new Bag(`${bagA.name} ∩ ${bagB.name}`, out, {
         op: 'intersection',
         src: [bagA.id, bagB.id].join(','),
@@ -206,8 +222,16 @@ export async function op_symmetric_difference(bagA, bagB, normalizeBefore = fals
     const srcItemsA = await maybeNormalizeBagItems(bagA, normalizeBefore);
     const srcItemsB = await maybeNormalizeBagItems(bagB, normalizeBefore);
     const out = new Set();
-    for (const w of srcItemsA) if (!srcItemsB.has(w)) out.add(w);
-    for (const w of srcItemsB) if (!srcItemsA.has(w)) out.add(w);
+    let i = 0;
+    const batch = getBatchSize();
+    for (const w of srcItemsA) {
+        if (!srcItemsB.has(w)) out.add(w);
+        if (++i % batch === 0) await waitFrame();
+    }
+    for (const w of srcItemsB) {
+        if (!srcItemsA.has(w)) out.add(w);
+        if (++i % batch === 0) await waitFrame();
+    }
     return new Bag(`${bagA.name} △ ${bagB.name}`, out, {
         op: 'symmetric_difference',
         src: [bagA.id, bagB.id].join(','),
@@ -222,10 +246,11 @@ export async function op_filter_length(bag, minLen, maxLen, normalizeBefore = fa
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     const out = new Set();
     let i = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         const len = normNFKC(w).length;
         if (len >= minLen && len <= maxLen) out.add(w);
-        if (++i % getBatchSize() === 0) await waitFrame();
+        if (++i % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → length[${minLen}-${maxLen}]`, out, {
         op: 'filter_length',
@@ -242,9 +267,10 @@ export async function op_filter_prefix(bag, prefix, normalizeBefore = false) {
     if (!needle) return new Bag(`${bag.name} → prefix(∅)`, out, { op: 'filter_prefix', src: bag.id, prefix: '', normalize_before: normalizeBefore });
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     let i = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         if (normNFKC(w).startsWith(needle)) out.add(w);
-        if (++i % getBatchSize() === 0) await waitFrame();
+        if (++i % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → prefix(${needle})`, out, { op: 'filter_prefix', src: bag.id, prefix: needle, normalize_before: normalizeBefore });
 }
@@ -254,9 +280,10 @@ export async function op_filter_suffix(bag, suffix, normalizeBefore = false) {
     if (!needle) return new Bag(`${bag.name} → suffix(∅)`, out, { op: 'filter_suffix', src: bag.id, suffix: '', normalize_before: normalizeBefore });
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     let i = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         if (normNFKC(w).endsWith(needle)) out.add(w);
-        if (++i % getBatchSize() === 0) await waitFrame();
+        if (++i % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → suffix(${needle})`, out, { op: 'filter_suffix', src: bag.id, suffix: needle, normalize_before: normalizeBefore });
 }
@@ -266,9 +293,10 @@ export async function op_filter_contains(bag, needleRaw, normalizeBefore = false
     if (!needle) return new Bag(`${bag.name} → contains(∅)`, out, { op: 'filter_contains', src: bag.id, needle: '', normalize_before: normalizeBefore });
     const srcItems = await maybeNormalizeBagItems(bag, normalizeBefore);
     let i = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         if (normNFKC(w).includes(needle)) out.add(w);
-        if (++i % getBatchSize() === 0) await waitFrame();
+        if (++i % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → contains(${needle})`, out, { op: 'filter_contains', src: bag.id, needle, normalize_before: normalizeBefore });
 }
@@ -277,10 +305,11 @@ export async function op_filter_regex(bag, pattern, invert, normalizeBefore = fa
     const re = new RegExp(pattern, 'u');
     const out = new Set();
     let i = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         const matched = re.test(w);
         if ((matched && !invert) || (!matched && invert)) out.add(w);
-        if (++i % getBatchSize() === 0) await waitFrame();
+        if (++i % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → regex(${pattern}${invert ? ', invert' : ''})`, out, { op: 'filter_regex', src: bag.id, pattern, invert, normalize_before: normalizeBefore });
 }
@@ -289,13 +318,15 @@ export async function op_ngrams(bag, n, normalizeBefore = false) {
     const size = Number.isFinite(n) ? Math.max(1, n) : 1;
     const out = new Set();
     let k = 0;
+    const batch = getBatchSize();
     for (const w of srcItems) {
         const norm = normNFKC(w);
-        if (!norm || norm.length < size) continue;
-        for (let i = 0; i <= norm.length - size; i += 1) {
-            out.add(norm.slice(i, i + size));
+        if (norm && norm.length >= size) {
+            for (let i = 0; i <= norm.length - size; i += 1) {
+                out.add(norm.slice(i, i + size));
+            }
         }
-        if (++k % getBatchSize() === 0) await waitFrame();
+        if (++k % batch === 0) await waitFrame();
     }
     return new Bag(`${bag.name} → ngram(n=${size})`, out, { op: 'ngrams', src: bag.id, n: size, normalize_before: normalizeBefore });
 }
@@ -442,7 +473,12 @@ export const OP_REBUILDERS = {
         const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_src_before);
         const lookupItems = await maybeNormalizeBagItems(lookup, !!meta.normalize_lookup_before);
         const out = new Set();
-        for (const w of srcItems) if (lookupItems.has(w)) out.add(w);
+        let i = 0;
+        const batch = getBatchSize();
+        for (const w of srcItems) {
+            if (lookupItems.has(w)) out.add(w);
+            if (++i % batch === 0) await waitFrame();
+        }
         return out;
     },
     async union(meta) {
@@ -459,7 +495,14 @@ export const OP_REBUILDERS = {
         if (!a || !b) throw new Error('difference source missing');
         const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
         const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
-        return new Set([...srcItemsA].filter(w => !srcItemsB.has(w)));
+        const out = new Set();
+        let i = 0;
+        const batch = getBatchSize();
+        for (const w of srcItemsA) {
+            if (!srcItemsB.has(w)) out.add(w);
+            if (++i % batch === 0) await waitFrame();
+        }
+        return out;
     },
     async intersection(meta) {
         const a = REG.get(meta.src_a ?? (meta.src?.split(',')[0]));
@@ -468,7 +511,12 @@ export const OP_REBUILDERS = {
         const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
         const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
         const out = new Set();
-        for (const w of srcItemsA) if (srcItemsB.has(w)) out.add(w);
+        let i = 0;
+        const batch = getBatchSize();
+        for (const w of srcItemsA) {
+            if (srcItemsB.has(w)) out.add(w);
+            if (++i % batch === 0) await waitFrame();
+        }
         return out;
     },
     async symmetric_difference(meta) {
@@ -478,8 +526,16 @@ export const OP_REBUILDERS = {
         const srcItemsA = await maybeNormalizeBagItems(a, !!meta.normalize_before);
         const srcItemsB = await maybeNormalizeBagItems(b, !!meta.normalize_before);
         const out = new Set();
-        for (const w of srcItemsA) if (!srcItemsB.has(w)) out.add(w);
-        for (const w of srcItemsB) if (!srcItemsA.has(w)) out.add(w);
+        let i = 0;
+        const batch = getBatchSize();
+        for (const w of srcItemsA) {
+            if (!srcItemsB.has(w)) out.add(w);
+            if (++i % batch === 0) await waitFrame();
+        }
+        for (const w of srcItemsB) {
+            if (!srcItemsA.has(w)) out.add(w);
+            if (++i % batch === 0) await waitFrame();
+        }
         return out;
     },
     async filter_length(meta) {
@@ -490,10 +546,11 @@ export const OP_REBUILDERS = {
         const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             const len = normNFKC(w).length;
             if (len >= min && len <= max) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -505,9 +562,10 @@ export const OP_REBUILDERS = {
         const out = new Set();
         if (!prefix) return out;
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             if (normNFKC(w).startsWith(prefix)) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -519,9 +577,10 @@ export const OP_REBUILDERS = {
         const out = new Set();
         if (!suffix) return out;
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             if (normNFKC(w).endsWith(suffix)) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -533,9 +592,10 @@ export const OP_REBUILDERS = {
         const out = new Set();
         if (!needle) return out;
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             if (normNFKC(w).includes(needle)) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -549,10 +609,11 @@ export const OP_REBUILDERS = {
         const re = new RegExp(pattern, 'u');
         const out = new Set();
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             const matched = re.test(w);
             if ((matched && !invert) || (!matched && invert)) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -563,12 +624,13 @@ export const OP_REBUILDERS = {
         const out = new Set();
         const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         let k = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             const norm = normNFKC(w);
             if (norm && norm.length >= n) {
                 for (let i = 0; i <= norm.length - n; i += 1) out.add(norm.slice(i, i + n));
             }
-            if (++k % getBatchSize() === 0) await waitFrame();
+            if (++k % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -598,6 +660,7 @@ export const OP_REBUILDERS = {
         const itemsA = Array.from(await maybeNormalizeBagItems(a, !!meta.normalize_before));
         const itemsB = Array.from(await maybeNormalizeBagItems(b, !!meta.normalize_before));
 
+        const batch = getBatchSize();
         for (let i = 0; i < itemsA.length; i++) {
             if (out.size >= limit) break;
             const wa = itemsA[i];
@@ -605,7 +668,7 @@ export const OP_REBUILDERS = {
                 out.add(wa + sep + wb);
                 if (out.size >= limit) break;
             }
-            if (i % getBatchSize() === 0) await waitFrame();
+            if (i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -617,9 +680,10 @@ export const OP_REBUILDERS = {
         const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             out.add(prefix + w + suffix);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -629,6 +693,7 @@ export const OP_REBUILDERS = {
         const srcItems = await maybeNormalizeBagItems(src, !!meta.normalize_before);
         const out = new Set();
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             const chars = Array.from(normNFKC(w));
             // Shuffle
@@ -637,7 +702,7 @@ export const OP_REBUILDERS = {
                 [chars[k], chars[j]] = [chars[j], chars[k]];
             }
             out.add(chars.join(''));
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
@@ -651,9 +716,10 @@ export const OP_REBUILDERS = {
         if (!target) return out;
 
         let i = 0;
+        const batch = getBatchSize();
         for (const w of srcItems) {
             if (levenshtein(w, target) <= dist) out.add(w);
-            if (++i % getBatchSize() === 0) await waitFrame();
+            if (++i % batch === 0) await waitFrame();
         }
         return out;
     },
