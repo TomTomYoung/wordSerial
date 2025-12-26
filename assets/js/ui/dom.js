@@ -26,7 +26,7 @@ export const el = q => document.querySelector(q);
  * @returns {Promise<void>}
  */
 export function waitFrame() {
-    return new Promise(resolve => setTimeout(resolve, 0));
+    return new Promise(resolve => setTimeout(resolve, 50));
 }
 
 /**
@@ -34,7 +34,7 @@ export function waitFrame() {
  * @returns {number}
  */
 export function getBatchSize() {
-    return Math.max(1, parseInt(el('#batchSize')?.value || 200, 10));
+    return Math.max(1, parseInt(el('#batchSize')?.value || 1000, 10));
 }
 
 /**

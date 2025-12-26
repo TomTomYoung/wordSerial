@@ -97,7 +97,6 @@ export function mulberry32(a) {
 export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null } = {}) {
     // console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}`);
     const out = new Set();
-    let i = 0;
     let chunkBuffer = [];
 
     const flushChunk = () => {
@@ -107,20 +106,39 @@ export async function processWithBatching(items, processFn, { yielder, batchSize
         }
     };
 
-    for (const item of items) {
-        const results = await processFn(item);
-        if (results !== null && results !== undefined) {
-            if (results instanceof Set || Array.isArray(results)) {
-                for (const r of results) {
-                    out.add(r);
-                    if (onChunk) chunkBuffer.push(r);
+    // Convert to array to support indexed slicing for batches
+    const itemsArray = Array.from(items);
+
+    for (let i = 0; i < itemsArray.length; i += batchSize) {
+        const batch = itemsArray.slice(i, i + batchSize);
+
+        // Execute batch in parallel
+        const results = await Promise.all(batch.map(async (item) => {
+            try {
+                return await processFn(item);
+            } catch (e) {
+                console.error("Item processing error:", e);
+                return null;
+            }
+        }));
+
+        // Collect results
+        for (const res of results) {
+            if (res !== null && res !== undefined) {
+                if (res instanceof Set || Array.isArray(res)) {
+                    for (const r of res) {
+                        out.add(r);
+                        if (onChunk) chunkBuffer.push(r);
+                    }
+                } else {
+                    out.add(res);
+                    if (onChunk) chunkBuffer.push(res);
                 }
-            } else {
-                out.add(results);
-                if (onChunk) chunkBuffer.push(results);
             }
         }
-        if (yielder && ++i % batchSize === 0) {
+
+        // Yield control to UI/GC
+        if (yielder) {
             flushChunk();
             await yielder();
         }
