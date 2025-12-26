@@ -55,7 +55,7 @@ async function loadSelectedJson() {
 }
 
 export function initImportPanel() {
-    el('#btnList')?.addEventListener('click', async () => {
+    const loadList = async () => {
         const sel = el('#selFile');
         if (!sel) return;
         sel.innerHTML = '';
@@ -70,7 +70,14 @@ export function initImportPanel() {
         } catch (e) {
             log('IO Error: ' + e.message);
         }
-    });
+    };
+
+    // Auto load on init
+    loadList();
+
+    // Keep button if it exists (legacy support) or for manual refresh? 
+    // If not in HTML, this does nothing, which is fine.
+    el('#btnList')?.addEventListener('click', loadList);
 
     el('#selFile')?.addEventListener('change', loadSelectedJson);
 

@@ -15,7 +15,7 @@
 import { ensureKuro, getK } from '../../infra/kuro-wrapper.js';
 import { runProgressiveOp } from './base.js';
 import { normalize, normNFKC } from '../../core/text.js';
-import { getBatchSize, waitFrame } from '../../core/utils.js'; // Should verify if getBatchSize needs UI or is core
+// Imports removed (unused)
 
 // Re-implementing logic-side getHooks locally or importing? 
 // The original operations.js used utils.js for getBatchSize.

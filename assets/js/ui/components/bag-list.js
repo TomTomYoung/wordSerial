@@ -17,19 +17,9 @@
 
 import { REG } from '../../domain/models/registry.js';
 import * as Ops from '../../domain/ops/base.js'; // For op_clone
-// We need reapplySeries from somewhere. It was in runner.js or operations.js.
-// Since runner.js wasn't fully refactored, let's assume valid import path or leave placeholder for now.
-// For now, I'll import it from the old location or a new location if I missed it.
-// Wait, I didn't create `domain/ops/runner.js` yet. It was `assets/js/modules/runner.js`.
-// I should probably move runner.js logic to domain/ops/runner.js or similar.
-// For now, I will assume it will be available at `../../domain/runner.js` or keep using `../modules/runner.js` if necessary, 
-// BUT my goal is to remove modules/.
-// I will create a `runner.js` task if I missed it.
-// Checking plan... I missed `runner.js` in the plan explicit list but it's crucial.
-// I will add `domain/runner.js` later. For now, I'll comment out reapply logic or point to future location.
-// Actually, let's just point to where it WILL be: `../../domain/runner.js` and ensure we create it.
-
-import { el, log, appendOpLog, setSelectOptions, nowISO } from '../dom.js';
+import { reapplySeries } from '../../domain/ops/runner.js';
+import { el, log, appendOpLog, setSelectOptions } from '../dom.js';
+import { nowISO } from '../../core/utils.js';
 import { captureState } from '../../store/history.js';
 import { normNFKC } from '../../core/text.js';
 
@@ -265,9 +255,20 @@ export function renderBags() {
 
         if (!isProcessing) {
             const reapplyBtn = actions.querySelector('[data-k="reapply"]');
-            reapplyBtn.addEventListener('click', () => {
-                // TODO: Implement Reapply with new runner
-                log('Reapply not yet connected in refactor');
+            reapplyBtn.addEventListener('click', async () => {
+                reapplyBtn.disabled = true;
+                try {
+                    await reapplySeries(b.id, {
+                        onStatus: setBagStatusMessage,
+                        onUpdate: () => {
+                            renderBags();
+                            applyChoices();
+                            captureState();
+                        }
+                    });
+                } finally {
+                    reapplyBtn.disabled = false;
+                }
             });
 
             const duplicateBtn = actions.querySelector('[data-k="duplicate"]');

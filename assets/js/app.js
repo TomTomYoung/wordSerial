@@ -63,6 +63,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         log('Modules loaded. App Ready.');
 
+        // Tab Switching Logic
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.tab;
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b === btn));
+                document.querySelectorAll('.tab-panel').forEach(p => {
+                    p.classList.toggle('active', p.dataset.panel === target);
+                    if (p.style.display && p.dataset.panel === target) p.style.display = ''; // Clear inline hide if any
+                });
+            });
+        });
+
         // Auto-load list logic from legacy app
         try {
             const listBtn = el('#btnList');

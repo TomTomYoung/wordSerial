@@ -77,6 +77,19 @@ export class BagRegistry {
     }
 
     restore(snapshot) {
+        if (!snapshot || Array.isArray(snapshot)) {
+            // Handle empty init or raw array (though raw array shouldn't happen with correct logic, but safe to handle)
+            this._bags = [];
+            setNextId(1);
+            return;
+        }
+
+        if (!snapshot.bags) {
+            this._bags = [];
+            setNextId(1);
+            return;
+        }
+
         this._bags = snapshot.bags.map(data => {
             const bag = new Bag(data.name, data.items, Object.assign({}, data.meta));
             bag.id = data.id;
@@ -84,7 +97,7 @@ export class BagRegistry {
             bag.meta.size = bag.items.size;
             return bag;
         });
-        setNextId(snapshot.nextId);
+        setNextId(snapshot.nextId || (Math.max(0, ...snapshot.bags.map(b => b.id)) + 1));
     }
 }
 

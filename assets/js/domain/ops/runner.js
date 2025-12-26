@@ -15,8 +15,8 @@
  */
 
 import { REG } from '../models/registry.js';
-import { nowISO, setsAreEqual, getBatchSize, waitFrame } from '../../core/utils.js';
-import { appendOpLog } from '../../ui/dom.js';
+import { nowISO, setsAreEqual } from '../../core/utils.js';
+import { appendOpLog, getBatchSize, waitFrame } from '../../ui/dom.js';
 // Note: ui/dom dependency in domain layer slightly breaks strict layering,
 // but runner heavily relies on logging to UI.
 // Ideally, we'd pass a logger callback. For now, we import appendOpLog to match legacy features.
