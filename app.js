@@ -1,4 +1,4 @@
-/**
+﻿/**
  * app.js
  *
  * Main entry point for the WordSerial application.
@@ -852,5 +852,18 @@ window.addEventListener('DOMContentLoaded', () => {
     initHistory();
     listJson().then(() => {
         // Auto-load if only one file? No, just list.
+    });
+});
+
+
+/* ====== Tabs ====== */
+document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        const panel = document.querySelector(`.tab-panel[data-panel="${tab}"]`);
+        if (panel) panel.classList.add('active');
     });
 });
