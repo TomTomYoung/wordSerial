@@ -19,11 +19,20 @@ export async function ensureKuro() {
     if (_initPromise) return _initPromise;
 
     _initPromise = (async () => {
-        if (!window.Kuroshiro || !window.KuromojiAnalyzer) {
-            throw new Error('Kuroshiro libs not loaded');
+        // Wait for script global if needed
+        if (!window.Kuroshiro) await new Promise(r => setTimeout(r, 500));
+
+        let KuroshiroConstructor = window.Kuroshiro;
+        if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
+            KuroshiroConstructor = KuroshiroConstructor.default;
         }
-        const k = new Kuroshiro();
-        await k.init(new KuromojiAnalyzer({ dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }));
+        if (typeof KuroshiroConstructor !== 'function') throw new Error("window.Kuroshiro is not a constructor");
+
+        let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
+        if (!Analyzer) throw new Error("KuromojiAnalyzer not found");
+
+        const k = new KuroshiroConstructor();
+        await k.init(new Analyzer({ dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }));
         _kuro = k;
         return k;
     })();
