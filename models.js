@@ -53,7 +53,12 @@ export class BagRegistry {
         this._bags.splice(insertIdx, 0, bag);
         return true;
     }
-    choices() { return this._bags.map(b => ({ label: b.label(), value: String(b.id) })); }
+    choices() {
+        return this._bags.map(b => ({
+            label: b.label(),
+            value: String(b.id)
+        }));
+    }
     serialize() {
         return {
             nextId: _nextId,
