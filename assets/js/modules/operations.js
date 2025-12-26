@@ -52,7 +52,9 @@ async function runProgressiveOp(bagName, meta, logicFn) {
     // Run logic in background
     (async () => {
         try {
+            console.log(`[Progressive] Start: ${bagName}`);
             const onChunk = (chunk) => {
+                // console.log(`[Progressive] Chunk: ${chunk.length} items`);
                 for (const item of chunk) bag.items.add(item);
                 bag.updateProgress(bag.items.size, 0); // Total unknown for filters, or we could pass src size
                 // Trigger UI update check? Ideally UI polls or we have an event. 
@@ -64,6 +66,7 @@ async function runProgressiveOp(bagName, meta, logicFn) {
 
             await logicFn(hooks);
 
+            console.log(`[Progressive] Finish: ${bagName}, Size=${bag.items.size}`);
             bag.finish();
         } catch (e) {
             console.error("Progressive Op Failed", e);
@@ -87,14 +90,33 @@ export async function op_clone(srcBag) {
 }
 
 export async function op_normalize_hiragana(srcBag) {
+    console.log('[op_normalize_hiragana] Waiting for Kuro...');
     await Kuro.ensureKuro();
+    console.log('[op_normalize_hiragana] Kuro ready. Getting K...');
     const K = Kuro.getK();
-    const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+
+    let debugCount = 0;
+    const fastConverter = async (s) => {
+        if (debugCount < 5) console.log(`[fastConverter] converting item #${debugCount}: "${s.slice(0, 20)}"...`);
+        try {
+            const res = await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+            if (debugCount < 5) console.log(`[fastConverter] done item #${debugCount}`);
+            debugCount++;
+            return res;
+        } catch (e) {
+            console.error(`[fastConverter] Error on item: "${s}"`, e);
+            throw e;
+        }
+    };
 
     return runProgressiveOp(`${srcBag.name} → normalize(hiragana)`,
         { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' },
         async (hooks) => {
+            console.log('[op_normalize_hiragana] Starting Logic.normalize...');
+            // Force batchSize to 10 for debug if needed, or stick to hooks
+            console.log(`[op_normalize_hiragana] BatchSize: ${hooks.batchSize}`);
             await Logic.normalize(srcBag.items, null, { ...hooks, converter: fastConverter });
+            console.log('[op_normalize_hiragana] Logic.normalize done.');
         }
     );
 }

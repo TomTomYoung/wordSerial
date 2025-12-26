@@ -68,6 +68,7 @@ function mulberry32(a) {
 
 // Helper to iterate with batching
 async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null } = {}) {
+    console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}`);
     const out = new Set();
     let i = 0;
     let chunkBuffer = [];
@@ -80,7 +81,9 @@ async function processWithBatching(items, processFn, { yielder, batchSize = 200,
     };
 
     for (const item of items) {
+        if (i === 0) console.log(`[processWithBatching] First item: "${item}"`);
         const results = await processFn(item);
+        // console.log(`[processWithBatching] Item ${i} done`);
         if (results !== null && results !== undefined) {
             if (results instanceof Set || Array.isArray(results)) {
                 for (const r of results) {
