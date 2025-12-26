@@ -106,51 +106,49 @@ async function processWithBatching(items, processFn, { yielder, batchSize = 200,
 
 export const Logic = {
     // Normalization & Conversion
-    async normalize(items, _, { converter, yielder, batchSize }) {
+    async normalize(items, _, hooks) {
+        const { converter } = hooks;
         return processWithBatching(items, async (w) => {
             const res = converter ? await converter(w) : w;
             return res ? res.replace(/\s+/g, '') : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
-    async toRomaji(items, _, { converter, yielder, batchSize }) {
+    async toRomaji(items, _, hooks) {
+        const { converter } = hooks;
         return processWithBatching(items, async (w) => {
             const res = converter ? await converter(w) : w;
             return res ? res.replace(/\s+/g, '') : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
     // Deletion
-    async deleteChars(items, { chars }, { yielder, batchSize }) {
+    async deleteChars(items, { chars }, hooks) {
         const dels = Array.from(new Set((chars || '').split('')));
         return processWithBatching(items, async (w) => {
             let wNew = w;
             for (const c of dels) if (c) wNew = wNew.split(c).join('');
-            return wNew !== w ? wNew : null; // Only keep if changed? ORIGINAL LOGIC: "if (wNew !== w) out.add(wNew);" -> This implies purely filtering for changed items or returning the modified version? 
-            // WAIT. Original code: if (wNew !== w) out.add(wNew); 
-            // It seems "Delete Chars" creates a bag of MODIFIED items. Untouched items are discarded?
-            // Checking operations.js line 79: `if (wNew !== w) out.add(wNew);`
-            // Yes.
-        }, { yielder, batchSize });
+            return wNew !== w ? wNew : null;
+        }, hooks);
     },
 
     // Transformations
-    async toUpper(items, _, { yielder, batchSize }) {
-        return processWithBatching(items, w => normNFKC(w).toUpperCase(), { yielder, batchSize });
+    async toUpper(items, _, hooks) {
+        return processWithBatching(items, w => normNFKC(w).toUpperCase(), hooks);
     },
 
-    async toLower(items, _, { yielder, batchSize }) {
-        return processWithBatching(items, w => normNFKC(w).toLowerCase(), { yielder, batchSize });
+    async toLower(items, _, hooks) {
+        return processWithBatching(items, w => normNFKC(w).toLowerCase(), hooks);
     },
 
-    async reverse(items, _, { yielder, batchSize }) {
+    async reverse(items, _, hooks) {
         return processWithBatching(items, w => {
             const reversed = Array.from(normNFKC(w)).reverse().join('');
             return reversed || null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
-    async dedupeChars(items, _, { yielder, batchSize }) {
+    async dedupeChars(items, _, hooks) {
         return processWithBatching(items, w => {
             const seen = new Set();
             const result = [];
@@ -160,25 +158,20 @@ export const Logic = {
                 result.push(ch);
             }
             return result.length ? result.join('') : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
-    async replace(items, { from, to }, { yielder, batchSize }) {
+    async replace(items, { from, to }, hooks) {
         const needle = normNFKC(from);
         const replacement = normNFKC(to ?? '');
-        if (!needle) return new Set(); // Special case in original: returns logic-specific empty set if no needle
+        if (!needle) return new Set();
         return processWithBatching(items, w => {
             const normed = normNFKC(w);
             return normed.split(needle).join(replacement);
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
     async sort(items, { order = 'asc', locale = 'ja' } = {}) {
-        // Sort is holistic, can't easily batch yield *during* the sort call itself, 
-        // but can batch the copy if needed. However, Array.from + sort is usually single thread blocking.
-        // For large sets, this will freeze. But original code didn't batch the sort call itself, just the surrounding ops if any?
-        // Original: const arr = Array.from(srcItems); arr.sort(...); return new Set(arr);
-        // It didn't yield inside sort.
         const arr = Array.from(items);
         arr.sort((a, b) => normNFKC(a).localeCompare(normNFKC(b), locale));
         if (order === 'desc') arr.reverse();
@@ -186,77 +179,79 @@ export const Logic = {
     },
 
     // Filters
-    async filterIn(items, { lookup }, { yielder, batchSize }) {
-        return processWithBatching(items, w => lookup.has(w) ? w : null, { yielder, batchSize });
+    async filterIn(items, { lookup }, hooks) {
+        return processWithBatching(items, w => lookup.has(w) ? w : null, hooks);
     },
 
-    async filterLength(items, { min, max }, { yielder, batchSize }) {
+    async filterLength(items, { min, max }, hooks) {
         return processWithBatching(items, w => {
             const len = normNFKC(w).length;
             return (len >= min && len <= max) ? w : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
-    async filterPrefix(items, { prefix }, { yielder, batchSize }) {
+    async filterPrefix(items, { prefix }, hooks) {
         if (!prefix) return new Set();
-        return processWithBatching(items, w => normNFKC(w).startsWith(prefix) ? w : null, { yielder, batchSize });
+        return processWithBatching(items, w => normNFKC(w).startsWith(prefix) ? w : null, hooks);
     },
 
-    async filterSuffix(items, { suffix }, { yielder, batchSize }) {
+    async filterSuffix(items, { suffix }, hooks) {
         if (!suffix) return new Set();
-        return processWithBatching(items, w => normNFKC(w).endsWith(suffix) ? w : null, { yielder, batchSize });
+        return processWithBatching(items, w => normNFKC(w).endsWith(suffix) ? w : null, hooks);
     },
 
-    async filterContains(items, { needle }, { yielder, batchSize }) {
+    async filterContains(items, { needle }, hooks) {
         if (!needle) return new Set();
-        return processWithBatching(items, w => normNFKC(w).includes(needle) ? w : null, { yielder, batchSize });
+        return processWithBatching(items, w => normNFKC(w).includes(needle) ? w : null, hooks);
     },
 
-    async filterRegex(items, { pattern, invert }, { yielder, batchSize }) {
+    async filterRegex(items, { pattern, invert }, hooks) {
         if (!pattern) return new Set();
         const re = new RegExp(pattern, 'u');
         return processWithBatching(items, w => {
             const matched = re.test(w);
             return ((matched && !invert) || (!matched && invert)) ? w : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
-    async filterSimilarity(items, { target, dist }, { yielder, batchSize }) {
+    async filterSimilarity(items, { target, dist }, hooks) {
         if (!target) return new Set();
         const d = Number.isFinite(dist) ? dist : 2;
         return processWithBatching(items, w => {
             return levenshtein(w, target) <= d ? w : null;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
     // Set Operations
     async union(itemsA, { itemsB }, _) {
-        // Union doesn't need batching if just creating a new Set from two iterables, 
-        // but if we want to be nice we could, but JS Set constructor is fast.
         return new Set([...itemsA, ...itemsB]);
     },
 
-    async difference(itemsA, { itemsB }, { yielder, batchSize }) {
-        return processWithBatching(itemsA, w => !itemsB.has(w) ? w : null, { yielder, batchSize });
+    async difference(itemsA, { itemsB }, hooks) {
+        return processWithBatching(itemsA, w => !itemsB.has(w) ? w : null, hooks);
     },
 
-    async intersection(itemsA, { itemsB }, { yielder, batchSize }) {
-        return processWithBatching(itemsA, w => itemsB.has(w) ? w : null, { yielder, batchSize });
+    async intersection(itemsA, { itemsB }, hooks) {
+        return processWithBatching(itemsA, w => itemsB.has(w) ? w : null, hooks);
     },
 
-    async symmetricDifference(itemsA, { itemsB }, { yielder, batchSize }) {
+    async symmetricDifference(itemsA, { itemsB }, hooks) {
         const out = new Set();
+        // Note: symmetricDifference logic is slightly more complex, 
+        // we need to pass hooks manually or update how it works if we want 'onChunk' to trigger for both passes.
+        // Current impl calls processWithBatching twice. Passing hooks (with onChunk) to both might double-trigger or work fine?
+        // It will work fine, just reporting chunks from both phases.
         await processWithBatching(itemsA, w => {
             if (!itemsB.has(w)) out.add(w);
-        }, { yielder, batchSize });
+        }, hooks);
         await processWithBatching(itemsB, w => {
             if (!itemsA.has(w)) out.add(w);
-        }, { yielder, batchSize });
+        }, hooks);
         return out;
     },
 
     // Generators / Others
-    async ngrams(items, { n }, { yielder, batchSize }) {
+    async ngrams(items, { n }, hooks) {
         const size = Number.isFinite(n) ? Math.max(1, n) : 1;
         return processWithBatching(items, w => {
             const norm = normNFKC(w);
@@ -267,11 +262,10 @@ export const Logic = {
                 }
             }
             return res;
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
     async sample(items, { count, seed }) {
-        // Sampling involves shuffling, usually holistic.
         const arr = Array.from(items);
         const safeCount = Number.isFinite(count) ? count : 0;
         const need = Math.min(Math.max(0, safeCount), arr.length);
@@ -287,7 +281,11 @@ export const Logic = {
         return new Set(arr.slice(0, need));
     },
 
-    async cartesian(itemsA, { itemsB, sep = '', limit = 10000 }, { yielder, batchSize = 200 }) {
+    async cartesian(itemsA, { itemsB, sep = '', limit = 10000 }, { yielder, batchSize = 200 } = {}) {
+        // Cartesian loop structure is custom, doesn't use processWithBatching.
+        // If we want onChunk support here, we need to add it manually.
+        // But for now, fixing processWithBatching usages is the priority.
+        // I will adhere to the existing signature for now to avoid breaking it if not using wrappers.
         const out = new Set();
         const arrA = Array.from(itemsA);
         const arrB = Array.from(itemsB);
@@ -299,18 +297,16 @@ export const Logic = {
                 if (out.size >= limit) break outer;
                 out.add(wa + sep + wb);
             }
-            // Yield every batch (approx) - since inner loop might be small or large, 
-            // simple check:
             if (++count % batchSize === 0 && yielder) await yielder();
         }
         return out;
     },
 
-    async append(items, { prefix = '', suffix = '' }, { yielder, batchSize }) {
-        return processWithBatching(items, w => prefix + w + suffix, { yielder, batchSize });
+    async append(items, { prefix = '', suffix = '' }, hooks) {
+        return processWithBatching(items, w => prefix + w + suffix, hooks);
     },
 
-    async anagram(items, _, { yielder, batchSize }) {
+    async anagram(items, _, hooks) {
         return processWithBatching(items, w => {
             const chars = Array.from(normNFKC(w));
             for (let k = chars.length - 1; k > 0; k--) {
@@ -318,7 +314,7 @@ export const Logic = {
                 [chars[k], chars[j]] = [chars[j], chars[k]];
             }
             return chars.join('');
-        }, { yielder, batchSize });
+        }, hooks);
     },
 
     clone(items) {

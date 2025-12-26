@@ -97,10 +97,10 @@ export async function op_normalize_hiragana(srcBag) {
 
     let debugCount = 0;
     const fastConverter = async (s) => {
-        if (debugCount < 5) console.log(`[fastConverter] converting item #${debugCount}: "${s.slice(0, 20)}"...`);
+        if (debugCount < 500) console.log(`[fastConverter] converting item #${debugCount}: "${s.slice(0, 20)}"...`);
         try {
             const res = await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
-            if (debugCount < 5) console.log(`[fastConverter] done item #${debugCount}`);
+            if (debugCount < 500) console.log(`[fastConverter] done item #${debugCount}`);
             debugCount++;
             return res;
         } catch (e) {
