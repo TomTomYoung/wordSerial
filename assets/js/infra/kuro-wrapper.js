@@ -23,7 +23,7 @@ export async function ensureKuro() {
             throw new Error('Kuroshiro libs not loaded');
         }
         const k = new Kuroshiro();
-        await k.init(new KuromojiAnalyzer({ dictPath: "https://taka.github.io/wordSerial/data/dict" }));
+        await k.init(new KuromojiAnalyzer({ dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }));
         _kuro = k;
         return k;
     })();
