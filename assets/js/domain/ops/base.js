@@ -31,9 +31,13 @@ export async function runProgressiveOp(bagName, meta, logicFn, hooks = {}) {
     (async () => {
         try {
             console.log(`[Progressive] Start: ${bagName}`);
+            let updateCount = 0;
             const onChunk = (chunk) => {
                 for (const item of chunk) bag.items.add(item);
-                bag.updateProgress(bag.items.size, 0);
+                // Update progress less frequently (every 10th chunk) to reduce overhead
+                if (++updateCount % 10 === 0) {
+                    bag.updateProgress(bag.items.size, 0);
+                }
             };
 
             // Inject onChunk into hooks

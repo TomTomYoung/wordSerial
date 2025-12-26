@@ -97,14 +97,12 @@ export function mulberry32(a) {
  */
 export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null, concurrency = 5 } = {}) {
     console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}, Concurrency: ${concurrency}`);
-    const out = new Set();
     const itemsArray = Array.from(items);
+    let processedCount = 0;
 
     for (let i = 0; i < itemsArray.length; i += batchSize) {
         const batch = itemsArray.slice(i, i + batchSize);
-        console.log(`[processWithBatching] Processing batch ${Math.floor(i / batchSize) + 1}, items ${i}-${i + batch.length}`);
-
-        const chunkBuffer = [];
+        console.log(`[processWithBatching] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(itemsArray.length / batchSize)}, items ${i}-${i + batch.length}`);
 
         // Process batch with limited concurrency
         for (let j = 0; j < batch.length; j += concurrency) {
@@ -114,24 +112,23 @@ export async function processWithBatching(items, processFn, { yielder, batchSize
                 return null;
             })));
 
-            // Collect results
-            for (const result of results) {
-                if (result !== null && result !== undefined) {
-                    if (result instanceof Set || Array.isArray(result)) {
-                        for (const r of result) {
-                            out.add(r);
-                            if (onChunk) chunkBuffer.push(r);
+            // Stream results immediately to onChunk (no buffering)
+            if (onChunk) {
+                const chunk = [];
+                for (const result of results) {
+                    if (result !== null && result !== undefined) {
+                        if (result instanceof Set || Array.isArray(result)) {
+                            for (const r of result) chunk.push(r);
+                        } else {
+                            chunk.push(result);
                         }
-                    } else {
-                        out.add(result);
-                        if (onChunk) chunkBuffer.push(result);
                     }
                 }
+                if (chunk.length > 0) {
+                    onChunk(chunk);
+                    processedCount += chunk.length;
+                }
             }
-        }
-
-        if (onChunk && chunkBuffer.length) {
-            onChunk(chunkBuffer);
         }
 
         // Yield control to allow UI updates and GC
@@ -140,6 +137,7 @@ export async function processWithBatching(items, processFn, { yielder, batchSize
         }
     }
 
-    console.log(`[processWithBatching] Complete. Output size: ${out.size}`);
-    return out;
+    console.log(`[processWithBatching] Complete. Processed ${processedCount} items`);
+    // Return empty set since results are streamed via onChunk
+    return new Set();
 }
