@@ -94,8 +94,8 @@ export function mulberry32(a) {
  * @param {function(Array): void} [options.onChunk] - Callback for progressive updates
  * @returns {Promise<Set<any>>}
  */
-export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null } = {}) {
-    // console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}`);
+export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null, concurrency = 5 } = {}) {
+    console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}, Concurrency: ${concurrency}`);
     const out = new Set();
     let chunkBuffer = [];
 
@@ -111,28 +111,33 @@ export async function processWithBatching(items, processFn, { yielder, batchSize
 
     for (let i = 0; i < itemsArray.length; i += batchSize) {
         const batch = itemsArray.slice(i, i + batchSize);
+        // console.log(`[processWithBatching] Processing batch ${i / batchSize + 1}, items ${i}-${i + batch.length}`);
 
-        // Execute batch in parallel
-        const results = await Promise.all(batch.map(async (item) => {
-            try {
-                return await processFn(item);
-            } catch (e) {
-                console.error("Item processing error:", e);
-                return null;
-            }
-        }));
+        // Process batch with limited concurrency
+        for (let j = 0; j < batch.length; j += concurrency) {
+            const concurrentBatch = batch.slice(j, j + concurrency);
 
-        // Collect results
-        for (const res of results) {
-            if (res !== null && res !== undefined) {
-                if (res instanceof Set || Array.isArray(res)) {
-                    for (const r of res) {
-                        out.add(r);
-                        if (onChunk) chunkBuffer.push(r);
+            const results = await Promise.all(concurrentBatch.map(async (item) => {
+                try {
+                    return await processFn(item);
+                } catch (e) {
+                    console.error("Item processing error:", e);
+                    return null;
+                }
+            }));
+
+            // Collect results
+            for (const res of results) {
+                if (res !== null && res !== undefined) {
+                    if (res instanceof Set || Array.isArray(res)) {
+                        for (const r of res) {
+                            out.add(r);
+                            if (onChunk) chunkBuffer.push(r);
+                        }
+                    } else {
+                        out.add(res);
+                        if (onChunk) chunkBuffer.push(res);
                     }
-                } else {
-                    out.add(res);
-                    if (onChunk) chunkBuffer.push(res);
                 }
             }
         }
