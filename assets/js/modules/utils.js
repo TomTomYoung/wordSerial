@@ -10,12 +10,12 @@
  *   - DOM manipulation, Logging, Helper calculations
  */
 
-import * as Kuro from './kuro.js';
+import * as Kuro from '../lib/kuro.js';
 import { Logic, normNFKC, setsAreEqual, levenshtein } from './logic.js';
 
 /* ====== Exports from Logic/Kuro for back-compat/convenience ====== */
 export { normNFKC, setsAreEqual, levenshtein };
-export { toHiragana, toKatakana, toRomaji, ensureKuro } from './kuro.js';
+export { toHiragana, toKatakana, toRomaji, ensureKuro } from '../lib/kuro.js';
 
 /* ====== Generic Helpers ====== */
 export const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');

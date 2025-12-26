@@ -5,12 +5,12 @@
  * Handles DOM events, UI rendering, and wiring between Logic/Ops and Models.
  */
 
-import { REG } from './models.js';
-import * as Ops from './operations.js';
-import { el, log, appendOpLog, normNFKC, parseIntSafe, setBagStatusMessage } from './utils.js';
-import { renderBags, applyChoices } from './ui-bags.js';
-import { initHistory, captureState, undo, redo } from './history.js';
-import { initLoader, listJson } from './loader.js';
+import { REG } from './modules/models.js';
+import * as Ops from './modules/operations.js';
+import { el, log, appendOpLog, normNFKC, parseIntSafe, setBagStatusMessage } from './modules/utils.js';
+import { renderBags, applyChoices } from './modules/ui-bags.js';
+import { initHistory, captureState, undo, redo } from './modules/history.js';
+import { initLoader, listJson } from './modules/loader.js';
 
 /* ====== General Helper - runOp ====== */
 async function runOp(src, desc, action) {

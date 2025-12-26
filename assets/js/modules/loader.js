@@ -3,7 +3,7 @@ import { el, log, appendOpLog, uniq, normNFKC, setSelectOptions, nowISO } from '
 import { renderBags, applyChoices } from './ui-bags.js';
 import { captureState } from './history.js';
 
-const BAG_DIR = './bag/';
+const BAG_DIR = './data/bags/';
 
 function addBagFromWords(name, words, meta) {
     const b = new Bag(name, uniq(words.map(normNFKC).filter(Boolean)), meta || {});
