@@ -112,6 +112,8 @@ export function renderBags() {
             details.appendChild(errDiv);
         }
 
+
+
         const bar = document.createElement('div');
         bar.className = 'preview-bar';
         // Hide edit controls if processing
