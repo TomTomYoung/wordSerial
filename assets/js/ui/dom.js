@@ -21,20 +21,21 @@ import { nowISO } from '../core/utils.js';
 export const el = q => document.querySelector(q);
 
 /**
- * Returns a promise that resolves on the next frame (approx 0ms delay).
- * Allows the browser to render changes.
+ * Returns a promise that resolves after a delay to allow browser rendering and GC.
+ * Increased from 0ms to 50ms to give garbage collector time to run.
  * @returns {Promise<void>}
  */
 export function waitFrame() {
-    return new Promise(resolve => setTimeout(resolve, 0));
+    return new Promise(resolve => setTimeout(resolve, 50));
 }
 
 /**
  * Reads batch size from UI input or returns default.
+ * Increased default from 200 to 1000 for better performance with large datasets.
  * @returns {number}
  */
 export function getBatchSize() {
-    return Math.max(1, parseInt(el('#batchSize')?.value || 200, 10));
+    return Math.max(1, parseInt(el('#batchSize')?.value || 1000, 10));
 }
 
 /**
