@@ -13,9 +13,29 @@
 import { Bag, setNextId, getNextId } from './bag.js';
 
 export class BagRegistry {
-    constructor() { this._bags = []; }
+    constructor() {
+        this._bags = [];
+        this._listeners = new Set();
+    }
 
-    add(b) { this._bags.push(b); return b.id; }
+    on(event, cb) {
+        if (event === 'change') this._listeners.add(cb);
+    }
+
+    off(event, cb) {
+        if (event === 'change') this._listeners.delete(cb);
+    }
+
+    notify() {
+        for (const cb of this._listeners) cb();
+    }
+
+    add(b) {
+        this._bags.push(b);
+        this.notify();
+        return b.id;
+    }
+
     get(id) { return this._bags.find(x => x.id === Number(id)); }
     all() { return this._bags.slice(); }
     indexOf(id) { return this._bags.findIndex(x => x.id === Number(id)); }
@@ -24,6 +44,7 @@ export class BagRegistry {
         const idx = this.indexOf(id);
         if (idx < 0) return false;
         this._bags.splice(idx, 1);
+        this.notify();
         return true;
     }
 
@@ -39,7 +60,7 @@ export class BagRegistry {
         delete clonedMeta.reapply_status;
         delete clonedMeta.reapply_error;
         const clone = new Bag(`${src.name}${nameSuffix}`, Array.from(src.items), clonedMeta);
-        this.add(clone);
+        this.add(clone); // add calls notify
         return clone;
     }
 
@@ -52,6 +73,7 @@ export class BagRegistry {
         if (insertIdx < 0) return false;
         if (!placeBefore) insertIdx += 1;
         this._bags.splice(insertIdx, 0, bag);
+        this.notify();
         return true;
     }
 
@@ -81,12 +103,14 @@ export class BagRegistry {
             // Handle empty init or raw array (though raw array shouldn't happen with correct logic, but safe to handle)
             this._bags = [];
             setNextId(1);
+            this.notify();
             return;
         }
 
         if (!snapshot.bags) {
             this._bags = [];
             setNextId(1);
+            this.notify();
             return;
         }
 
@@ -98,6 +122,7 @@ export class BagRegistry {
             return bag;
         });
         setNextId(snapshot.nextId || (Math.max(0, ...snapshot.bags.map(b => b.id)) + 1));
+        this.notify();
     }
 }
 

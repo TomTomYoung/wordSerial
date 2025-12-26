@@ -30,6 +30,13 @@ let progressPoller = null;
 let lastProcessingIds = new Set();
 
 export function startProgressPoller() {
+    // Subscribe to Registry changes for reliable updates
+    REG.on('change', () => {
+        renderBags();
+        applyChoices();
+        // captureState(); // Optional: might be too frequent, depends on when notify is called
+    });
+
     if (progressPoller) return;
     progressPoller = setInterval(() => {
         const allBags = REG.all();

@@ -43,6 +43,7 @@ export async function runProgressiveOp(bagName, meta, logicFn, hooks = {}) {
 
             console.log(`[Progressive] Finish: ${bagName}, Size=${bag.items.size}`);
             bag.finish();
+            REG.notify(); // Trigger UI update
         } catch (e) {
             console.error("Progressive Op Failed", e);
             bag.meta.status = 'error';
