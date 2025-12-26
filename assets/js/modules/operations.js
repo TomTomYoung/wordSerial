@@ -3,6 +3,7 @@ import {
     toHiragana, toKatakana, toRomaji, waitFrame,
     nowISO, appendOpLog, getBatchSize
 } from './utils.js';
+import * as Kuro from '../lib/kuro.js';
 import { Logic, normNFKC, setsAreEqual } from './logic.js';
 
 /* ====== Helpers ====== */
@@ -43,37 +44,18 @@ async function normQuery(val, normalizeBefore) {
 /* ====== Ops (Serial) ====== */
 
 export async function op_normalize_hiragana(srcBag) {
+    await Kuro.ensureKuro();
+    const K = Kuro.getK();
+    const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+
     const out = await Logic.normalize(srcBag.items, null, {
         ...getHooks(),
-        converter: toHiragana
+        converter: fastConverter
     });
     return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
 }
 
 export async function op_normalize_katakana(srcBag) {
-    // Logic.normalize uses converter, so we can reuse it with katakana converter?
-    // Logic.normalize implementation: const res = converter ? await converter(w) : w; return res ? res.replace(/\s+/g, '') : null;
-    // Yes, essentially same structure.
-    const out = await Logic.normalize(srcBag.items, null, {
-        ...getHooks(),
-        converter: toKatakana
-    });
-    return new Bag(`${srcBag.name} → normalize(katakana)`, out, { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' });
-}
-
-export async function op_to_romaji(srcBag, normalizeBefore = false) {
-    const srcItems = await getSourceItems(srcBag, normalizeBefore);
-    const out = await Logic.toRomaji(srcItems, null, {
-        ...getHooks(),
-        converter: toRomaji
-    });
-    return new Bag(`${srcBag.name} → to_romaji`, out, { op: 'to_romaji', src: srcBag.id, normalized: 'romaji', normalize_before: normalizeBefore });
-}
-
-export async function op_delete_chars(srcBag, chars, normalizeInput = false, normalizeBefore = false) {
-    const del = normalizeInput ? await toHiragana(chars) : normNFKC(chars);
-    const srcItems = await getSourceItems(srcBag, normalizeBefore);
-    const out = await Logic.deleteChars(srcItems, { chars: del }, getHooks());
 
     // Logic.deleteChars returns modified items. 
     // Original op_delete_chars logic: "if (wNew !== w) out.add(wNew);" -> Only added if changed?

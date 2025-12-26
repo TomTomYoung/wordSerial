@@ -1,28 +1,38 @@
 
 import { REG } from './models.js';
 import {
-    toHiragana, toKatakana, toRomaji, waitFrame,
-    nowISO, appendOpLog
+    waitFrame, nowISO, appendOpLog
 } from './utils.js';
 import { Logic, setsAreEqual } from './logic.js';
 import { getHooks, getSourceItems, normQuery } from './operations.js';
+import * as Kuro from '../lib/kuro.js';
+import { normNFKC } from './logic.js'; // Ensure normNFKC is available
 
 /* ====== OP_REBUILDERS ====== */
 export const OP_REBUILDERS = {
     async normalize_hiragana(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
-        return Logic.normalize(src.items, null, { ...getHooks(), converter: toHiragana });
+        await Kuro.ensureKuro();
+        const K = Kuro.getK();
+        const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
+        return Logic.normalize(src.items, null, { ...getHooks(), converter: fastConverter });
     },
     async normalize_katakana(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
-        return Logic.normalize(src.items, null, { ...getHooks(), converter: toKatakana });
+        await Kuro.ensureKuro();
+        const K = Kuro.getK();
+        const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
+        return Logic.normalize(src.items, null, { ...getHooks(), converter: fastConverter });
     },
     async to_romaji(meta) {
         const src = REG.get(meta.src);
         if (!src) throw new Error('source bag not found');
-        return Logic.toRomaji(await getSourceItems(src, !!meta.normalize_before), null, { ...getHooks(), converter: toRomaji });
+        await Kuro.ensureKuro();
+        const K = Kuro.getK();
+        const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
+        return Logic.toRomaji(await getSourceItems(src, !!meta.normalize_before), null, { ...getHooks(), converter: fastConverter });
     },
     async delete_chars(meta) {
         const src = REG.get(meta.src);
