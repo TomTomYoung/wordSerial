@@ -26,8 +26,24 @@ export class Bag {
         this.meta = Object.assign({}, meta);
         if (!this.meta.created_at) this.meta.created_at = nowISO();
         this.meta.size = this.items.size;
+
+        // Progressive State
+        this.status = this.meta.status || 'ready'; // 'ready' | 'processing'
+        this.progress = { current: this.items.size, total: 0 };
     }
-    label() { return `[${this.id}] ${this.name} (${this.items.size})`; }
+    label() { return `[${this.id}] ${this.name} (${this.items.size})${this.status === 'processing' ? ' ⏳' : ''}`; }
+
+    updateProgress(current, total) {
+        this.progress.current = current;
+        this.progress.total = total;
+    }
+
+    finish() {
+        this.status = 'ready';
+        this.meta.status = 'ready'; // Persist
+        this.meta.size = this.items.size;
+        this.meta.completed_at = nowISO();
+    }
 }
 
 export class BagRegistry {
@@ -69,10 +85,12 @@ export class BagRegistry {
         return true;
     }
     choices() {
-        return this._bags.map(b => ({
-            label: b.label(),
-            value: String(b.id)
-        }));
+        return this._bags
+            .filter(b => b.status !== 'processing')
+            .map(b => ({
+                label: b.label(),
+                value: String(b.id)
+            }));
     }
     serialize() {
         return {

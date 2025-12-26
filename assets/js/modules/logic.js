@@ -67,20 +67,37 @@ function mulberry32(a) {
 /* ====== Logic Functions ====== */
 
 // Helper to iterate with batching
-async function processWithBatching(items, processFn, { yielder, batchSize = 200 } = {}) {
+async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null } = {}) {
     const out = new Set();
     let i = 0;
+    let chunkBuffer = [];
+
+    const flushChunk = () => {
+        if (onChunk && chunkBuffer.length) {
+            onChunk(chunkBuffer);
+            chunkBuffer = [];
+        }
+    };
+
     for (const item of items) {
         const results = await processFn(item);
         if (results !== null && results !== undefined) {
             if (results instanceof Set || Array.isArray(results)) {
-                for (const r of results) out.add(r);
+                for (const r of results) {
+                    out.add(r);
+                    if (onChunk) chunkBuffer.push(r);
+                }
             } else {
                 out.add(results);
+                if (onChunk) chunkBuffer.push(results);
             }
         }
-        if (yielder && ++i % batchSize === 0) await yielder();
+        if (yielder && ++i % batchSize === 0) {
+            flushChunk();
+            await yielder();
+        }
     }
+    flushChunk();
     return out;
 }
 

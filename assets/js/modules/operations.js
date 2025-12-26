@@ -43,33 +43,73 @@ async function normQuery(val, normalizeBefore) {
 
 /* ====== Ops (Serial) ====== */
 
+// Helper to run operations progressively
+async function runProgressiveOp(bagName, meta, logicFn) {
+    // Create Bag in 'processing' state
+    const bag = new Bag(bagName, [], { ...meta, status: 'processing' });
+    REG.add(bag); // Register immediately so it appears in UI
+
+    // Run logic in background
+    (async () => {
+        try {
+            const onChunk = (chunk) => {
+                for (const item of chunk) bag.items.add(item);
+                bag.updateProgress(bag.items.size, 0); // Total unknown for filters, or we could pass src size
+                // Trigger UI update check? Ideally UI polls or we have an event. 
+                // For now, simple object update. UI needs to react.
+            };
+
+            // Inject onChunk into hooks
+            const hooks = { ...getHooks(), onChunk };
+
+            await logicFn(hooks);
+
+            bag.finish();
+        } catch (e) {
+            console.error("Progressive Op Failed", e);
+            bag.meta.status = 'error';
+            bag.meta.error = e.message;
+        }
+    })();
+
+    return bag;
+}
+
+export async function op_clone(srcBag) {
+    // Special Case: Clone works on Processing bags too (Snapshot)
+    const items = new Set(srcBag.items); // Snapshot current items
+    const name = `${srcBag.name} (copy)`;
+    return new Bag(name, items, {
+        op: 'clone',
+        src: srcBag.id,
+        status: 'ready' // Explicitly ready
+    });
+}
+
 export async function op_normalize_hiragana(srcBag) {
     await Kuro.ensureKuro();
     const K = Kuro.getK();
     const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
 
-    const out = await Logic.normalize(srcBag.items, null, {
-        ...getHooks(),
-        converter: fastConverter
-    });
-    return new Bag(`${srcBag.name} → normalize(hiragana)`, out, { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' });
+    return runProgressiveOp(`${srcBag.name} → normalize(hiragana)`,
+        { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' },
+        async (hooks) => {
+            await Logic.normalize(srcBag.items, null, { ...hooks, converter: fastConverter });
+        }
+    );
 }
 
 export async function op_normalize_katakana(srcBag) {
+    await Kuro.ensureKuro();
+    const K = Kuro.getK();
+    const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
 
-    // Logic.deleteChars returns modified items. 
-    // Original op_delete_chars logic: "if (wNew !== w) out.add(wNew);" -> Only added if changed?
-    // Wait, original line 80: `if (wNew !== w) out.add(wNew);`
-    // Yes. My Logic.deleteChars implementation does `return wNew !== w ? wNew : null`.
-    // So if it returns a Set of non-nulls, it matches the original behavior.
-
-    return new Bag(`${srcBag.name} → delete(${del || '∅'})`, out, {
-        op: 'delete_chars',
-        src: srcBag.id,
-        deleted: del,
-        normalize_input: normalizeInput,
-        normalize_before: normalizeBefore
-    });
+    return runProgressiveOp(`${srcBag.name} → normalize(katakana)`,
+        { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' },
+        async (hooks) => {
+            await Logic.normalize(srcBag.items, null, { ...hooks, converter: fastConverter });
+        }
+    );
 }
 
 export async function op_to_upper(srcBag, normalizeBefore = false) {
