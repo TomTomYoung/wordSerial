@@ -1,7 +1,25 @@
-/* ====== 共通ユーティリティ ====== */
+/**
+ * utils.js
+ *
+ * Generic UI utilities and helpers for the application.
+ *
+ * INPUT:
+ *   - DOM elements, specific app logic arguments
+ *
+ * OUTPUT:
+ *   - DOM manipulation, Logging, Helper calculations
+ */
+
+import * as Kuro from './kuro.js';
+import { Logic, normNFKC, setsAreEqual, levenshtein } from './logic.js';
+
+/* ====== Exports from Logic/Kuro for back-compat/convenience ====== */
+export { normNFKC, setsAreEqual, levenshtein };
+export { toHiragana, toKatakana, toRomaji, ensureKuro } from './kuro.js';
+
+/* ====== Generic Helpers ====== */
 export const nowISO = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 export const uniq = a => Array.from(new Set(a));
-export const normNFKC = s => (s || "").normalize('NFKC').trim();
 export const el = q => document.querySelector(q);
 export const parseIntSafe = (value, fallback = 0) => {
     const n = Number.parseInt(value, 10);
@@ -16,6 +34,7 @@ export function waitFrame() {
     return new Promise(resolve => setTimeout(resolve, 0));
 }
 
+/* ====== Logging ====== */
 export function log(msg) {
     const verbose = el('#ckVerboseLog')?.checked;
     const stamped = `[${nowISO()}] ${msg}`;
@@ -43,258 +62,21 @@ export function appendOpLog(msg) {
     while (host.children.length > 150) host.removeChild(host.lastChild);
 }
 
-/* Levenshtein Distance */
-export function levenshtein(s, t) {
-    if (!s) return t.length;
-    if (!t) return s.length;
-    const d = [];
-    const n = s.length;
-    const m = t.length;
-    for (let i = 0; i <= n; i++) d[i] = [i];
-    for (let j = 0; j <= m; j++) d[0][j] = j;
-    for (let i = 1; i <= n; i++) {
-        for (let j = 1; j <= m; j++) {
-            const cost = s[i - 1] === t[j - 1] ? 0 : 1;
-            d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
-        }
-    }
-    return d[n][m];
-}
+/* ====== Random Seeds (Pure but used in UI/Ops) ====== */
+// Re-exporting or keeping here if they are only used for UI-side seed generation?
+// Logic.js has its own internal implementations to be self-contained. 
+// If `operations.js` uses Logic.sample, it passes the seed string.
+// `operations.js` does NOT use these functions directly anymore, it delegates to Logic.
+// So we can technically remove them if unused.
+// Checking operations.js references...
+// `operations.js` (refactored) calls `Logic.sample` passing `meta.seed`.
+// `Logic.sample` uses its own `makeSeedFromString` / `mulberry32`.
+// So we can remove these from here to avoid duplication confusion.
+// ...But wait, let's keep them ONLY if `app.js` needs them?
+// `app.js` does not seem to use `makeSeedFromString`.
+// Safe to remove.
 
-export function setsAreEqual(a, b) {
-    if (a === b) return true;
-    if (!(a instanceof Set) || !(b instanceof Set)) return false;
-    if (a.size !== b.size) return false;
-    for (const value of a) {
-        if (!b.has(value)) return false;
-    }
-    return true;
-}
-
-/* Random Seeds */
-export function makeSeedFromString(seed) {
-    if (typeof seed === 'number') return seed >>> 0;
-    let h = 1779033703 ^ (seed?.length || 0);
-    for (let i = 0; i < (seed?.length || 0); i += 1) {
-        h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-    }
-    return (Math.imul(h ^ (h >>> 16), 2246822507) ^ Math.imul(h ^ (h >>> 13), 3266489909)) >>> 0;
-}
-
-export function mulberry32(a) {
-    return function () {
-        let t = (a += 0x6d2b79f5);
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
-
-/* ====== Kuroshiro（かな正規化） ====== */
-let K = null, kuroReady = false;
-let kuroFetchPatched = false;
-let kuroInitPromise = null;
-let kuroFailed = false; // Prevent retry loop if init fails
-const kuroFetchLog = [];
-const kuroInitTrace = [];
-const MAX_KURO_CONVERT_LOGS = 100;
-const KURO_CONVERT_LOG_AGG_INTERVAL = 20;
-let kuroConvertLogCount = 0;
-const kuroConvertStepCounts = new Map();
-
-function recordKuroInit(step) {
-    const entry = { at: nowISO(), step };
-    kuroInitTrace.push(entry);
-    if (kuroInitTrace.length > 100) kuroInitTrace.shift();
-    log(`[kuro-init] ${step}`);
-    if (typeof window !== 'undefined') {
-        window.__kuroInitTrace = kuroInitTrace.slice();
-    }
-}
-
-function recordKuroConvert(step) {
-    if (kuroConvertLogCount >= MAX_KURO_CONVERT_LOGS) return;
-    kuroConvertLogCount += 1;
-    const current = (kuroConvertStepCounts.get(step) || 0) + 1;
-    kuroConvertStepCounts.set(step, current);
-    if (current === 1 || current % KURO_CONVERT_LOG_AGG_INTERVAL === 0) {
-        const suffix = current === 1 ? '' : ` (x${current})`;
-        recordKuroInit(`${step}${suffix}`);
-    }
-}
-
-function recordKuroFetch(original, fixed) {
-    const entry = { at: nowISO(), original, fixed, same: original === fixed };
-    kuroFetchLog.push(entry);
-    if (kuroFetchLog.length > 50) kuroFetchLog.shift();
-
-    if (fixed !== original) {
-        log(`kuromoji URL rewrite: ${original} -> ${fixed}`);
-    } else if (typeof window?.location?.host === 'string' && original?.includes(window.location.host)) {
-        log(`kuromoji URL stayed on host (${window.location.host}): ${original}`);
-    }
-
-    // Expose for manual inspection in DevTools
-    if (typeof window !== 'undefined') {
-        window.__kuromojiFetchLog = kuroFetchLog;
-    }
-}
-
-function normalizeCdnUrl(url) {
-    if (!url || typeof url !== 'string') return url;
-    const addMissingSlash = url.replace(/((?:https?:)?\/\/cdn\.jsdelivr\.net\/npm\/kuromoji@0\.1\.2\/dict)(?=[^\/])/g, '$1/');
-    if (addMissingSlash.startsWith('https://cdn.jsdelivr.net/')) {
-        const fixed = addMissingSlash;
-        recordKuroFetch(url, fixed);
-        return fixed;
-    }
-    if (addMissingSlash.startsWith('http://cdn.jsdelivr.net/')) {
-        const fixed = addMissingSlash.replace('http:', 'https:');
-        recordKuroFetch(url, fixed);
-        return fixed;
-    }
-    if (addMissingSlash.startsWith('https:/cdn.jsdelivr.net/')) {
-        const fixed = addMissingSlash.replace('https:/cdn.jsdelivr.net/', 'https://cdn.jsdelivr.net/');
-        recordKuroFetch(url, fixed);
-        return fixed;
-    }
-    // path.join() inside kuromoji drops one of the slashes (https:/...), which then
-    // becomes a host-relative path on GitHub Pages and 404s. Fix a few known patterns.
-    // The previous regex handles the most common case. This is a fallback for other patterns.
-    const finalFixed = addMissingSlash.replace(/^(https?:)\/([^/])/, '$1//$2');
-    if (finalFixed !== url) {
-        recordKuroFetch(url, finalFixed);
-        return finalFixed;
-    }
-    recordKuroFetch(url, url); // Record even if no change
-    return url;
-}
-
-function patchKuroFetch() {
-    if (kuroFetchPatched) return;
-    kuroFetchPatched = true;
-    recordKuroInit('patchKuroFetch: start');
-
-    if (typeof window.fetch === 'function') {
-        const originalFetch = window.fetch;
-        window.fetch = (...args) => {
-            if (typeof args[0] === 'string') {
-                const fixed = normalizeCdnUrl(args[0]);
-                if (fixed !== args[0]) console.debug('Rewriting kuromoji fetch URL:', args[0], '->', fixed);
-                args[0] = fixed;
-            }
-            return originalFetch.apply(window, args);
-        };
-        recordKuroInit('patchKuroFetch: hooked window.fetch');
-    }
-
-    if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype?.open) {
-        const originalOpen = window.XMLHttpRequest.prototype.open;
-        window.XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-            const fixed = normalizeCdnUrl(url);
-            if (fixed !== url) console.debug('Rewriting kuromoji XHR URL:', url, '->', fixed);
-            return originalOpen.call(this, method, fixed, ...rest);
-        };
-        recordKuroInit('patchKuroFetch: hooked XMLHttpRequest.open');
-    }
-}
-
-export async function ensureKuro() {
-    if (kuroReady) return;
-    if (kuroFailed) throw new Error("Kuroshiro initialization failed previously"); // Fail fast
-    if (kuroInitPromise) return kuroInitPromise;
-
-    kuroInitPromise = (async () => {
-        try {
-            recordKuroInit('ensureKuro: start');
-            patchKuroFetch();
-            if (typeof window.require === 'function') {
-                const pathModule = window.require('path');
-                if (pathModule && pathModule.join) {
-                    const originalJoin = pathModule.join;
-                    pathModule.join = function (...args) {
-                        if (args[0] && /^https?:\/\//.test(args[0])) {
-                            let result = args[0];
-                            for (let i = 1; i < args.length; i++) {
-                                if (!result.endsWith('/')) result += '/';
-                                result += args[i].replace(/^\/+/, '');
-                            }
-                            return result;
-                        }
-                        return originalJoin.apply(this, args);
-                    };
-                    recordKuroInit('ensureKuro: patched path.join for URL handling');
-                }
-            }
-
-            if (!window.Kuroshiro) await new Promise(r => setTimeout(r, 500));
-
-            let KuroshiroConstructor = window.Kuroshiro;
-            if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
-                KuroshiroConstructor = KuroshiroConstructor.default;
-            }
-
-            if (typeof KuroshiroConstructor !== 'function') throw new Error("window.Kuroshiro is not a constructor");
-            recordKuroInit('ensureKuro: Kuroshiro constructor detected');
-
-            let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro.Analyzer?.KuromojiAnalyzer;
-            if (!Analyzer) throw new Error("KuromojiAnalyzer not found");
-            recordKuroInit('ensureKuro: KuromojiAnalyzer detected, starting init');
-
-            K = new KuroshiroConstructor();
-            const analyzer = new Analyzer({
-                dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/'
-            });
-
-            const initPromise = K.init(analyzer);
-            const timeoutMs = 8000;
-            await Promise.race([
-                initPromise,
-                new Promise((_, reject) => setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs))
-            ]);
-            kuroReady = true;
-            recordKuroInit('ensureKuro: Kuroshiro initialized successfully');
-            console.log("Kuroshiro initialized successfully");
-        } catch (e) {
-            kuroFailed = true;
-            recordKuroInit(`ensureKuro: init failed (${e?.message || e})`);
-            console.warn("Kuroshiro init failed:", e);
-            log(`Kuroshiro init failed: ${e?.message || e}`); // Show error to user
-            throw e; // Propagate error!
-        } finally {
-            kuroInitPromise = null;
-        }
-    })();
-    return kuroInitPromise;
-}
-
-// NOTE: fallback helpers removed/unused as requested
-
-export async function toHiragana(s) {
-    if (!s) return '';
-    recordKuroConvert('toHiragana: start');
-    await ensureKuro(); // Throws if failed
-    if (!K) throw new Error("Kuroshiro not initialized");
-    return await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
-}
-
-export async function toKatakana(s) {
-    if (!s) return '';
-    recordKuroConvert('toKatakana: start');
-    await ensureKuro(); // Throws if failed
-    if (!K) throw new Error("Kuroshiro not initialized");
-    return await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
-}
-
-export async function toRomaji(s) {
-    if (!s) return '';
-    recordKuroConvert('toRomaji: start');
-    await ensureKuro(); // Throws if failed
-    if (!K) throw new Error("Kuroshiro not initialized");
-    return await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
-}
-
+/* ====== DOM Component Helpers ====== */
 export function findBagStatusElement(bagId) {
     return document.querySelector(`.bag-card[data-id="${bagId}"] [data-k="status"]`);
 }

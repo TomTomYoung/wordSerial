@@ -1,3 +1,18 @@
+/**
+ * models.js
+ *
+ * Data models for the WordSerial application.
+ * Manages Bag (Set of words) and BagRegistry (Collection of Bags).
+ *
+ * INPUT:
+ *   - Raw strings (names, items) for Bag creation.
+ *   - Snapshot objects for restoration.
+ *
+ * OUTPUT:
+ *   - Bag instances.
+ *   - Serialized state objects.
+ */
+
 import { nowISO } from './utils.js';
 
 /* ====== Bag / Registry ====== */

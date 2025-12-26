@@ -1,3 +1,16 @@
+/**
+ * app.js
+ *
+ * Main entry point for the WordSerial application.
+ * Handles DOM events, UI rendering, and wiring between Logic/Ops and Models.
+ *
+ * INPUT:
+ *   - User interaction (Clicks, Inputs, File drops).
+ *
+ * OUTPUT:
+ *   - DOM updates (HTML rendering, Status messages).
+ */
+
 /* ====== 履歴管理 ====== */
 import { REG, Bag } from './models.js';
 import * as Ops from './operations.js';
@@ -798,72 +811,46 @@ function renderBags() {
             e.dataTransfer?.setData('text/plain', String(b.id));
             if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
         });
+
         details.addEventListener('dragend', () => {
-            dragSourceId = null;
             details.classList.remove('dragging');
-            details.classList.remove('drag-over');
         });
+
         details.addEventListener('dragover', e => {
             e.preventDefault();
-            if (dragSourceId === null || dragSourceId === b.id) return;
-            details.classList.add('drag-over');
-            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+            e.dataTransfer.dropEffect = 'move';
+            details.classList.add('drag-target');
         });
+
         details.addEventListener('dragleave', () => {
-            details.classList.remove('drag-over');
+            details.classList.remove('drag-target');
         });
+
         details.addEventListener('drop', e => {
             e.preventDefault();
-            details.classList.remove('drag-over');
-            const sourceId = dragSourceId;
-            dragSourceId = null;
-            if (sourceId === null || sourceId === b.id) return;
-            const rect = details.getBoundingClientRect();
-            const placeBefore = e.clientY < rect.top + rect.height / 2;
-            if (REG.moveRelative(sourceId, b.id,
-                placeBefore)) {
-                applyChoices();
-                renderBags();
-                captureState();
-                appendOpLog(`↕ Reorder Bag [${sourceId}]
-                ${placeBefore ? '↑ before' : '↓ after'} [${b.id}]`);
+            details.classList.remove('drag-target');
+            const srcId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            if (!Number.isNaN(srcId) && srcId !== b.id) {
+                // Move srcId to before/after b.id
+                // Simple logic: insert before this bag
+                if (REG.moveRelative(srcId, b.id, true)) {
+                    renderBags();
+                    applyChoices();
+                    captureState();
+                }
             }
         });
+
         host.appendChild(details);
     }
 }
 
-/* Initialization */
-el('#btnLoad').addEventListener('click', loadSelectedJson);
-el('#btnFileSelect').addEventListener('click', () => el('#filePick').click());
-
-el('#btnApplyAll').addEventListener('click', async () => {
-    const btn = el('#btnApplyAll');
-    btn.disabled = true;
-    try {
-        await Ops.reapplySeries(null, {
-            onStatus: (bagId, msg) => setBagStatusMessage(bagId, msg),
-            onUpdate: () => {
-                renderBags();
-                applyChoices();
-                captureState();
-            }
-        });
-    } finally {
-        btn.disabled = false;
-    }
-});
-
-/* Tabs */
-document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        const tab = btn.dataset.tab;
-        el(`.tab-panel[data-panel="${tab}"]`).classList.add('active');
+/* ====== Initialization ====== */
+el('#btnList')?.addEventListener('click', listJson);
+el('#selFile')?.addEventListener('change', loadSelectedJson);
+window.addEventListener('DOMContentLoaded', () => {
+    initHistory();
+    listJson().then(() => {
+        // Auto-load if only one file? No, just list.
     });
 });
-
-/* Initial load */
-listJson();
