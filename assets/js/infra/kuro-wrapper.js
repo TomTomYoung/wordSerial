@@ -4,7 +4,7 @@
  * @description
  * Initialises the Kuroshiro library with the Kuromoji analyzer.
  * Handles loading states and provides a simplified API for text conversion.
- * 
+ *
  * @module infra/kuro-wrapper
  * @requires kuroshiro (global)
  * @requires kuroshiro-analyzer-kuromoji (global)
@@ -13,19 +13,59 @@
 
 let _kuro = null;
 let _initPromise = null;
+let _failed = false;
 
 export async function ensureKuro() {
     if (_kuro) return _kuro;
+    if (_failed) throw new Error("Kuroshiro initialization failed previously");
     if (_initPromise) return _initPromise;
 
     _initPromise = (async () => {
-        if (!window.Kuroshiro || !window.KuromojiAnalyzer) {
-            throw new Error('Kuroshiro libs not loaded');
+        try {
+            // Wait for global scripts to load
+            if (!window.Kuroshiro) {
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            // Get Kuroshiro constructor
+            let KuroshiroConstructor = window.Kuroshiro;
+            if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
+                KuroshiroConstructor = KuroshiroConstructor.default;
+            }
+            if (typeof KuroshiroConstructor !== 'function') {
+                throw new Error("window.Kuroshiro is not a constructor");
+            }
+
+            // Get Analyzer - try multiple locations
+            let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro?.Analyzer?.KuromojiAnalyzer;
+            if (!Analyzer) {
+                throw new Error("KuromojiAnalyzer not found");
+            }
+
+            // Initialize Kuroshiro
+            const k = new KuroshiroConstructor();
+            const analyzer = new Analyzer({
+                dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
+            });
+
+            const initPromise = k.init(analyzer);
+            const timeoutMs = 8000;
+            await Promise.race([
+                initPromise,
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs)
+                )
+            ]);
+
+            _kuro = k;
+            return k;
+        } catch (e) {
+            _failed = true;
+            console.error("Kuroshiro init failed:", e);
+            throw e;
+        } finally {
+            _initPromise = null;
         }
-        const k = new Kuroshiro();
-        await k.init(new KuromojiAnalyzer({ dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }));
-        _kuro = k;
-        return k;
     })();
     return _initPromise;
 }
