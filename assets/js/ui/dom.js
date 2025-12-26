@@ -22,11 +22,11 @@ export const el = q => document.querySelector(q);
 
 /**
  * Returns a promise that resolves after a delay to allow browser rendering and GC.
- * Increased from 0ms to 50ms to give garbage collector time to run.
+ * Increased to 100ms to give garbage collector adequate time for heavy operations like Kuroshiro.
  * @returns {Promise<void>}
  */
 export function waitFrame() {
-    return new Promise(resolve => setTimeout(resolve, 50));
+    return new Promise(resolve => setTimeout(resolve, 100));
 }
 
 /**

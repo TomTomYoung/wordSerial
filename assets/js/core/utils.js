@@ -91,36 +91,41 @@ export function mulberry32(a) {
  * @param {object} options - Options
  * @param {function(): Promise<void>} [options.yielder] - Function to yield control (e.g., waitFrame)
  * @param {number} [options.batchSize=200] - Number of items to process before yielding
+ * @param {number} [options.concurrency=5] - Max number of items to process concurrently within a batch
  * @param {function(Array): void} [options.onChunk] - Callback for progressive updates
  * @returns {Promise<Set<any>>}
  */
-export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null } = {}) {
-    console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}`);
+export async function processWithBatching(items, processFn, { yielder, batchSize = 200, onChunk = null, concurrency = 5 } = {}) {
+    console.log(`[processWithBatching] Start. Items size: ${items instanceof Set ? items.size : items.length}, BatchSize: ${batchSize}, Concurrency: ${concurrency}`);
     const out = new Set();
     const itemsArray = Array.from(items);
 
     for (let i = 0; i < itemsArray.length; i += batchSize) {
         const batch = itemsArray.slice(i, i + batchSize);
-        console.log(`[processWithBatching] Processing batch ${i / batchSize + 1}, items ${i}-${i + batch.length}`);
+        console.log(`[processWithBatching] Processing batch ${Math.floor(i / batchSize) + 1}, items ${i}-${i + batch.length}`);
 
-        // Process batch in parallel using Promise.all
-        const results = await Promise.all(batch.map(item => processFn(item).catch(err => {
-            console.warn(`[processWithBatching] Error processing item:`, err);
-            return null;
-        })));
-
-        // Collect results and trigger onChunk callback
         const chunkBuffer = [];
-        for (const result of results) {
-            if (result !== null && result !== undefined) {
-                if (result instanceof Set || Array.isArray(result)) {
-                    for (const r of result) {
-                        out.add(r);
-                        if (onChunk) chunkBuffer.push(r);
+
+        // Process batch with limited concurrency
+        for (let j = 0; j < batch.length; j += concurrency) {
+            const concurrentBatch = batch.slice(j, j + concurrency);
+            const results = await Promise.all(concurrentBatch.map(item => processFn(item).catch(err => {
+                console.warn(`[processWithBatching] Error processing item:`, err);
+                return null;
+            })));
+
+            // Collect results
+            for (const result of results) {
+                if (result !== null && result !== undefined) {
+                    if (result instanceof Set || Array.isArray(result)) {
+                        for (const r of result) {
+                            out.add(r);
+                            if (onChunk) chunkBuffer.push(r);
+                        }
+                    } else {
+                        out.add(result);
+                        if (onChunk) chunkBuffer.push(result);
                     }
-                } else {
-                    out.add(result);
-                    if (onChunk) chunkBuffer.push(result);
                 }
             }
         }
