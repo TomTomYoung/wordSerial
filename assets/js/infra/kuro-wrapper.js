@@ -22,40 +22,14 @@ export async function ensureKuro() {
 
     _initPromise = (async () => {
         try {
-            // Wait for global scripts to load
-            if (!window.Kuroshiro) {
-                await new Promise(r => setTimeout(r, 500));
+            // Match the working single-file version exactly
+            if (!window.Kuroshiro || !window.Kuroshiro.Analyzer || !window.Kuroshiro.Analyzer.KuromojiAnalyzer) {
+                throw new Error('Kuroshiro or KuromojiAnalyzer not loaded');
             }
 
-            // Get Kuroshiro constructor
-            let KuroshiroConstructor = window.Kuroshiro;
-            if (typeof KuroshiroConstructor !== 'function' && KuroshiroConstructor?.default) {
-                KuroshiroConstructor = KuroshiroConstructor.default;
-            }
-            if (typeof KuroshiroConstructor !== 'function') {
-                throw new Error("window.Kuroshiro is not a constructor");
-            }
-
-            // Get Analyzer - try multiple locations
-            let Analyzer = window.KuromojiAnalyzer || window.Kuroshiro?.Analyzer?.KuromojiAnalyzer;
-            if (!Analyzer) {
-                throw new Error("KuromojiAnalyzer not found");
-            }
-
-            // Initialize Kuroshiro
-            const k = new KuroshiroConstructor();
-            const analyzer = new Analyzer({
-                dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
-            });
-
-            const initPromise = k.init(analyzer);
-            const timeoutMs = 8000;
-            await Promise.race([
-                initPromise,
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error(`Kuromoji init timeout after ${timeoutMs}ms`)), timeoutMs)
-                )
-            ]);
+            const k = new window.Kuroshiro();
+            const Analyzer = window.Kuroshiro.Analyzer.KuromojiAnalyzer;
+            await k.init(new Analyzer({ dictPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict' }));
 
             _kuro = k;
             return k;
