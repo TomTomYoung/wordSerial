@@ -7,6 +7,7 @@
 
 import { REG } from './modules/models.js';
 import * as Ops from './modules/operations.js';
+import { reapplySeries } from './modules/runner.js';
 import { el, log, appendOpLog, normNFKC, parseIntSafe, setBagStatusMessage } from './modules/utils.js';
 import { renderBags, applyChoices } from './modules/ui-bags.js';
 import { initHistory, captureState, undo, redo } from './modules/history.js';
@@ -270,7 +271,7 @@ el('#btnApplyAll')?.addEventListener('click', async () => {
     if (!btn) return;
     btn.disabled = true;
     try {
-        await Ops.reapplySeries(null, {
+        await reapplySeries(null, {
             onStatus: (bagId, msg) => setBagStatusMessage(bagId, msg),
             onUpdate: () => {
                 renderBags();
