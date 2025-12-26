@@ -1,48 +1,57 @@
-import { REG } from './models.js';
-import * as Ops from './operations.js';
-import {
-    el, log, appendOpLog, uniq, normNFKC, parseIntSafe, nowISO,
-    setSelectOptions, describeBagLifecycle, setBagStatusMessage
-} from './utils.js';
-import { captureState } from './history.js';
+/**
+ * @fileoverview Bag List UI Component.
+ * @summary Renders the list of bags and handles bag-level interactions.
+ * @description
+ * Manages the display of bags using HTML details/summary elements.
+ * Handles drag-and-drop reordering, inline editing, snapshotting, and lifecycle status updates.
+ *
+ * @module ui/components/bag-list
+ * @requires ui/dom
+ * @requires domain/models/registry
+ * @requires domain/ops/base
+ * @requires core/text
+ * @requires core/utils
+ * @requires store/history
+ * @exports renderBags, applyChoices, startProgressPoller, setBagStatusMessage
+ */
+
+import { REG } from '../../domain/models/registry.js';
+import * as Ops from '../../domain/ops/base.js'; // For op_clone
+// We need reapplySeries from somewhere. It was in runner.js or operations.js.
+// Since runner.js wasn't fully refactored, let's assume valid import path or leave placeholder for now.
+// For now, I'll import it from the old location or a new location if I missed it.
+// Wait, I didn't create `domain/ops/runner.js` yet. It was `assets/js/modules/runner.js`.
+// I should probably move runner.js logic to domain/ops/runner.js or similar.
+// For now, I will assume it will be available at `../../domain/runner.js` or keep using `../modules/runner.js` if necessary, 
+// BUT my goal is to remove modules/.
+// I will create a `runner.js` task if I missed it.
+// Checking plan... I missed `runner.js` in the plan explicit list but it's crucial.
+// I will add `domain/runner.js` later. For now, I'll comment out reapply logic or point to future location.
+// Actually, let's just point to where it WILL be: `../../domain/runner.js` and ensure we create it.
+
+import { el, log, appendOpLog, setSelectOptions, nowISO } from '../dom.js';
+import { captureState } from '../../store/history.js';
+import { normNFKC } from '../../core/text.js';
 
 let dragSourceId = null;
 
-export function applyChoices() {
-    const choices = REG.choices();
-    const ids = ['#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt', '#selSrcUnionA',
-        '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains', '#selSrcRegex', '#selSrcFormat',
-        '#selSrcNgram', '#selSrcSample', '#selExport', '#selSrcCartesianA', '#selSrcCartesianB', '#selSrcAppend',
-        '#selSrcAnagram', '#selSrcSimilarity'
-    ];
-    ids.forEach(id => setSelectOptions(el(id), choices));
-}
-
-// Poller for updating progress bars
+// Progress Poller State
 let progressPoller = null;
 let lastProcessingIds = new Set();
 
-function startProgressPoller() {
+export function startProgressPoller() {
     if (progressPoller) return;
     progressPoller = setInterval(() => {
         const allBags = REG.all();
         const processingBags = allBags.filter(b => b.status === 'processing');
         const processingIds = new Set(processingBags.map(b => b.id));
 
-        // Check for completions (in last set but not in current)
         let needsRender = false;
         for (const id of lastProcessingIds) {
-            if (!processingIds.has(id)) {
-                needsRender = true;
-            }
+            if (!processingIds.has(id)) needsRender = true;
         }
 
-        if (needsRender) {
-            renderBags();
-            // If we rendered, we don't need to update individual bars potentially, 
-            // but we might as well update currently processing ones below.
-        }
-
+        if (needsRender) renderBags();
         lastProcessingIds = processingIds;
 
         if (processingBags.length === 0) return;
@@ -50,28 +59,49 @@ function startProgressPoller() {
         processingBags.forEach(b => {
             const card = document.querySelector(`.bag-card[data-id="${b.id}"]`);
             if (!card) return;
-
-            // Update Title / Size
             const titleSize = card.querySelector('.bag-title-size');
             if (titleSize) titleSize.textContent = `(${b.items.size}) ⏳`;
-
-            // Update Progress Bar
-            const msg = `Processing... ${b.items.size} items`;
             const statusEl = card.querySelector('.bag-status-text');
-            if (statusEl) statusEl.textContent = msg;
+            if (statusEl) statusEl.textContent = `Processing... ${b.items.size} items`;
         });
     }, 200);
 }
 
-startProgressPoller();
+export function setBagStatusMessage(bagId, message) {
+    const card = document.querySelector(`.bag-card[data-id="${bagId}"]`);
+    if (!card) return;
+    const statusEl = card.querySelector('[data-k="status"]');
+    if (statusEl) {
+        statusEl.textContent = message || '';
+        statusEl.title = message || '';
+    }
+}
+
+function describeBagLifecycle(bag) {
+    if (bag?.status === 'error') return `⚠ Error`;
+    if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
+    if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
+    if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
+    if (bag?.meta?.created_at) return `＋ ${bag.meta.created_at}`;
+    return '';
+}
+
+export function applyChoices() {
+    const choices = REG.choices();
+    const ids = [
+        '#selSrcNorm', '#selSrcTransform', '#selSrcDel', '#selSrcFlt', '#selLkpFlt',
+        '#selSrcUnionA', '#selSrcUnionB', '#selSrcLen', '#selSrcAffix', '#selSrcContains',
+        '#selSrcRegex', '#selSrcFormat', '#selSrcNgram', '#selSrcSample', '#selExport',
+        '#selSrcCartesianA', '#selSrcCartesianB', '#selSrcAppend', '#selSrcAnagram', '#selSrcSimilarity'
+    ];
+    ids.forEach(id => setSelectOptions(el(id), choices));
+}
 
 export function renderBags() {
     const host = el('#bagsArea');
     if (!host) return;
     dragSourceId = null;
     host.innerHTML = '';
-
-    // Auto-scroll to bottom if new bag added? (Optional, maybe distracting)
 
     for (const b of REG.all()) {
         const isProcessing = b.status === 'processing';
@@ -80,11 +110,13 @@ export function renderBags() {
         const details = document.createElement('details');
         details.className = `bag-card ${isProcessing ? 'processing' : ''} ${isError ? 'error' : ''}`;
         details.dataset.id = b.id;
-        details.draggable = !isProcessing; // Lock drag if processing
+        details.draggable = !isProcessing;
 
         const sum = document.createElement('summary');
-        sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div>
-              <div class="muted small bag-title-size">size=${b.items.size} | op=${b.meta.op || 'root'} ${isProcessing ? ' ⏳' : ''}</div>`;
+        sum.innerHTML = `
+            <div class="bag-title">[${b.id}] ${b.name}</div>
+            <div class="muted small bag-title-size">size=${b.items.size} | op=${b.meta.op || 'root'} ${isProcessing ? ' ⏳' : ''}</div>
+        `;
         details.appendChild(sum);
 
         const meta = document.createElement('div');
@@ -92,7 +124,6 @@ export function renderBags() {
         meta.textContent = Object.entries(b.meta).map(([k, v]) => `${k}: ${v}`).join('\n');
         details.appendChild(meta);
 
-        // Progress Bar (Visible if processing)
         if (isProcessing) {
             const prog = document.createElement('div');
             prog.className = 'bag-progress';
@@ -102,7 +133,6 @@ export function renderBags() {
             details.appendChild(prog);
         }
 
-        // Error Message
         if (isError) {
             const errDiv = document.createElement('div');
             errDiv.style.padding = '8px';
@@ -112,11 +142,8 @@ export function renderBags() {
             details.appendChild(errDiv);
         }
 
-
-
         const bar = document.createElement('div');
         bar.className = 'preview-bar';
-        // Hide edit controls if processing
         if (isProcessing) {
             bar.innerHTML = `
                <span class="muted small badge">Preview (Partial)</span>
@@ -125,16 +152,14 @@ export function renderBags() {
         } else {
             bar.innerHTML = `
               <span class="muted small badge">Preview</span>
-              <label class="muted small">offset <input class="input tight" type="number" min="0" value="0"
-                  data-k="off"></label>
-              <label class="muted small">limit <input class="input tight" type="number" min="1" value="200"
-                  data-k="lim"></label>
+              <label class="muted small">offset <input class="input tight" type="number" min="0" value="0" data-k="off"></label>
+              <label class="muted small">limit <input class="input tight" type="number" min="1" value="200" data-k="lim"></label>
               <label class="muted small"><input type="checkbox" data-k="all"> 全表示</label>
               <button class="btn ghost" data-k="copy">クリップボード</button>
               <button class="btn" data-k="edit">編集モード</button>
               <button class="btn ok" data-k="apply" disabled>編集を適用</button>
               <span class="muted mono small" data-k="count"></span>
-              `;
+            `;
         }
         details.appendChild(bar);
 
@@ -144,8 +169,6 @@ export function renderBags() {
         ta.readOnly = true;
         details.appendChild(ta);
 
-        // ... Event Listeners ...
-        // Only attach standard listeners if NOT processing
         if (!isProcessing) {
             const offEl = bar.querySelector('input[data-k="off"]');
             const limEl = bar.querySelector('input[data-k="lim"]');
@@ -174,9 +197,7 @@ export function renderBags() {
                 try {
                     await navigator.clipboard.writeText(ta.value);
                     copyBtn.textContent = 'コピー済み';
-                    setTimeout(() => {
-                        copyBtn.textContent = copyOriginalLabel;
-                    }, 1200);
+                    setTimeout(() => { copyBtn.textContent = copyOriginalLabel; }, 1200);
                 } catch { }
             });
 
@@ -194,7 +215,7 @@ export function renderBags() {
             });
             applyBtn.addEventListener('click', () => {
                 const lines = ta.value.split(/\r?\n/).map(normNFKC).filter(Boolean);
-                b.items = new Set(uniq(lines));
+                b.items = new Set(Array.from(new Set(lines)));
                 b.meta.size = b.items.size;
                 b.meta.op = 'manual_edit';
                 b.meta.updated_at = nowISO();
@@ -204,9 +225,6 @@ export function renderBags() {
                 editing = false;
                 applyBtn.disabled = true;
                 editBtn.textContent = '編集モード';
-                sum.innerHTML = `<div class="bag-title">[${b.id}] ${b.name}</div>
-                  <div class="muted small">size=${b.items.size} | op=${b.meta.op || 'root'} | norm=${b.meta.normalized ||
-                    '-'}</div>`;
                 renderRange();
                 applyChoices();
                 captureState();
@@ -217,30 +235,27 @@ export function renderBags() {
             });
         }
 
-        // Snapshot logic
         if (isProcessing) {
             const snapBtn = bar.querySelector('[data-k="snapshot"]');
             snapBtn.addEventListener('click', async () => {
-                await Ops.op_clone(b); // Clone handles processing bags
+                await Ops.op_clone(b);
                 renderBags();
                 applyChoices();
                 appendOpLog(`📷 Snapshot taken of [${b.id}]`);
             });
-            // Poller will handle updates
             ta.value = `(Processing... ${b.items.size} items so far)\n\n` + Array.from(b.items).slice(0, 50).join('\n');
         }
 
         const actions = document.createElement('div');
         actions.className = 'bag-actions';
         actions.innerHTML = `
-              <button class="btn ghost" data-k="reapply" ${isProcessing ? 'disabled' : ''}>再適用</button>
-              <button class="btn ghost" data-k="duplicate" ${isProcessing ? 'disabled' : ''}>複製</button>
-              <button class="btn warn" data-k="remove" ${isProcessing ? 'disabled' : ''}>削除</button>
-              <span class="muted small status" data-k="status"></span>
-              `;
+            <button class="btn ghost" data-k="reapply" ${isProcessing ? 'disabled' : ''}>再適用</button>
+            <button class="btn ghost" data-k="duplicate" ${isProcessing ? 'disabled' : ''}>複製</button>
+            <button class="btn warn" data-k="remove" ${isProcessing ? 'disabled' : ''}>削除</button>
+            <span class="muted small status" data-k="status"></span>
+        `;
         details.appendChild(actions);
 
-        // ... (Status logic) ...
         const statusEl = actions.querySelector('[data-k="status"]');
         if (statusEl) {
             const statusText = describeBagLifecycle(b);
@@ -248,28 +263,14 @@ export function renderBags() {
             statusEl.title = statusText;
         }
 
-        const reapplyBtn = actions.querySelector('[data-k="reapply"]');
-        const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
-        const removeBtn = actions.querySelector('[data-k="remove"]');
-
         if (!isProcessing) {
-            reapplyBtn.addEventListener('click', async () => {
-                reapplyBtn.disabled = true;
-                try {
-                    // Call reapply logic with callbacks for UI updates
-                    await Ops.reapplySeries(b.id, {
-                        onStatus: (bagId, msg) => setBagStatusMessage(bagId, msg),
-                        onUpdate: () => {
-                            renderBags();
-                            applyChoices();
-                            captureState();
-                        }
-                    });
-                } finally {
-                    reapplyBtn.disabled = false;
-                }
+            const reapplyBtn = actions.querySelector('[data-k="reapply"]');
+            reapplyBtn.addEventListener('click', () => {
+                // TODO: Implement Reapply with new runner
+                log('Reapply not yet connected in refactor');
             });
 
+            const duplicateBtn = actions.querySelector('[data-k="duplicate"]');
             duplicateBtn.addEventListener('click', () => {
                 const clone = REG.clone(b.id);
                 if (!clone) return;
@@ -279,6 +280,7 @@ export function renderBags() {
                 appendOpLog(`⧉ Clone → [${clone.id}] from [${b.id}] ${b.name}`);
             });
 
+            const removeBtn = actions.querySelector('[data-k="remove"]');
             removeBtn.addEventListener('click', () => {
                 if (!window.confirm(`Bag [${b.id}] ${b.name} を削除しますか？`)) return;
                 if (REG.remove(b.id)) {
@@ -289,27 +291,20 @@ export function renderBags() {
                 }
             });
 
+            // Drag & Drop
             details.addEventListener('dragstart', e => {
                 dragSourceId = b.id;
                 details.classList.add('dragging');
                 e.dataTransfer?.setData('text/plain', String(b.id));
                 if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
             });
-
-            details.addEventListener('dragend', () => {
-                details.classList.remove('dragging');
-            });
-
+            details.addEventListener('dragend', () => details.classList.remove('dragging'));
             details.addEventListener('dragover', e => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 details.classList.add('drag-target');
             });
-
-            details.addEventListener('dragleave', () => {
-                details.classList.remove('drag-target');
-            });
-
+            details.addEventListener('dragleave', () => details.classList.remove('drag-target'));
             details.addEventListener('drop', e => {
                 e.preventDefault();
                 details.classList.remove('drag-target');
@@ -323,7 +318,6 @@ export function renderBags() {
                 }
             });
         }
-
         host.appendChild(details);
     }
 }

@@ -1,63 +1,32 @@
 /**
- * models.js
+ * @fileoverview Registry for managing Bag instances.
+ * @summary Singleton registry to store, retrieve, and manage Bags.
+ * @description
+ * Acts as the in-memory database for the application. Handles CRUD operations
+ * for Bags, including serialization and snapshot restoration.
  *
- * Data models for the WordSerial application.
- * Manages Bag (Set of words) and BagRegistry (Collection of Bags).
- *
- * INPUT:
- *   - Raw strings (names, items) for Bag creation.
- *   - Snapshot objects for restoration.
- *
- * OUTPUT:
- *   - Bag instances.
- *   - Serialized state objects.
+ * @module domain/models/registry
+ * @requires domain/models/bag
+ * @exports BagRegistry, REG
  */
 
-import { nowISO } from './utils.js';
-
-/* ====== Bag / Registry ====== */
-let _nextId = 0;
-
-export class Bag {
-    constructor(name, items, meta = {}) {
-        this.id = _nextId++;
-        this.name = name || `bag#${this.id}`;
-        this.items = new Set(items || []);
-        this.meta = Object.assign({}, meta);
-        if (!this.meta.created_at) this.meta.created_at = nowISO();
-        this.meta.size = this.items.size;
-
-        // Progressive State
-        this.status = this.meta.status || 'ready'; // 'ready' | 'processing'
-        this.progress = { current: this.items.size, total: 0 };
-    }
-    label() { return `[${this.id}] ${this.name} (${this.items.size})${this.status === 'processing' ? ' ⏳' : ''}`; }
-
-    updateProgress(current, total) {
-        this.progress.current = current;
-        this.progress.total = total;
-    }
-
-    finish() {
-        this.status = 'ready';
-        this.meta.status = 'ready'; // Persist
-        this.meta.size = this.items.size;
-        this.meta.completed_at = nowISO();
-    }
-}
+import { Bag, setNextId, getNextId } from './bag.js';
 
 export class BagRegistry {
     constructor() { this._bags = []; }
+
     add(b) { this._bags.push(b); return b.id; }
     get(id) { return this._bags.find(x => x.id === Number(id)); }
     all() { return this._bags.slice(); }
     indexOf(id) { return this._bags.findIndex(x => x.id === Number(id)); }
+
     remove(id) {
         const idx = this.indexOf(id);
         if (idx < 0) return false;
         this._bags.splice(idx, 1);
         return true;
     }
+
     clone(id, nameSuffix = ' copy') {
         const src = this.get(id);
         if (!src) return null;
@@ -73,6 +42,7 @@ export class BagRegistry {
         this.add(clone);
         return clone;
     }
+
     moveRelative(sourceId, targetId, placeBefore = false) {
         const fromIdx = this.indexOf(sourceId);
         const targetIdx = this.indexOf(targetId);
@@ -84,6 +54,7 @@ export class BagRegistry {
         this._bags.splice(insertIdx, 0, bag);
         return true;
     }
+
     choices() {
         return this._bags
             .filter(b => b.status !== 'processing')
@@ -92,9 +63,10 @@ export class BagRegistry {
                 value: String(b.id)
             }));
     }
+
     serialize() {
         return {
-            nextId: _nextId,
+            nextId: getNextId(),
             bags: this._bags.map(b => ({
                 id: b.id,
                 name: b.name,
@@ -103,14 +75,16 @@ export class BagRegistry {
             }))
         };
     }
+
     restore(snapshot) {
         this._bags = snapshot.bags.map(data => {
             const bag = new Bag(data.name, data.items, Object.assign({}, data.meta));
             bag.id = data.id;
+            // Ensure internal size reflects items size if meta mismatch
             bag.meta.size = bag.items.size;
             return bag;
         });
-        _nextId = snapshot.nextId;
+        setNextId(snapshot.nextId);
     }
 }
 
