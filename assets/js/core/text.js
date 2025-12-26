@@ -33,7 +33,8 @@ export async function normalize(items, _, hooks) {
     const { converter } = hooks;
     return processWithBatching(items, async (w) => {
         const res = converter ? await converter(w) : w;
-        return res ? res.replace(/\s+/g, '') : null;
+        const cleaned = res ? res.replace(/\s+/g, '') : '';
+        return cleaned || null;  // Return null if empty string
     }, hooks);
 }
 
