@@ -20,20 +20,36 @@ export function applyChoices() {
 
 // Poller for updating progress bars
 let progressPoller = null;
+let lastProcessingIds = new Set();
 
 function startProgressPoller() {
     if (progressPoller) return;
     progressPoller = setInterval(() => {
-        const processingBags = REG.all().filter(b => b.status === 'processing');
+        const allBags = REG.all();
+        const processingBags = allBags.filter(b => b.status === 'processing');
+        const processingIds = new Set(processingBags.map(b => b.id));
+
+        // Check for completions (in last set but not in current)
+        let needsRender = false;
+        for (const id of lastProcessingIds) {
+            if (!processingIds.has(id)) {
+                needsRender = true;
+            }
+        }
+
+        if (needsRender) {
+            renderBags();
+            // If we rendered, we don't need to update individual bars potentially, 
+            // but we might as well update currently processing ones below.
+        }
+
+        lastProcessingIds = processingIds;
+
         if (processingBags.length === 0) return;
 
         processingBags.forEach(b => {
             const card = document.querySelector(`.bag-card[data-id="${b.id}"]`);
-            if (!card) {
-                // Might need re-render if it just appeared
-                if (document.getElementById('bagsArea')) renderBags();
-                return;
-            }
+            if (!card) return;
 
             // Update Title / Size
             const titleSize = card.querySelector('.bag-title-size');
@@ -43,9 +59,6 @@ function startProgressPoller() {
             const msg = `Processing... ${b.items.size} items`;
             const statusEl = card.querySelector('.bag-status-text');
             if (statusEl) statusEl.textContent = msg;
-
-            // If we had a real total, we could do percentage. For now just spinner-like text.
-            if (b.status === 'ready') renderBags(); // Re-render on completion
         });
     }, 200);
 }
@@ -62,9 +75,10 @@ export function renderBags() {
 
     for (const b of REG.all()) {
         const isProcessing = b.status === 'processing';
+        const isError = b.status === 'error';
 
         const details = document.createElement('details');
-        details.className = `bag-card ${isProcessing ? 'processing' : ''}`;
+        details.className = `bag-card ${isProcessing ? 'processing' : ''} ${isError ? 'error' : ''}`;
         details.dataset.id = b.id;
         details.draggable = !isProcessing; // Lock drag if processing
 
@@ -86,6 +100,16 @@ export function renderBags() {
             prog.style.background = '#f0f0f0';
             prog.innerHTML = `<div class="bag-status-text" style="font-size:0.8em; color:#666;">Processing... ${b.items.size} items</div>`;
             details.appendChild(prog);
+        }
+
+        // Error Message
+        if (isError) {
+            const errDiv = document.createElement('div');
+            errDiv.style.padding = '8px';
+            errDiv.style.background = '#ffebee';
+            errDiv.style.color = '#c62828';
+            errDiv.innerHTML = `<strong>Error:</strong> ${b.meta.error || 'Unknown error'}`;
+            details.appendChild(errDiv);
         }
 
         const bar = document.createElement('div');

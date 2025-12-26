@@ -91,6 +91,7 @@ export function setBagStatusMessage(bagId, message) {
 }
 
 export function describeBagLifecycle(bag) {
+    if (bag?.status === 'error') return `⚠ Error`;
     if (bag?.meta?.reapply_status) return bag.meta.reapply_status;
     if (bag?.meta?.reapplied_at) return `↻ ${bag.meta.reapplied_at}`;
     if (bag?.meta?.updated_at) return `✎ ${bag.meta.updated_at}`;
