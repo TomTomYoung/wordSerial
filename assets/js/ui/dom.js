@@ -26,7 +26,7 @@ export const el = q => document.querySelector(q);
  * @returns {Promise<void>}
  */
 export function waitFrame() {
-    return new Promise(resolve => setTimeout(resolve, 100));
+    return new Promise(resolve => setTimeout(resolve, 30));
 }
 
 /**

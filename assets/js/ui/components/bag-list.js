@@ -240,7 +240,15 @@ export function renderBags() {
                 applyChoices();
                 appendOpLog(`📷 Snapshot taken of [${b.id}]`);
             });
-            ta.value = `(Processing... ${b.items.size} items so far)\n\n` + Array.from(b.items).slice(0, 50).join('\n');
+
+            // Efficient preview generation
+            const previewLines = [];
+            let pCount = 0;
+            for (const item of b.items) {
+                previewLines.push(item);
+                if (++pCount >= 50) break;
+            }
+            ta.value = `(Processing... ${b.items.size} items so far)\n\n` + previewLines.join('\n');
         }
 
         const actions = document.createElement('div');
