@@ -8,13 +8,15 @@
 function tryImportScripts(urls) {
     try {
         importScripts(...urls);
+        return true;
     } catch (err) {
         // Swallow network errors so we can still run with fallbacks.
         console.warn('[hiragana-worker] importScripts failed, using fallbacks only', err);
+        return false;
     }
 }
 
-tryImportScripts([
+const libsLoaded = tryImportScripts([
     'https://cdn.jsdelivr.net/npm/wanakana@5.0.2/dist/wanakana.min.js',
     'https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js',
     'https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js'
@@ -64,22 +66,33 @@ function shouldUseKuroshiro(value) {
 }
 
 async function ensureKuro() {
+    // If CDN scripts failed, skip Kuroshiro initialization entirely.
+    if (!libsLoaded) return null;
     if (kuroInstance) return kuroInstance;
     if (kuroInitPromise) return kuroInitPromise;
 
     kuroInitPromise = (async () => {
-        let KuroshiroConstructor = self.Kuroshiro?.default || self.Kuroshiro;
-        if (typeof KuroshiroConstructor !== 'function') {
-            throw new Error('Kuroshiro constructor not found');
+        try {
+            let KuroshiroConstructor = self.Kuroshiro?.default || self.Kuroshiro;
+            if (typeof KuroshiroConstructor !== 'function') {
+                console.warn('[hiragana-worker] Kuroshiro constructor not found; fallback path only');
+                return null;
+            }
+
+            const Analyzer = self.KuromojiAnalyzer || self.Kuroshiro?.Analyzer?.KuromojiAnalyzer;
+            if (!Analyzer) {
+                console.warn('[hiragana-worker] KuromojiAnalyzer not found; fallback path only');
+                return null;
+            }
+
+            const k = new KuroshiroConstructor();
+            await k.init(new Analyzer({ dictPath: KUROMOJI_DICT }));
+            kuroInstance = k;
+            return k;
+        } catch (err) {
+            console.warn('[hiragana-worker] Kuroshiro init failed; fallback path only', err);
+            return null;
         }
-
-        const Analyzer = self.KuromojiAnalyzer || self.Kuroshiro?.Analyzer?.KuromojiAnalyzer;
-        if (!Analyzer) throw new Error('KuromojiAnalyzer not found');
-
-        const k = new KuroshiroConstructor();
-        await k.init(new Analyzer({ dictPath: KUROMOJI_DICT }));
-        kuroInstance = k;
-        return k;
     })();
 
     return kuroInitPromise;
@@ -96,12 +109,14 @@ async function convert(value, target) {
 
     try {
         const k = await ensureKuro();
-        return await k.convert(base, { to: target, mode: 'spaced' });
+        if (k) {
+            return await k.convert(base, { to: target, mode: 'spaced' });
+        }
     } catch (err) {
         // Fall back to wanakana if Kuroshiro fails mid-stream
         console.warn('[hiragana-worker] Kuroshiro convert failed, fallback to wanakana', err);
-        return fallbackConvert(base, target);
     }
+    return fallbackConvert(base, target);
 }
 
 self.onmessage = async (event) => {
