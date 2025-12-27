@@ -35,8 +35,8 @@ export async function runProgressiveOp(bagName, meta, logicFn, hooks = {}) {
             const onChunk = (chunk) => {
                 for (const item of chunk) bag.items.add(item);
 
-                // Update progress less frequently (every 10th chunk) to reduce overhead
-                if (++updateCount % 10 === 0) {
+                // Update progress more coarsely to reduce UI churn.
+                if (++updateCount % 50 === 0) {
                     bag.updateProgress(bag.items.size, 0);
                 }
             };
