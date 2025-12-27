@@ -21,6 +21,8 @@ import { appendOpLog, getBatchSize, waitFrame } from '../../ui/dom.js';
 // but runner heavily relies on logging to UI.
 // Ideally, we'd pass a logger callback. For now, we import appendOpLog to match legacy features.
 
+import { convertInWorker } from '../../infra/hiragana-worker-client.js';
+
 // Generic hooks provider
 function getHooks() {
     return {
@@ -90,6 +92,16 @@ import * as CoreFilters from '../../core/filters.js';
 import * as CoreGens from '../../core/generators.js';
 import { ensureKuro, getK } from '../../infra/kuro-wrapper.js';
 
+async function convertWithWorker(items, target) {
+    const out = new Set();
+    await convertInWorker(items, target, {
+        onChunk: (chunk) => {
+            for (const c of chunk || []) out.add(c);
+        }
+    });
+    return out;
+}
+
 // Helper to get items from src ID in meta
 async function getItems(bagId, normalizeBefore = false) {
     const bag = REG.get(bagId);
@@ -102,16 +114,28 @@ async function getItems(bagId, normalizeBefore = false) {
 
 export const OP_REBUILDERS = {
     async normalize_hiragana(meta) {
+        const items = await getItems(meta.src);
+        try {
+            return await convertWithWorker(items, 'hiragana');
+        } catch (err) {
+            console.warn('[runner] Worker normalize_hiragana fallback', err);
+        }
+
         await ensureKuro();
         const K = getK();
-        const items = await getItems(meta.src);
         const fastConverter = async (s) => await K.convert(CoreText.normNFKC(s), { to: 'hiragana', mode: 'spaced' });
         return CoreText.normalize(items, null, { ...getHooks(), converter: fastConverter });
     },
     async normalize_katakana(meta) {
+        const items = await getItems(meta.src);
+        try {
+            return await convertWithWorker(items, 'katakana');
+        } catch (err) {
+            console.warn('[runner] Worker normalize_katakana fallback', err);
+        }
+
         await ensureKuro();
         const K = getK();
-        const items = await getItems(meta.src);
         const fastConverter = async (s) => await K.convert(CoreText.normNFKC(s), { to: 'katakana', mode: 'spaced' });
         return CoreText.normalize(items, null, { ...getHooks(), converter: fastConverter });
     },
