@@ -13,6 +13,7 @@
  */
 
 import { ensureKuro, getK } from '../../infra/kuro-wrapper.js';
+import { convertInWorker } from '../../infra/hiragana-worker-client.js';
 import { runProgressiveOp } from './base.js';
 import { normalize, normNFKC } from '../../core/text.js';
 import { Bag } from '../models/bag.js';
@@ -40,12 +41,22 @@ export async function op_normalize_hiragana(srcBag, { hooks } = {}) {
     // 高速化のため、ラップ関数(toHiragana)を経由せずKuroshiroインスタンスを直接使うコンバータを定義
     const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
 
+    const logic = async (h) => {
+        // Try Web Worker first to avoid blocking the main thread.
+        try {
+            await convertInWorker(srcBag.items, 'hiragana', { onChunk: h.onChunk });
+            return;
+        } catch (err) {
+            console.warn('[op_normalize_hiragana] Worker fallback to main thread', err);
+        }
+
+        await normalize(srcBag.items, null, { ...h, converter: fastConverter });
+    };
+
     return runProgressiveOp(
         `${srcBag.name} → normalize(hiragana)`,
         { op: 'normalize_hiragana', src: srcBag.id, normalized: 'hiragana' },
-        async (h) => {
-            await normalize(srcBag.items, null, { ...h, converter: fastConverter });
-        },
+        logic,
         hooks
     );
 }
@@ -55,12 +66,21 @@ export async function op_normalize_katakana(srcBag, { hooks } = {}) {
     const K = getK();
     const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'katakana', mode: 'spaced' });
 
+    const logic = async (h) => {
+        try {
+            await convertInWorker(srcBag.items, 'katakana', { onChunk: h.onChunk });
+            return;
+        } catch (err) {
+            console.warn('[op_normalize_katakana] Worker fallback to main thread', err);
+        }
+
+        await normalize(srcBag.items, null, { ...h, converter: fastConverter });
+    };
+
     return runProgressiveOp(
         `${srcBag.name} → normalize(katakana)`,
         { op: 'normalize_katakana', src: srcBag.id, normalized: 'katakana' },
-        async (h) => {
-            await normalize(srcBag.items, null, { ...h, converter: fastConverter });
-        },
+        logic,
         hooks
     );
 }
