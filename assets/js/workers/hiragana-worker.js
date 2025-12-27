@@ -4,12 +4,21 @@
  * remains responsive even when handling 100k+ items.
  */
 
-// Load dependencies in the worker scope
-importScripts(
+// Load dependencies in the worker scope (best-effort; fall back to built-ins if blocked)
+function tryImportScripts(urls) {
+    try {
+        importScripts(...urls);
+    } catch (err) {
+        // Swallow network errors so we can still run with fallbacks.
+        console.warn('[hiragana-worker] importScripts failed, using fallbacks only', err);
+    }
+}
+
+tryImportScripts([
     'https://cdn.jsdelivr.net/npm/wanakana@5.0.2/dist/wanakana.min.js',
     'https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js',
     'https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js'
-);
+]);
 
 const KUROMOJI_DICT = 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/';
 let kuroInstance = null;
