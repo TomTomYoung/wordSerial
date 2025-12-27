@@ -15,6 +15,9 @@
 import { ensureKuro, getK } from '../../infra/kuro-wrapper.js';
 import { runProgressiveOp } from './base.js';
 import { normalize, normNFKC } from '../../core/text.js';
+import { Bag } from '../models/bag.js';
+
+
 // Imports removed (unused)
 
 // Re-implementing logic-side getHooks locally or importing? 
@@ -24,12 +27,17 @@ import { normalize, normNFKC } from '../../core/text.js';
 // but provide defaults here for testing if possible.
 // Wait, getBatchSize reads from DOM. This logic should be passed in.
 
+/**
+ * Hiragana Normalization
+ * Reverted to Progressive Op with Timeout (Step 161 state).
+ */
 export async function op_normalize_hiragana(srcBag, { hooks } = {}) {
     console.log('[op_normalize_hiragana] Waiting for Kuro...');
     await ensureKuro();
     console.log('[op_normalize_hiragana] Kuro ready.');
     const K = getK();
 
+    // 高速化のため、ラップ関数(toHiragana)を経由せずKuroshiroインスタンスを直接使うコンバータを定義
     const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'hiragana', mode: 'spaced' });
 
     return runProgressiveOp(
