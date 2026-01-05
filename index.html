@@ -323,13 +323,19 @@
             </div>
 
             <div class="op-group">
-              <h4>類似度フィルタ (Levenshtein)</h4>
-              <p class="muted small" style="margin: 4px 0 8px;">ターゲット文字列に近い単語（編集距離が近い）を抽出します。</p>
+              <h4>類似度フィルタ (Distance/Similarity)</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">ターゲット文字列に近い単語（編集距離・類似度）を抽出します。</p>
               <select id="selSrcSimilarity" class="input" title="入力とするBagを選択"></select>
               <div class="inline">
+                <select id="selSimilarityMetric" class="input" title="計算アルゴリズム" style="width: 140px;">
+                  <option value="levenshtein">Levenshtein</option>
+                  <option value="damerau">Damerau-Levenshtein</option>
+                  <option value="jaro-winkler">Jaro-Winkler</option>
+                  <option value="dice">Sørensen–Dice</option>
+                </select>
                 <input id="similarityTarget" class="input" placeholder="ターゲット文字列" title="比較対象の単語" />
-                <label class="muted small">dist <input id="similarityDist" type="number" min="0" class="input tight"
-                    value="2" title="許容する最大編集距離"></label>
+                <label class="muted small">dist <input id="similarityDist" type="number" min="0" step="0.1"
+                    class="input tight" value="2" title="許容する最大距離 (Dice/Jaroは0~1)"></label>
                 <button id="btnSimilarity" class="btn" title="類似度フィルタを実行します">抽出</button>
               </div>
               <div class="inline">

@@ -217,7 +217,7 @@ export const OP_REBUILDERS = {
         return CoreFilters.filterRegex(await getItems(meta.src, meta.normalize_before), { pattern: meta.pattern, invert: meta.invert }, getHooks());
     },
     async filter_similarity(meta) {
-        return CoreFilters.filterSimilarity(await getItems(meta.src, meta.normalize_before), { target: meta.target, dist: meta.dist }, getHooks());
+        return CoreFilters.filterSimilarity(await getItems(meta.src, meta.normalize_before), { target: meta.target, dist: meta.dist, metric: meta.metric }, getHooks());
     },
     async filter_in(meta) {
         const itemsA = await getItems(meta.src, meta.normalize_src_before);

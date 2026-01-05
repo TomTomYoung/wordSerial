@@ -19,7 +19,9 @@
  */
 
 import { processWithBatching } from './utils.js';
-import { normNFKC, levenshtein } from './text.js';
+import {
+    normNFKC, levenshtein, damerauLevenshtein, jaroWinkler, diceCoefficient
+} from './text.js';
 
 export async function filterLength(items, { min, max }, hooks) {
     return processWithBatching(items, w => {
@@ -59,11 +61,32 @@ export async function filterRegex(items, { pattern, invert }, hooks) {
  * @param {object} params - { target, dist }
  * @param {object} hooks
  */
-export async function filterSimilarity(items, { target, dist }, hooks) {
+export async function filterSimilarity(items, { target, dist, metric = 'levenshtein' }, hooks) {
     if (!target) return new Set();
     const d = Number.isFinite(dist) ? dist : 2;
+    const t = normNFKC(target);
+
+    let distFn;
+    switch (metric.toLowerCase()) {
+        case 'damerau':
+            distFn = damerauLevenshtein;
+            break;
+        case 'jarowinkler':
+        case 'jaro-winkler':
+            distFn = jaroWinkler;
+            break;
+        case 'dice':
+            distFn = diceCoefficient;
+            break;
+        case 'levenshtein':
+        default:
+            distFn = levenshtein;
+            break;
+    }
+
     return processWithBatching(items, w => {
-        return levenshtein(w, target) <= d ? w : null;
+        const val = distFn(normNFKC(w), t);
+        return val <= d ? w : null;
     }, hooks);
 }
 

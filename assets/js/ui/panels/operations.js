@@ -186,9 +186,10 @@ export function initOperationsPanel() {
         const kTarget = el('#simTarget') ? '#simTarget' : '#similarityTarget';
         const kDist = el('#simDist') ? '#simDist' : '#similarityDist';
         const target = el(kTarget).value;
-        const dist = parseInt(el(kDist).value, 10) || 2;
+        const dist = parseFloat(el(kDist).value) || 2; // Allow float for Jaro/Dice
+        const metric = el('#selSimilarityMetric')?.value || 'levenshtein';
         const normBag = el('#ckPreNormSimilarity').checked;
-        runOp(src, `similarity`, () => op_filter_similarity(src, target, dist, { normalizeBefore: normBag, hooks: getHooks() }));
+        runOp(src, `similarity`, () => op_filter_similarity(src, target, dist, { normalizeBefore: normBag, metric, hooks: getHooks() }));
     });
     el('#btnFlt')?.addEventListener('click', () => {
         const src = REG.get(el('#selSrcFlt').value);

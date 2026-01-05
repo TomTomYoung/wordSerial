@@ -112,13 +112,13 @@ export async function op_filter_regex(bag, pattern, invert, { normalizeBefore = 
     );
 }
 
-export async function op_filter_similarity(bag, targetRaw, dist, { normalizeBefore = false, hooks = {} } = {}) {
+export async function op_filter_similarity(bag, targetRaw, dist, { normalizeBefore = false, metric = 'levenshtein', hooks = {} } = {}) {
     const target = normNFKC(targetRaw);
     return runProgressiveOp(
-        `${bag.name} → similarity(${target},${dist})`,
-        { op: 'filter_similarity', src: bag.id, target, dist, normalize_before: normalizeBefore },
+        `${bag.name} → similarity(${target},${dist},${metric})`,
+        { op: 'filter_similarity', src: bag.id, target, dist, metric, normalize_before: normalizeBefore },
         async (h) => {
-            await filterSimilarity(bag.items, { target, dist }, h);
+            await filterSimilarity(bag.items, { target, dist, metric }, h);
         },
         hooks
     );

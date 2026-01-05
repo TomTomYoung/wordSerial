@@ -17,7 +17,8 @@
  *  uniqueNormalized,
  *  sortByLength, sortNatural, sortLocale,
  *  fingerprint,
- *  commonPrefix, commonSuffix
+ *  commonPrefix, commonSuffix,
+ *  levenshtein, damerauLevenshtein, jaroWinkler, diceCoefficient
  */
 
 import { processWithBatching } from './utils.js';
@@ -628,3 +629,167 @@ export async function commonSuffix(items, { target } = {}, hooks) {
         return out ? out : null;
     }, hooks);
 }
+
+/* ====== Distance Metrics ====== */
+
+/**
+ * Calculates the Damerau-Levenshtein distance (edit distance with transpositions).
+ * @param {string} s
+ * @param {string} t
+ * @returns {number}
+ */
+export function damerauLevenshtein(s, t) {
+    if (!s) return t ? t.length : 0;
+    if (!t) return s.length;
+
+    // Convert to code points for correct Unicode handling (surrogate pairs)
+    const source = toCodePoints(s);
+    const target = toCodePoints(t);
+
+    const n = source.length;
+    const m = target.length;
+    const INF = n + m;
+
+    const h = new Array(n + 2).fill(0).map(() => new Array(m + 2).fill(0));
+    const da = new Map();
+
+    // Initialize
+    for (let i = 0; i <= n; i++) {
+        h[i + 1][0] = INF;
+        h[i + 1][1] = i;
+    }
+    for (let j = 0; j <= m; j++) {
+        h[0][j + 1] = INF;
+        h[1][j + 1] = j;
+    }
+
+    // Fill
+    for (let i = 1; i <= n; i++) {
+        let db = 0;
+        for (let j = 1; j <= m; j++) {
+            const i1 = da.get(target[j - 1]) || 0;
+            const j1 = db;
+            let cost = 1;
+
+            if (source[i - 1] === target[j - 1]) {
+                cost = 0;
+                db = j;
+            }
+
+            h[i + 1][j + 1] = Math.min(
+                h[i][j] + cost,                 // substitution
+                h[i + 1][j] + 1,               // insertion
+                h[i][j + 1] + 1,               // deletion
+                h[i1][j1] + (i - i1 - 1) + 1 + (j - j1 - 1) // transposition
+            );
+        }
+        da.set(source[i - 1], i);
+    }
+
+    return h[n + 1][m + 1];
+}
+
+/**
+ * Calculates the Jaro-Winkler similarity distance (1 - similarity).
+ * Returns between 0 (exact match) and 1 (no match), to align with "distance" concept.
+ * Note: Typically Jaro-Winkler returns similarity (0 to 1), so we invert it.
+ * @param {string} s
+ * @param {string} t
+ * @returns {number}
+ */
+export function jaroWinkler(s, t) {
+    if (s === t) return 0;
+    if (!s || !t) return 1;
+
+    const jaro = (s, t) => {
+        const sLen = s.length;
+        const tLen = t.length;
+        if (sLen === 0 || tLen === 0) return 0;
+
+        const matchDist = Math.floor(Math.max(sLen, tLen) / 2) - 1;
+        const sMatches = new Array(sLen).fill(false);
+        const tMatches = new Array(tLen).fill(false);
+
+        let matches = 0;
+        for (let i = 0; i < sLen; i++) {
+            const start = Math.max(0, i - matchDist);
+            const end = Math.min(i + matchDist + 1, tLen);
+            for (let j = start; j < end; j++) {
+                if (!tMatches[j] && s[i] === t[j]) {
+                    sMatches[i] = true;
+                    tMatches[j] = true;
+                    matches++;
+                    break;
+                }
+            }
+        }
+
+        if (matches === 0) return 0;
+
+        let k = 0;
+        let transpositions = 0;
+        for (let i = 0; i < sLen; i++) {
+            if (sMatches[i]) {
+                while (!tMatches[k]) k++;
+                if (s[i] !== t[k]) transpositions++;
+                k++;
+            }
+        }
+
+        return ((matches / sLen) + (matches / tLen) + ((matches - transpositions / 2) / matches)) / 3;
+    };
+
+    const j = jaro(s, t);
+    if (j < 0.7) return 1 - j;
+
+    let prefix = 0;
+    const maxPrefix = Math.min(s.length, t.length, 4);
+    for (let i = 0; i < maxPrefix; i++) {
+        if (s[i] === t[i]) prefix++;
+        else break;
+    }
+
+    const jw = j + prefix * 0.1 * (1 - j);
+    return 1 - jw; // Return distance (0 = match, 1 = mismatch)
+}
+
+/**
+ * Calculates the Sørensen–Dice coefficient distance (1 - coefficient).
+ * Uses bigrams by default.
+ * @param {string} s
+ * @param {string} t
+ * @returns {number} 0 to 1
+ */
+export function diceCoefficient(s, t) {
+    if (s === t) return 0;
+    if (!s || !t) return 1;
+
+    const getBigrams = (str) => {
+        const bigrams = new Map();
+        for (let i = 0; i < str.length - 1; i++) {
+            const bg = str.slice(i, i + 2);
+            bigrams.set(bg, (bigrams.get(bg) || 0) + 1);
+        }
+        return bigrams;
+    };
+
+    const sBi = getBigrams(s);
+    const tBi = getBigrams(t);
+    const sSize = s.length - 1;
+    const tSize = t.length - 1;
+
+    if (sSize < 1 || tSize < 1) return 1; // Cannot form bigrams
+
+    let intersection = 0;
+    for (const [bg, count] of sBi) {
+        if (tBi.has(bg)) {
+            intersection += Math.min(count, tBi.get(bg));
+        }
+    }
+
+    const dice = (2 * intersection) / (sSize + tSize);
+    return 1 - dice;
+}
+
+
+
