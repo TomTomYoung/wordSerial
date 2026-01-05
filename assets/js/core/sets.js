@@ -12,6 +12,22 @@
 
 import { processWithBatching } from './utils.js';
 
+/**
+ * Checks if two sets contain exactly the same values.
+ * @param {Set} a 
+ * @param {Set} b 
+ * @returns {boolean}
+ */
+export function setsAreEqual(a, b) {
+    if (a === b) return true;
+    if (!(a instanceof Set) || !(b instanceof Set)) return false;
+    if (a.size !== b.size) return false;
+    for (const value of a) {
+        if (!b.has(value)) return false;
+    }
+    return true;
+}
+
 export async function union(itemsA, { itemsB }, _) {
     return new Set([...itemsA, ...itemsB]);
 }

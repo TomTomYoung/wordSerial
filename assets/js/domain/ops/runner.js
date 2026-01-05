@@ -15,7 +15,8 @@
  */
 
 import { REG } from '../models/registry.js';
-import { nowISO, setsAreEqual } from '../../core/utils.js';
+import { nowISO } from '../../core/utils.js';
+import { setsAreEqual } from '../../core/sets.js';
 import { appendOpLog, getBatchSize, waitFrame } from '../../ui/dom.js';
 // Note: ui/dom dependency in domain layer slightly breaks strict layering,
 // but runner heavily relies on logging to UI.

@@ -11,8 +11,8 @@
  * @exports filterLength, filterPrefix, filterSuffix, filterContains, filterRegex, filterSimilarity
  */
 
-import { processWithBatching, levenshtein } from './utils.js';
-import { normNFKC } from './text.js';
+import { processWithBatching } from './utils.js';
+import { normNFKC, levenshtein } from './text.js';
 
 export async function filterLength(items, { min, max }, hooks) {
     return processWithBatching(items, w => {

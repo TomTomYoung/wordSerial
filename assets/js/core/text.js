@@ -12,6 +12,29 @@
 
 import { processWithBatching } from './utils.js';
 
+/**
+ * Calculates the Levenshtein distance between two strings.
+ * @param {string} s 
+ * @param {string} t 
+ * @returns {number}
+ */
+export function levenshtein(s, t) {
+    if (!s) return t.length;
+    if (!t) return s.length;
+    const d = [];
+    const n = s.length;
+    const m = t.length;
+    for (let i = 0; i <= n; i++) d[i] = [i];
+    for (let j = 0; j <= m; j++) d[0][j] = j;
+    for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+            const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+            d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+        }
+    }
+    return d[n][m];
+}
+
 /* ====== Pure Helpers ====== */
 
 /**

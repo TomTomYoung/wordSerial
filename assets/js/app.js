@@ -11,11 +11,13 @@
  * @requires store/history
  * @requires domain/models/registry
  * @requires infra/file-loader
+ * @requires ui/layout
  */
 
 import { initImportPanel } from './ui/panels/import.js';
 import { initOperationsPanel } from './ui/panels/operations.js';
 import { initExportPanel } from './ui/panels/export.js';
+import { initTabs } from './ui/layout.js';
 import { renderBags, startProgressPoller, applyChoices } from './ui/components/bag-list.js';
 import { initHistory, undo, redo, setHistoryUpdateCallback } from './store/history.js';
 import { REG } from './domain/models/registry.js';
@@ -64,16 +66,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         log('Modules loaded. App Ready.');
 
         // Tab Switching Logic
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = btn.dataset.tab;
-                document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b === btn));
-                document.querySelectorAll('.tab-panel').forEach(p => {
-                    p.classList.toggle('active', p.dataset.panel === target);
-                    if (p.style.display && p.dataset.panel === target) p.style.display = ''; // Clear inline hide if any
-                });
-            });
-        });
+        initTabs();
+
+        // Auto-load list logic from legacy app
 
         // Auto-load list logic from legacy app
         try {
