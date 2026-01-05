@@ -46,6 +46,7 @@ import * as GenOps from './generators.js';
 const OP_MAP = {
     'normalize_hiragana': NormOps.op_normalize_hiragana,
     'normalize_katakana': NormOps.op_normalize_katakana,
+    'normalize_romaji': NormOps.op_normalize_romaji,
     'to_upper': TransOps.op_to_upper,
     'to_lower': TransOps.op_to_lower,
     'reverse': TransOps.op_reverse,
@@ -62,6 +63,15 @@ const OP_MAP = {
     'filter_contains': FilterOps.op_filter_contains,
     'filter_regex': FilterOps.op_filter_regex,
     'filter_similarity': FilterOps.op_filter_similarity,
+    'filter_normalized_equals': FilterOps.op_filter_normalized_equals,
+    'filter_normalized_contains': FilterOps.op_filter_normalized_contains,
+    'filter_script': FilterOps.op_filter_script,
+    'filter_unicode_property': FilterOps.op_filter_unicode_property,
+    'filter_subsequence': FilterOps.op_filter_subsequence,
+    'filter_char_at': FilterOps.op_filter_char_at,
+    'filter_ngram_jaccard': FilterOps.op_filter_ngram_jaccard,
+    'filter_hamming': FilterOps.op_filter_hamming,
+    'filter_pattern_preset': FilterOps.op_filter_pattern_preset,
     // 'filter_in' is special, mapped below
     'ngrams': GenOps.op_ngrams,
     'sample': GenOps.op_sample,
@@ -138,6 +148,19 @@ export const OP_REBUILDERS = {
         await ensureKuro();
         const K = getK();
         const fastConverter = async (s) => await K.convert(CoreText.normNFKC(s), { to: 'katakana', mode: 'spaced' });
+        return CoreText.normalize(items, null, { ...getHooks(), converter: fastConverter });
+    },
+    async normalize_romaji(meta) {
+        const items = await getItems(meta.src);
+        try {
+            return await convertWithWorker(items, 'romaji');
+        } catch (err) {
+            console.warn('[runner] Worker normalize_romaji fallback', err);
+        }
+
+        await ensureKuro();
+        const K = getK();
+        const fastConverter = async (s) => await K.convert(CoreText.normNFKC(s), { to: 'romaji', mode: 'spaced' });
         return CoreText.normalize(items, null, { ...getHooks(), converter: fastConverter });
     },
     async to_upper(meta) {
@@ -217,6 +240,33 @@ export const OP_REBUILDERS = {
     },
     async anagram(meta) {
         return CoreGens.anagram(await getItems(meta.src, meta.normalize_before), null, getHooks());
+    },
+    async filter_normalized_equals(meta) {
+        return FilterOps.op_filter_normalized_equals(await getItems(meta.src), meta.target, getHooks());
+    },
+    async filter_normalized_contains(meta) {
+        return FilterOps.op_filter_normalized_contains(await getItems(meta.src), meta.needle, getHooks());
+    },
+    async filter_script(meta) {
+        return FilterOps.op_filter_script(await getItems(meta.src), meta.script, meta.invert, getHooks());
+    },
+    async filter_unicode_property(meta) {
+        return FilterOps.op_filter_unicode_property(await getItems(meta.src), meta.property, meta.invert, getHooks());
+    },
+    async filter_subsequence(meta) {
+        return FilterOps.op_filter_subsequence(await getItems(meta.src), meta.needle, { normalize: meta.normalize, ...getHooks() });
+    },
+    async filter_char_at(meta) {
+        return FilterOps.op_filter_char_at(await getItems(meta.src), meta.index, meta.char, getHooks());
+    },
+    async filter_ngram_jaccard(meta) {
+        return FilterOps.op_filter_ngram_jaccard(await getItems(meta.src), meta.target, meta.n, meta.min, getHooks());
+    },
+    async filter_hamming(meta) {
+        return FilterOps.op_filter_hamming(await getItems(meta.src), meta.target, meta.max, meta.allowDifferentLength, getHooks());
+    },
+    async filter_pattern_preset(meta) {
+        return FilterOps.op_filter_pattern_preset(await getItems(meta.src), meta.preset, meta.invert, getHooks());
     }
 };
 

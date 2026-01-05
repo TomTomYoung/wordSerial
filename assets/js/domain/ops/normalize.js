@@ -84,3 +84,27 @@ export async function op_normalize_katakana(srcBag, { hooks } = {}) {
         hooks
     );
 }
+
+export async function op_normalize_romaji(srcBag, { hooks } = {}) {
+    await ensureKuro();
+    const K = getK();
+    const fastConverter = async (s) => await K.convert(normNFKC(s), { to: 'romaji', mode: 'spaced' });
+
+    const logic = async (h) => {
+        try {
+            await convertInWorker(srcBag.items, 'romaji', { onChunk: h.onChunk });
+            return;
+        } catch (err) {
+            console.warn('[op_normalize_romaji] Worker fallback to main thread', err);
+        }
+
+        await normalize(srcBag.items, null, { ...h, converter: fastConverter });
+    };
+
+    return runProgressiveOp(
+        `${srcBag.name} → normalize(romaji)`,
+        { op: 'normalize_romaji', src: srcBag.id, normalized: 'romaji' },
+        logic,
+        hooks
+    );
+}

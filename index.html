@@ -259,6 +259,70 @@
             </div>
 
             <div class="op-group">
+              <h4>拡張フィルタ (Advanced)</h4>
+              <p class="muted small" style="margin: 4px 0 8px;">Unicodeプロパティや正規化後の比較など、高度なフィルタリング。</p>
+              <select id="selSrcAdv" class="input" title="入力とするBagを選択"></select>
+              <div class="inline">
+                <label class="muted small" title="処理前に入力Bagをひらがな化します"><input type="checkbox" id="ckPreNormAdv"> Bag
+                  をひらがな化</label>
+              </div>
+
+              <!-- Presets -->
+              <div class="inline">
+                <select id="selPreset" class="input" title="プリセット選択">
+                  <option value="">(Preset)</option>
+                  <option value="email">Email</option>
+                  <option value="url">URL</option>
+                  <option value="integer">Integer</option>
+                  <option value="number">Number</option>
+                  <option value="date_ymd">Date (YMD)</option>
+                  <option value="uuid">UUID</option>
+                  <option value="hiragana">Hiragana only</option>
+                  <option value="katakana">Katakana only</option>
+                  <option value="kanji">Kanji only</option>
+                  <option value="kana">Kana (Hira/Kata)</option>
+                </select>
+                <label class="muted small"><input type="checkbox" id="presetInvert"> Invert</label>
+                <button id="btnPreset" class="btn" title="プリセットパターンでフィルタ">Preset Filter</button>
+              </div>
+
+              <!-- Scripts / Unicode -->
+              <div class="inline">
+                <input id="scriptName" class="input" placeholder="Script (e.g. Hiragana)" style="width: 140px;" />
+                <button id="btnScript" class="btn" title="Unicode Scriptでフィルタ">Script</button>
+                <input id="uniProp" class="input" placeholder="Prop (e.g. Number)" style="width: 140px;" />
+                <button id="btnUniProp" class="btn" title="Unicode Propertyでフィルタ">Prop</button>
+              </div>
+
+              <!-- Normalized Compare -->
+              <div class="inline">
+                <input id="normTarget" class="input" placeholder="Target (Normalized)" />
+                <button id="btnNormEq" class="btn" title="正規化(NFKC)して完全一致">Norm Equals</button>
+                <button id="btnNormCont" class="btn" title="正規化(NFKC)して部分一致">Norm Contains</button>
+              </div>
+
+              <!-- Fuzzy / Subseq -->
+              <div class="inline">
+                <input id="subseqNeedle" class="input" placeholder="Subsequence needle" />
+                <button id="btnSubseq" class="btn" title="部分列(飛び飛び可)でフィルタ">Subsequence</button>
+              </div>
+
+              <!-- CharAt -->
+              <div class="inline">
+                <input id="charAtIdx" type="number" class="input tight" value="0" title="Index" style="width: 50px;" />
+                <input id="charAtChar" class="input tight" placeholder="Char" style="width: 50px;" />
+                <button id="btnCharAt" class="btn" title="指定位置の文字でフィルタ">Char At</button>
+              </div>
+
+              <!-- Jaccard / Hamming -->
+              <div class="inline">
+                <input id="fuzzyTarget" class="input" placeholder="Fuzzy Target" />
+                <button id="btnNgramJac" class="btn" title="N-gram Jaccard (n=2, min=0.5)">Jaccard</button>
+                <button id="btnHamming" class="btn" title="Hamming Distance (max=1)">Hamming</button>
+              </div>
+            </div>
+
+            <div class="op-group">
               <h4>類似度フィルタ (Levenshtein)</h4>
               <p class="muted small" style="margin: 4px 0 8px;">ターゲット文字列に近い単語（編集距離が近い）を抽出します。</p>
               <select id="selSrcSimilarity" class="input" title="入力とするBagを選択"></select>

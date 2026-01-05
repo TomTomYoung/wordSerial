@@ -13,7 +13,13 @@
 
 import { runProgressiveOp } from './base.js';
 import {
-    filterLength, filterPrefix, filterSuffix, filterContains, filterRegex, filterSimilarity
+    filterLength, filterPrefix, filterSuffix, filterContains, filterRegex, filterSimilarity,
+    filterNormalizedEquals, filterNormalizedContains,
+    filterScript, filterUnicodeProperty,
+    filterSubsequence, filterCharAt,
+    filterNgramJaccard, filterHamming,
+    filterPatternPreset,
+    filterIntersection, filterDifference
 } from '../../core/filters.js';
 import { normNFKC } from '../../core/text.js';
 // filterIn was logic.filterIn, which is just checking existence in another set. 
@@ -136,3 +142,107 @@ export async function op_filter_in(srcBag, lookupBag, { normalizeSrc = false, no
         hooks
     );
 }
+
+export async function op_filter_normalized_equals(bag, targetRaw, { hooks = {} } = {}) {
+    const target = normNFKC(targetRaw);
+    return runProgressiveOp(
+        `${bag.name} → norm_equals(${target || '∅'})`,
+        { op: 'filter_normalized_equals', src: bag.id, target },
+        async (h) => {
+            await filterNormalizedEquals(bag.items, { target }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_normalized_contains(bag, needleRaw, { hooks = {} } = {}) {
+    const needle = normNFKC(needleRaw);
+    return runProgressiveOp(
+        `${bag.name} → norm_contains(${needle || '∅'})`,
+        { op: 'filter_normalized_contains', src: bag.id, needle },
+        async (h) => {
+            await filterNormalizedContains(bag.items, { needle }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_script(bag, script, invert, { hooks = {} } = {}) {
+    return runProgressiveOp(
+        `${bag.name} → script(${script}${invert ? '!' : ''})`,
+        { op: 'filter_script', src: bag.id, script, invert },
+        async (h) => {
+            await filterScript(bag.items, { script, invert }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_unicode_property(bag, property, invert, { hooks = {} } = {}) {
+    return runProgressiveOp(
+        `${bag.name} → unicode(${property}${invert ? '!' : ''})`,
+        { op: 'filter_unicode_property', src: bag.id, property, invert },
+        async (h) => {
+            await filterUnicodeProperty(bag.items, { property, invert }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_subsequence(bag, needleRaw, { normalize = true, hooks = {} } = {}) {
+    return runProgressiveOp(
+        `${bag.name} → subseq(${needleRaw})`,
+        { op: 'filter_subsequence', src: bag.id, needle: needleRaw, normalize },
+        async (h) => {
+            await filterSubsequence(bag.items, { needle: needleRaw, normalize }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_char_at(bag, index, charRaw, { hooks = {} } = {}) {
+    return runProgressiveOp(
+        `${bag.name} → charAt(${index}, ${charRaw})`,
+        { op: 'filter_char_at', src: bag.id, index, char: charRaw },
+        async (h) => {
+            await filterCharAt(bag.items, { index, char: charRaw }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_ngram_jaccard(bag, targetRaw, n, min, { hooks = {} } = {}) {
+    const target = normNFKC(targetRaw);
+    return runProgressiveOp(
+        `${bag.name} → ngram_jaccard(${target}, n=${n}, >=${min})`,
+        { op: 'filter_ngram_jaccard', src: bag.id, target, n, min },
+        async (h) => {
+            await filterNgramJaccard(bag.items, { target, n, min }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_hamming(bag, targetRaw, max, allowDifferentLength, { hooks = {} } = {}) {
+    const target = normNFKC(targetRaw);
+    return runProgressiveOp(
+        `${bag.name} → hamming(${target}, <=${max})`,
+        { op: 'filter_hamming', src: bag.id, target, max, allowDifferentLength },
+        async (h) => {
+            await filterHamming(bag.items, { target, max, allowDifferentLength }, h);
+        },
+        hooks
+    );
+}
+
+export async function op_filter_pattern_preset(bag, preset, invert, { hooks = {} } = {}) {
+    return runProgressiveOp(
+        `${bag.name} → preset(${preset}${invert ? '!' : ''})`,
+        { op: 'filter_pattern_preset', src: bag.id, preset, invert },
+        async (h) => {
+            await filterPatternPreset(bag.items, { preset, invert }, h);
+        },
+        hooks
+    );
+}
+

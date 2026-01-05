@@ -23,10 +23,17 @@ import { captureState } from '../../store/history.js';
 import { normNFKC } from '../../core/text.js';
 
 // Import All Ops
-import { op_normalize_hiragana, op_normalize_katakana } from '../../domain/ops/normalize.js';
+import { op_normalize_hiragana, op_normalize_katakana, op_normalize_romaji } from '../../domain/ops/normalize.js';
 import { op_to_upper, op_to_lower, op_reverse, op_dedupe_chars, op_replace, op_sort } from '../../domain/ops/transform.js';
 import { op_union, op_difference, op_intersection, op_symmetric_difference } from '../../domain/ops/sets.js';
-import { op_filter_length, op_filter_prefix, op_filter_suffix, op_filter_contains, op_filter_regex, op_filter_similarity, op_filter_in } from '../../domain/ops/filters.js';
+import {
+    op_filter_length, op_filter_prefix, op_filter_suffix, op_filter_contains, op_filter_regex, op_filter_similarity, op_filter_in,
+    op_filter_normalized_equals, op_filter_normalized_contains,
+    op_filter_script, op_filter_unicode_property,
+    op_filter_subsequence, op_filter_char_at,
+    op_filter_ngram_jaccard, op_filter_hamming,
+    op_filter_pattern_preset
+} from '../../domain/ops/filters.js';
 import { op_ngrams, op_sample, op_cartesian, op_append, op_anagram } from '../../domain/ops/generators.js';
 
 /* ====== Generic Runner Wrapper ====== */
@@ -74,12 +81,10 @@ export function initOperationsPanel() {
     });
 
     el('#btnRomaji')?.addEventListener('click', () => {
-        // Romaji not yet migrated? It was op_to_romaji in operations.js
-        // I may have missed it in domain/ops/normalize.js or transform.js?
-        // Checking my plan... I didn't verify if I added it.
-        // I should add it to normalize.js or transform.js.
-        // For now, logging warning.
-        log("Romaji conversion not yet implemented in refactoring.");
+        const src = REG.get(el('#selSrcTransform').value);
+        if (!src) return;
+        runOp(src, `normalize(romaji)… [${src.id}]`,
+            () => op_normalize_romaji(src, { hooks: getHooks() }));
     });
 
     /* === Transform === */
@@ -194,6 +199,58 @@ export function initOperationsPanel() {
         runOp(src, `filter_in`, () => op_filter_in(src, lkp, { normalizeSrc: normSrc, normalizeLookup: normLookup, hooks: getHooks() }));
     });
 
+
+
+    /* === Advanced Filters === */
+    el('#btnPreset')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const preset = el('#selPreset').value;
+        const invert = el('#presetInvert').checked;
+        const normBag = el('#ckPreNormAdv').checked;
+        runOp(src, `preset(${preset})`, () => op_filter_pattern_preset(src, preset, invert, { normalizeBefore: normBag, hooks: getHooks() }));
+    });
+    el('#btnScript')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const script = el('#scriptName').value;
+        // const normBag = el('#ckPreNormAdv').checked;
+        runOp(src, `script(${script})`, () => op_filter_script(src, script, false, { hooks: getHooks() }));
+    });
+    el('#btnUniProp')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const prop = el('#uniProp').value;
+        runOp(src, `prop(${prop})`, () => op_filter_unicode_property(src, prop, false, { hooks: getHooks() }));
+    });
+    el('#btnNormEq')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const target = el('#normTarget').value;
+        runOp(src, `norm_eq`, () => op_filter_normalized_equals(src, target, { hooks: getHooks() }));
+    });
+    el('#btnNormCont')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const needle = el('#normTarget').value;
+        runOp(src, `norm_cont`, () => op_filter_normalized_contains(src, needle, { hooks: getHooks() }));
+    });
+    el('#btnSubseq')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const needle = el('#subseqNeedle').value;
+        runOp(src, `subseq`, () => op_filter_subsequence(src, needle, { normalize: true, hooks: getHooks() }));
+    });
+    el('#btnCharAt')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const idx = parseInt(el('#charAtIdx').value, 10) || 0;
+        const char = el('#charAtChar').value;
+        runOp(src, `char_at`, () => op_filter_char_at(src, idx, char, { hooks: getHooks() }));
+    });
+    el('#btnNgramJac')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const target = el('#fuzzyTarget').value;
+        runOp(src, `jaccard`, () => op_filter_ngram_jaccard(src, target, 2, 0.5, { hooks: getHooks() }));
+    });
+    el('#btnHamming')?.addEventListener('click', () => {
+        const src = REG.get(el('#selSrcAdv').value);
+        const target = el('#fuzzyTarget').value;
+        runOp(src, `hamming`, () => op_filter_hamming(src, target, 1, false, { hooks: getHooks() }));
+    });
 
     /* === Generators === */
     el('#btnNgram')?.addEventListener('click', () => {

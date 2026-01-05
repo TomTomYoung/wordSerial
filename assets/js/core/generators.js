@@ -14,6 +14,13 @@
 import { processWithBatching, makeSeedFromString, mulberry32 } from './utils.js';
 import { normNFKC } from './text.js';
 
+
+/**
+ * Generates N-grams from valid items.
+ * @param {Iterable} items - Input items
+ * @param {object} params - { n }
+ * @param {object} hooks 
+ */
 export async function ngrams(items, { n }, hooks) {
     const size = Number.isFinite(n) ? Math.max(1, n) : 1;
     return processWithBatching(items, w => {
@@ -28,6 +35,13 @@ export async function ngrams(items, { n }, hooks) {
     }, hooks);
 }
 
+
+/**
+ * Randomly samples a specified count of items from the input.
+ * Supports seeding for reproducibility.
+ * @param {Iterable} items 
+ * @param {object} params - { count, seed }
+ */
 export async function sample(items, { count, seed }) {
     const arr = Array.from(items);
     const safeCount = Number.isFinite(count) ? count : 0;
@@ -44,6 +58,14 @@ export async function sample(items, { count, seed }) {
     return new Set(arr.slice(0, need));
 }
 
+
+/**
+ * Generates the Cartesian product of two sets of items (A x B).
+ * Joiner is 'sep'. Respects a limit to avoid explosions.
+ * @param {Iterable} itemsA 
+ * @param {object} params - { itemsB, sep, limit }
+ * @param {object} hooks - { yielder, batchSize }
+ */
 export async function cartesian(itemsA, { itemsB, sep = '', limit = 10000 }, { yielder, batchSize = 200 } = {}) {
     const out = new Set();
     const arrA = Array.from(itemsA);
@@ -61,6 +83,13 @@ export async function cartesian(itemsA, { itemsB, sep = '', limit = 10000 }, { y
     return out;
 }
 
+
+/**
+ * Randomly shuffles the characters within each word (Anagram).
+ * @param {Iterable} items 
+ * @param {object} _ - Unused
+ * @param {object} hooks 
+ */
 export async function anagram(items, _, hooks) {
     return processWithBatching(items, w => {
         const chars = Array.from(normNFKC(w));
